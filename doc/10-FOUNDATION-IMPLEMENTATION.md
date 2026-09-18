@@ -43,12 +43,21 @@ Every completed phase must update:
 
 A phase is not complete because code was committed only.
 
-## Current Phase 1 progress
+## Phase 1 status — closed
 
-The central tenant registry, domain registry, memberships, tenant context, tenant connection manager, idempotent tenant database provisioning, baseline tenant migration verification, and local MySQL smoke-test path have now been implemented incrementally. See `doc/11-PHASE-1-TENANCY-FOUNDATION.md` for the current Phase 1 implementation status.
+The tenancy foundation is complete and verified. The implementation includes the central tenant/domain/membership registries, dedicated tenant database provisioning, tenant routing/context, tenant-owned Company Settings/Locations/Staff/Customers, active membership authorization, cross-tenant isolation coverage, and production-style request-context cleanup.
 
-The remaining Phase 1 work is membership authorization plus local execution/verification of the new tenant request and isolation tests against the updated tenant schema.
+Verification completed:
+
+- Local `php artisan test`: **16 passed (59 assertions)**.
+- GitHub Actions Backend Tests for commit `0712ea36fbe35656bcdfd44bdb31540d989ea169`: **success**.
+- Existing MySQL tenant `velora-clinic`: `active` + `ready`.
+- Tenant baseline tables verified: `tenant_runtime`, `company_settings`, `locations`, `staff`, `customers`.
+- Tenant runtime schema version verified: `1.1`.
+- Default tenant company settings verified: 6 entries.
+
+See `doc/11-PHASE-1-TENANCY-FOUNDATION.md` for the detailed Phase 1 record.
 
 ## Next phase
 
-Finish the Phase 1 integration/isolation verification before closing Phase 1.
+Phase 2 starts with platform Identity, Authentication, and RBAC. This phase must preserve the existing tenant isolation boundary and reuse the existing `PlatformAccount`, memberships, Staff, and Customer identity model.
