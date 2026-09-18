@@ -6,6 +6,7 @@ use App\Infrastructure\Tenancy\TenantDatabaseManager;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
@@ -33,12 +34,16 @@ final class TenantProvisioner implements TenantProvisionerContract
 
             $exitCode = Artisan::call('migrate', [
                 '--database' => TenantDatabaseManager::CONNECTION,
-                '--path' => database_path('migrations/tenant'),
+                '--path' => 'database/migrations/tenant',
                 '--force' => true,
             ]);
 
             if ($exitCode !== 0) {
                 throw new RuntimeException(Artisan::output());
+            }
+
+            if (! Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('tenant_runtime')) {
+                throw new RuntimeException('Tenant baseline migration completed without creating the tenant_runtime table.');
             }
 
             $tenant->forceFill([
