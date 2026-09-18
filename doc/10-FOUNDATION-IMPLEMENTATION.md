@@ -51,4 +51,4 @@ The remaining Phase 1 work is membership authorization plus local execution/veri
 
 ## Next phase
 
-Complete membership authorization and finish the Phase 1 integration/isolation verification before closing Phase 1.
+Finish the Phase 1 integration/isolation verification before closing Phase 1.
