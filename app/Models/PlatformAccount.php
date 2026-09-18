@@ -14,7 +14,7 @@ use IlluminateNotificationsNotifiable;
 class PlatformAccount extends Authenticatable
 {
     /** @use HasFactory<PlatformAccountFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasUlids, Notifiable;
 
     protected $table = 'platform_accounts';
 
