@@ -20,6 +20,8 @@ Phase 1 is being implemented in incremental slices.
 - Idempotent tenant database creation and tenant migration provisioning service.
 - Tenant provisioning verifies the baseline `tenant_runtime` table before marking a tenant Ready.
 - A tenant previously marked Ready is not trusted blindly: provisioning re-validates the tenant baseline and repairs incomplete provisioning.
+- Tenant provisioning initializes a baseline tenant_runtime record.
+- Tenant provisioning initializes default tenant company_settings entries.
 - `tenant` middleware alias for future tenant routes.
 - `tenant:create` Artisan command for local/provisioning workflows.
 - `tenant:provision` Artisan command for idempotent provisioning/retry of an existing tenant.
@@ -62,13 +64,22 @@ Database creation is intentionally outside a long-running central transaction be
 
 Package integration must be installed and locked through Composer before relying on vendor-specific tenant commands or middleware. The application-level tenancy contracts in this slice are intentionally testable without coupling business logic to the package.
 
-## Next slice
+## Current Platform Core progress
 
-- Complete Platform Core company setup.
-- Add tenant-aware company settings.
-- Add locations/branches.
-- Add Staff and Customer tenant entities.
-- Add membership authorization rules.
-- Add real tenant request integration tests.
-- Run local provisioning against MySQL and verify the dedicated database contains the tenant runtime migration.
-- Then close Phase 1 and move to Identity/RBAC hardening.
+Implemented:
+
+- tenant-aware Company Settings schema/model;
+- Locations/Branches schema/model;
+- Staff schema/model with optional platform account reference;
+- Customer schema/model with optional customer account reference;
+- tenant model base enforcing the tenant database connection;
+- factories for tenant-owned core entities.
+
+Remaining before Phase 1 closure:
+
+- membership authorization rules;
+- real tenant request integration tests;
+- cross-tenant isolation tests;
+- local verification of the newly added tenant core migrations against an existing dedicated MySQL tenant database.
+
+Then Phase 1 can close and Identity/RBAC hardening can begin.
