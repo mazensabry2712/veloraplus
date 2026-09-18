@@ -226,7 +226,50 @@ A membership is not the same thing as a tenant Staff profile.
 
 For tenant workspace routes, an authenticated Platform Account must have an active Membership for the current Tenant. Tenant context resolution and membership authorization are separate controls; public tenant routes such as public Booking can use tenant context without requiring an account membership.
 
-## 12. User switching
+## 12. Authentication and RBAC
+
+VeloraPlus authentication is platform-level and tenant authorization is tenant-scoped.
+
+### Authentication boundary
+
+- The authenticated model is `PlatformAccount` on the central database.
+- Fortify provides registration, login/logout, password reset, and email verification in the initial implementation.
+- Authentication state and password-reset/session records remain central.
+- Suspended Platform Accounts must not authenticate.
+
+### RBAC boundary
+
+Spatie Laravel Permission runs with Teams enabled. The configured team key is `tenant_id` and the permission tables remain in the central database.
+
+Roles are tenant-specific. Permissions are global definitions that are assigned to tenant-scoped roles.
+
+The authorization sequence is:
+
+~~~
+Tenant Context
+    ↓
+Active Membership
+    ↓
+Permission Team = Tenant ID
+    ↓
+Role / Permission Check
+    ↓
+Business Authorization
+~~~
+
+`tenant_memberships` answers workspace membership; Spatie roles and permissions answer capabilities inside that workspace.
+
+Every permission-sensitive request must establish the current tenant permission team before calling `can()`, `hasRole()`, Policies, or package middleware. The team value must be cleared in a `finally` block after request processing.
+
+### Tenant-specific role isolation
+
+The same Platform Account may have different roles in different tenants. A role assignment in Tenant A must never authorize a request in Tenant B.
+
+Role and permission pivot identifiers use ULIDs to match the platform identity policy. Tenant IDs are central ULIDs and are used directly as the team key.
+
+The package's default global-role capability is not used for company workspace roles. VeloraPlus creates tenant-scoped roles only for the standard workspace roles and permits custom tenant roles later through the platform's role-management flow.
+
+## 13. User switching
 
 A multi-company user needs an explicit company switcher.
 
@@ -248,7 +291,7 @@ When switching:
 - entitlements are recalculated;
 - tenant-scoped caches/state are isolated.
 
-## 13. Customer account privacy
+## 14. Customer account privacy
 
 A customer account can be associated with multiple tenant profiles.
 
@@ -256,11 +299,11 @@ The central account does not grant a company access to another company's profile
 
 Access to a customer profile is always Customer Account + Current Tenant + Tenant Customer Profile.
 
-## 14. Staff reuse
+## 15. Staff reuse
 
 A staff member may participate in Booking, CRM, HR, and future modules without duplicate identities.
 
-## 15. Tenant database creation
+## 16. Tenant database creation
 
 New tenant lifecycle:
 
@@ -284,7 +327,7 @@ Route to tenant domain
 
 Database provisioning must be idempotent and recoverable.
 
-## 16. Tenant deletion
+## 17. Tenant deletion
 
 Tenant deletion is a lifecycle, not an immediate DROP.
 
@@ -306,7 +349,7 @@ Permanent purge
 
 A permanent purge must be explicit and audited.
 
-## 17. Isolation requirements
+## 18. Isolation requirements
 
 Automated tests must prove:
 
@@ -318,7 +361,7 @@ Automated tests must prove:
 - cached tenant state cannot cross boundaries;
 - queued jobs restore the correct tenant context.
 
-## 18. Cache and queue
+## 19. Cache and queue
 
 Every tenant-sensitive cache key must contain tenant identity.
 
@@ -326,7 +369,7 @@ Every tenant-sensitive job must include enough information to restore the correc
 
 Never assume a queue worker's current tenant from a previous job.
 
-## 19. Tenant-aware storage
+## 20. Tenant-aware storage
 
 Tenant files should be namespaced by tenant.
 
@@ -338,7 +381,7 @@ tenants/{tenant-public-id}/...
 
 Sensitive files remain private.
 
-## 20. Central vs tenant data rule
+## 21. Central vs tenant data rule
 
 Use this rule:
 
