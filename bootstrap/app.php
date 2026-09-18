@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'tenant' => InitializeTenantContext::class,
+            'tenant.member' => \App\Http\Middleware\EnsureTenantMembership::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
