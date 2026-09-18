@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 final class CreateTenant
 {
     public function __construct(
-        private readonly TenantProvisioner $provisioner,
+        private readonly TenantProvisionerContract $provisioner,
     ) {}
 
     public function execute(
