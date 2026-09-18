@@ -335,7 +335,23 @@ Recommended order:
 8. Expenses.
 9. Finance/accounting.
 
-## 16. Release gates
+## 16. Scalability & performance gate
+
+Before calling a high-traffic flow production-ready:
+
+- the flow is stateless and horizontally scalable;
+- database access patterns and indexes are reviewed;
+- tenant-aware caching is reviewed;
+- queue/offloading opportunities are reviewed;
+- rate limits exist for public/high-risk endpoints;
+- concurrency behavior is tested where relevant;
+- p50/p95/p99 latency is measurable;
+- load/stress testing is performed for critical high-traffic paths;
+- observability is operational.
+
+See `doc/09-SCALABILITY-AND-PERFORMANCE.md`.
+
+## 17. Release gates
 
 Do not call production ready until:
 
@@ -350,7 +366,7 @@ Do not call production ready until:
 - monitoring is operational;
 - deployment procedure is documented.
 
-## 17. Implementation order
+## 18. Implementation order
 
 ~~~
 1. Foundation
@@ -370,13 +386,13 @@ Do not call production ready until:
 15. ERP
 ~~~
 
-## 18. Product promise
+## 19. Product promise
 
 The user should experience VeloraPlus as one system.
 
 Buying another Module must feel like turning on a new capability inside the same company workspace, not creating a second application or second set of customers/staff.
 
-## 19. Final acceptance scenario
+## 20. Final acceptance scenario
 
 ~~~
 User registers
@@ -412,7 +428,7 @@ Company sees everything in one Dashboard
 
 This validates the intended architecture.
 
-## 20. Change control
+## 21. Change control
 
 If a future requirement conflicts with a documented rule, do not silently change implementation.
 
