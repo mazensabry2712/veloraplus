@@ -13,6 +13,17 @@ use Throwable;
 
 final class TenantProvisioner implements TenantProvisionerContract
 {
+    private const BASELINE_SCHEMA_VERSION = '1.1';
+
+    /** @var list<string> */
+    private const BASELINE_TABLES = [
+        'tenant_runtime',
+        'company_settings',
+        'locations',
+        'staff',
+        'customers',
+    ];
+
     public function __construct(
         private readonly TenantDatabaseManager $databaseManager,
     ) {}
@@ -23,12 +34,9 @@ final class TenantProvisioner implements TenantProvisionerContract
             try {
                 $this->databaseManager->connect($tenant);
 
-                if (Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('tenant_runtime')) {
+                if ($this->baselineTablesExist()) {
                     $this->ensureTenantRuntime($tenant);
-
-                    if (Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('company_settings')) {
-                        $this->ensureCompanySettings($tenant);
-                    }
+                    $this->ensureCompanySettings($tenant);
 
                     return $tenant;
                 }
@@ -56,15 +64,12 @@ final class TenantProvisioner implements TenantProvisionerContract
                 throw new RuntimeException(Artisan::output());
             }
 
-            if (! Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('tenant_runtime')) {
-                throw new RuntimeException('Tenant baseline migration completed without creating the tenant_runtime table.');
+            if (! $this->baselineTablesExist()) {
+                throw new RuntimeException('Tenant baseline migrations completed without creating the required tenant core tables.');
             }
 
             $this->ensureTenantRuntime($tenant);
-
-            if (Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('company_settings')) {
-                $this->ensureCompanySettings($tenant);
-            }
+            $this->ensureCompanySettings($tenant);
 
             $tenant->forceFill([
                 'status' => 'active',
@@ -96,7 +101,7 @@ final class TenantProvisioner implements TenantProvisionerContract
             $table->insert([
                 'id' => (string) Str::ulid(),
                 'tenant_id' => $tenant->getKey(),
-                'schema_version' => '1.0',
+                'schema_version' => self::BASELINE_SCHEMA_VERSION,
                 'provisioned_at' => $now,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -105,12 +110,33 @@ final class TenantProvisioner implements TenantProvisionerContract
             return;
         }
 
+        $updates = [];
+
         if ($runtime->provisioned_at === null) {
-            $table->where('tenant_id', $tenant->getKey())->update([
-                'provisioned_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $updates['provisioned_at'] = now();
         }
+
+        if ($runtime->schema_version !== self::BASELINE_SCHEMA_VERSION) {
+            $updates['schema_version'] = self::BASELINE_SCHEMA_VERSION;
+        }
+
+        if ($updates !== []) {
+            $updates['updated_at'] = now();
+            $table->where('tenant_id', $tenant->getKey())->update($updates);
+        }
+    }
+
+    private function baselineTablesExist(): bool
+    {
+        $schema = Schema::connection(TenantDatabaseManager::CONNECTION);
+
+        foreach (self::BASELINE_TABLES as $table) {
+            if (! $schema->hasTable($table)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function ensureCompanySettings(Tenant $tenant): void
