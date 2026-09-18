@@ -49,6 +49,8 @@ function tenantCoreTestDatabase(): string
 
 function migrateTenantCoreTestDatabase(string $path): void
 {
+    config(['database.connections.tenant_template.database' => $path]);
+
     $tenant = new Tenant;
     $tenant->database_name = $path;
 
@@ -216,12 +218,7 @@ test('tenant databases remain isolated from each other', function () {
 
     try {
         migrateTenantCoreTestDatabase($pathA);
-
-        $pathForB = $pathB;
-        config([
-            'database.connections.tenant_template.database' => $pathForB,
-        ]);
-        migrateTenantCoreTestDatabase($pathForB);
+        migrateTenantCoreTestDatabase($pathB);
 
         $manager = app(TenantDatabaseManager::class);
 
