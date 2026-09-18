@@ -33,7 +33,7 @@ This document tracks what has actually been implemented in the repository. It is
 - Kashier.
 - Booking.
 
-Those belong to later phases and should not be duplicated or approximated inside Foundation.
+Roles/permissions, Module catalog, Entitlements, Billing, Kashier, and Booking belong to later phases and should not be duplicated or approximated inside Foundation.
 
 ## Implementation rule
 
@@ -48,7 +48,9 @@ A phase is not complete because code was committed only.
 
 ## Current Phase 1 progress
 
-The central tenant registry, domain registry, memberships, tenant context, tenant connection manager, and tenant database provisioning path have now been implemented incrementally. See `doc/11-PHASE-1-TENANCY-FOUNDATION.md` for the current Phase 1 implementation status.
+The central tenant registry, domain registry, memberships, tenant context, tenant connection manager, idempotent tenant database provisioning, baseline tenant migration verification, and local MySQL smoke-test path have now been implemented incrementally. See `doc/11-PHASE-1-TENANCY-FOUNDATION.md` for the current Phase 1 implementation status.
+
+The remaining Phase 1 work is Company Settings, Locations/Branches, Staff, Customer entities, membership authorization, and real tenant request integration/isolation tests.
 
 ## Next phase
 
