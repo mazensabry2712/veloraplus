@@ -27,7 +27,10 @@ The Tenancy Foundation has been implemented and verified locally, in GitHub Acti
 - `tenant` middleware alias for future tenant routes.
 - `tenant:create` Artisan command for local/provisioning workflows.
 - `tenant:provision` Artisan command for idempotent provisioning/retry of an existing tenant.
-- Feature and unit tests covering registry, membership uniqueness, domain resolution, context, and connection configuration.
+- Feature and unit tests covering registry, membership uniqueness, domain resolution, context, connection configuration, request lifecycle, membership authorization, and cross-tenant isolation.
+- Final local verification: `php artisan test` → **16 passed (59 assertions)**.
+- GitHub Actions Backend Tests for commit `0712ea36fbe35656bcdfd44bdb31540d989ea169` → **success**.
+- Existing MySQL tenant `velora-clinic` verified as `active` / `ready` with all five baseline tenant tables, schema version `1.1`, and 6 default company settings.
 
 ## Tenant lifecycle
 
