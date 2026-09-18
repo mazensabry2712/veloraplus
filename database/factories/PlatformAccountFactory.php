@@ -1,11 +1,11 @@
 <?php
 
-namespace DatabaseFactories;
+namespace Database\Factories;
 
-use AppModelsPlatformAccount;
-use IlluminateDatabaseEloquentFactoriesFactory;
-use IlluminateSupportFacadesHash;
-use IlluminateSupportStr;
+use App\Models\PlatformAccount;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<PlatformAccount>
@@ -36,9 +36,6 @@ class PlatformAccountFactory extends Factory
         ];
     }
 
-    /**
-     * Indicate that the account should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -46,9 +43,6 @@ class PlatformAccountFactory extends Factory
         ]);
     }
 
-    /**
-     * Indicate that the account should be suspended.
-     */
     public function suspended(): static
     {
         return $this->state(fn (array $attributes) => [
