@@ -18,6 +18,10 @@ final class TenantResolver
         return TenantDomain::query()
             ->where('domain', $domain)
             ->where('status', 'active')
+            ->where(function ($query): void {
+                $query->where('type', 'subdomain')
+                    ->orWhereNotNull('verified_at');
+            })
             ->whereHas('tenant', function ($query): void {
                 $query->whereIn('status', ['active', 'trial']);
             })
