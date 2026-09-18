@@ -4,10 +4,9 @@ use App\Models\PlatformAccount;
 use App\Models\Tenant;
 use App\Models\TenantDomain;
 use App\Models\TenantMembership;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Application\Tenancy\CreateTenant;
 use App\Application\Tenancy\TenantProvisioner;
-use Mockery;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
