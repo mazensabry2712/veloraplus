@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use App\Models\TenantDomain;
 use App\Models\TenantMembership;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 final class CreateTenant
 {
@@ -22,7 +23,10 @@ final class CreateTenant
         array $attributes = [],
     ): Tenant {
         $tenant = DB::connection('central')->transaction(function () use ($owner, $name, $slug, $domain, $attributes): Tenant {
-            $tenant = Tenant::create([
+            $tenantId = (string) Str::ulid();
+
+            $tenant = Tenant::create([ 
+                'id' => $tenantId,
                 'name' => $name,
                 'legal_name' => $attributes['legal_name'] ?? null,
                 'slug' => $slug,
@@ -32,16 +36,12 @@ final class CreateTenant
                 'default_currency' => $attributes['default_currency'] ?? 'USD',
                 'timezone' => $attributes['timezone'] ?? 'UTC',
                 'locale' => $attributes['locale'] ?? 'en',
-                'database_name' => Tenant::databaseNameFor('pending-'.uniqid('', true)),
+                'database_name' => Tenant::databaseNameFor($tenantId),
                 'database_host' => config('database.connections.tenant_template.host'),
                 'database_port' => (int) config('database.connections.tenant_template.port', 3306),
                 'database_status' => 'pending',
                 'metadata' => $attributes['metadata'] ?? [],
             ]);
-
-            $tenant->forceFill([
-                'database_name' => Tenant::databaseNameFor($tenant->getKey()),
-            ])->save();
 
             TenantDomain::create([
                 'tenant_id' => $tenant->getKey(),
