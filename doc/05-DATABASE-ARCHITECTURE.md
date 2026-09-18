@@ -11,11 +11,8 @@ The system uses one central/control database and one dedicated database per Tena
 ~~~
 platform_accounts
 -----------------
-id
-public_id
-phone
+id (ULID stable identifier)
 email
-phone_verified_at
 email_verified_at
 password_hash / auth data
 status
@@ -28,8 +25,7 @@ updated_at
 ~~~
 tenants
 -------
-id
-public_id
+id (ULID stable identifier)
 name
 legal_name
 slug
@@ -314,8 +310,7 @@ deleted_at
 ~~~
 locations
 ---------
-id
-public_id
+id (ULID stable identifier)
 name
 code
 address
@@ -333,8 +328,7 @@ updated_at
 ~~~
 services
 --------
-id
-public_id
+id (ULID stable identifier)
 name
 description
 duration_minutes
@@ -550,3 +544,8 @@ A tenant restore should not require restoring unrelated tenant business data.
 Schema separation is a security boundary, not a permission substitute.
 
 Every application service still operates only in the current Tenant context.
+
+
+## Current identifier implementation
+
+For the current Foundation/Phase 1 implementation, ULIDs are used directly as primary identifiers for Platform Accounts, Tenants, Tenant Domains, and Tenant Memberships. A separate sequential internal ID/public ID pair is not used. This keeps identifiers opaque and stable across central/tenant boundaries. Additional identity fields such as phone may be introduced during the Identity phase without changing this identifier strategy.
