@@ -21,6 +21,7 @@ Implementation must follow these documents:
 7. 07-MVP-ROADMAP-AND-ACCEPTANCE.md
 8. 08-STACK-AND-LIBRARIES.md
 9. 09-SCALABILITY-AND-PERFORMANCE.md
+10. 10-FOUNDATION-IMPLEMENTATION.md
 
 ## Locked decisions
 
