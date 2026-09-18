@@ -271,10 +271,9 @@ Important business settings should use typed entities/columns when required.
 ~~~
 staff
 -----
-id
-public_id
+id (ULID stable tenant identifier)
 account_id (reference identifier, not FK)
-location_id (nullable)
+location_id (tenant FK)
 name
 phone
 email
@@ -285,13 +284,14 @@ updated_at
 deleted_at
 ~~~
 
+`account_id` references a central Platform Account identifier and is never a cross-database foreign key.
+
 ### Customers
 
 ~~~
 customers
 ---------
-id
-public_id
+id (ULID stable tenant identifier)
 customer_account_id (nullable reference identifier)
 name
 phone
@@ -304,6 +304,8 @@ created_at
 updated_at
 deleted_at
 ~~~
+
+`customer_account_id` references an optional central Customer Account identity and is never a cross-database foreign key.
 
 ### Locations
 
@@ -411,7 +413,8 @@ Internal integer IDs may still be used where appropriate, but external IDs shoul
 Because central and tenant databases are separate:
 
 - no cross-database FK constraints;
-- stable identifiers for references;
+- stable identifiers for central-to-tenant references;
+- normal tenant-local foreign keys are allowed inside a tenant database;
 - application validation for central records;
 - tenant-aware caching.
 
@@ -425,7 +428,7 @@ Customers:
 ~~~
 phone
 email
-public_id
+id
 ~~~
 
 Appointments:
@@ -545,6 +548,10 @@ Schema separation is a security boundary, not a permission substitute.
 
 Every application service still operates only in the current Tenant context.
 
+
+## Current Core tenant entities
+
+`company_settings`, `locations`, `staff`, and `customers` use ULID primary identifiers in the tenant database. Tenant-local relationships may use database foreign keys; central identifiers such as `staff.account_id` and `customers.customer_account_id` remain application-level references only.
 
 ## Current identifier implementation
 
