@@ -121,3 +121,20 @@ Before introducing a package:
 The initial repository is a Laravel 13 skeleton. Existing starter dependencies are the starting point, not a permanent list.
 
 Implementation should update composer.json and package.json deliberately and keep lockfiles committed.
+
+
+## 9. Performance/scalability baseline
+
+The selected stack must support horizontal scaling and global delivery.
+
+Baseline expectations:
+
+- Redis for shared cache/queues/locks/session storage where configured;
+- stateless Laravel application nodes;
+- MySQL tenant databases that can be distributed across database hosts later;
+- Vite-built assets suitable for CDN delivery;
+- asynchronous queues for non-blocking work;
+- application and database observability;
+- load/stress testing for critical flows before production scale.
+
+Packages are not added merely for performance. Prefer Laravel/platform capabilities first, then introduce infrastructure or libraries when measured workloads justify them.
