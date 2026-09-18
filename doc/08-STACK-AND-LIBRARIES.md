@@ -1,0 +1,115 @@
+# VeloraPlus — Stack & Library Policy
+
+## 1. Target stack
+
+| Layer | Standard |
+|---|---|
+| Language | PHP 8.4 |
+| Framework | Laravel 13 |
+| Database | MySQL 8.4 |
+| Cache/Queue | Redis |
+| Templates | Blade |
+| CSS | Tailwind CSS 4 |
+| UI state | Alpine.js |
+| Browser logic | Vanilla JavaScript |
+| Bundler | Vite |
+| Auth | Laravel Fortify |
+| Roles/Permissions | Spatie Laravel Permission |
+| Tenancy | Stancl Tenancy |
+| Money | Brick Money |
+| Testing | Pest |
+| Static analysis | Larastan |
+| Formatting | Laravel Pint |
+| Initial payment provider | Kashier |
+
+## 2. Backend packages
+
+Foundation packages:
+
+- laravel/framework
+- laravel/fortify
+- stancl/tenancy
+- spatie/laravel-permission
+- spatie/laravel-activitylog when the audit implementation uses it
+- brick/money
+- Pest + Laravel plugin
+- Larastan
+- Laravel Pint
+
+Feature-specific packages are added only when required.
+
+## 3. Frontend packages
+
+Foundation:
+
+- tailwindcss
+- @tailwindcss/vite
+- vite
+- alpinejs
+
+Booking:
+
+- fullcalendar
+- flatpickr
+- tom-select
+
+Dashboard:
+
+- chart.js
+
+UI utilities:
+
+- sweetalert2
+- lucide
+
+CRM/ordering:
+
+- sortablejs
+
+## 4. Documents
+
+Possible later additions:
+
+- DOMPDF integration;
+- Laravel Excel.
+
+Add them only with a concrete requirement.
+
+## 5. HTTP client policy
+
+Prefer browser fetch() for simple frontend AJAX.
+
+Axios is not a default dependency.
+
+Backend external integrations should prefer Laravel's HTTP client or a provider SDK where justified.
+
+## 6. Frontend framework policy
+
+Do not introduce:
+
+- React;
+- Vue;
+- Inertia;
+- Livewire;
+- jQuery;
+
+unless a future architecture decision explicitly changes the baseline.
+
+## 7. Package approval checklist
+
+Before introducing a package:
+
+- Laravel 13 compatibility verified;
+- PHP 8.4 compatibility verified;
+- maintenance/release health reviewed;
+- security/advisories reviewed;
+- license reviewed;
+- Laravel-native overlap checked;
+- tests defined;
+- package reason documented.
+
+## 8. Repository baseline note
+
+The initial repository is a Laravel 13 skeleton. Existing starter dependencies are the starting point, not a permanent list.
+
+Implementation should update composer.json and package.json deliberately and keep lockfiles committed.
