@@ -12,7 +12,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(TenantContext::class);
+        $this->app->scoped(TenantContext::class);
     }
 
     /**
