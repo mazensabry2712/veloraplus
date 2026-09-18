@@ -521,3 +521,22 @@ Follow Laravel conventions and repository rules:
 The application is a modular monolith.
 
 Do not split Booking, CRM, and ERP into separate repositories/services merely because they are Modules.
+
+
+## 31. Global-scale performance rule
+
+VeloraPlus is intended for global usage and high concurrency.
+
+Performance requirements are architectural:
+
+- application nodes remain stateless and horizontally scalable;
+- Redis is used for shared cache, queues, locks, and sessions where configured;
+- tenant databases can be distributed across database hosts as scale grows;
+- high-volume work is moved to queues when it does not need to block the request;
+- high-traffic queries must be indexed, bounded, and monitored;
+- tenant-sensitive cache keys always include tenant identity;
+- public Booking traffic is rate-limited and concurrency-safe;
+- static assets should be CDN/edge-ready;
+- observability and load testing are part of production readiness.
+
+See `doc/09-SCALABILITY-AND-PERFORMANCE.md` for the detailed scaling rules.
