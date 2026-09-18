@@ -21,8 +21,14 @@ final class TenantDatabaseManager
         }
 
         $template['database'] = $tenant->database_name;
-        $template['host'] = $tenant->database_host ?: $template['host'];
-        $template['port'] = $tenant->database_port ?: $template['port'];
+
+        if ($tenant->database_host !== null) {
+            $template['host'] = $tenant->database_host;
+        }
+
+        if ($tenant->database_port !== null) {
+            $template['port'] = $tenant->database_port;
+        }
 
         config(['database.connections.'.self::CONNECTION => $template]);
         DB::purge(self::CONNECTION);
