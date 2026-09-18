@@ -46,6 +46,10 @@ Every completed phase must update:
 
 A phase is not complete because code was committed only.
 
+## Current Phase 1 progress
+
+The central tenant registry, domain registry, memberships, tenant context, tenant connection manager, and tenant database provisioning path have now been implemented incrementally. See `doc/11-PHASE-1-TENANCY-FOUNDATION.md` for the current Phase 1 implementation status.
+
 ## Next phase
 
-Phase 1 continues with the central platform registry and multi-tenant infrastructure after the Foundation changes pass locally against MySQL 8.4.
+Complete company/staff/customer core entities and tenant authorization before closing Phase 1.
