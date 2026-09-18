@@ -47,8 +47,8 @@ A phase is not complete because code was committed only.
 
 The central tenant registry, domain registry, memberships, tenant context, tenant connection manager, idempotent tenant database provisioning, baseline tenant migration verification, and local MySQL smoke-test path have now been implemented incrementally. See `doc/11-PHASE-1-TENANCY-FOUNDATION.md` for the current Phase 1 implementation status.
 
-The remaining Phase 1 work is membership authorization, real tenant request integration/isolation tests, and MySQL verification of the tenant core migrations.
+The remaining Phase 1 work is membership authorization plus local execution/verification of the new tenant request and isolation tests against the updated tenant schema.
 
 ## Next phase
 
-Complete company/staff/customer core entities and tenant authorization before closing Phase 1.
+Complete membership authorization and finish the Phase 1 integration/isolation verification before closing Phase 1.
