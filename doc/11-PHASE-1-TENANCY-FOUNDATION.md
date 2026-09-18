@@ -18,6 +18,7 @@ Phase 1 is being implemented in incremental slices.
 - Tenant context service.
 - Tenant database connection manager.
 - Idempotent tenant database creation and tenant migration provisioning service.
+- Tenant provisioning verifies the baseline `tenant_runtime` table before marking a tenant Ready.
 - `tenant` middleware alias for future tenant routes.
 - `tenant:create` Artisan command for local/provisioning workflows.
 - `tenant:provision` Artisan command for idempotent provisioning/retry of an existing tenant.
