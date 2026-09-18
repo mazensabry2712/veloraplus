@@ -20,6 +20,7 @@ Phase 1 is being implemented in incremental slices.
 - Idempotent tenant database creation and tenant migration provisioning service.
 - `tenant` middleware alias for future tenant routes.
 - `tenant:create` Artisan command for local/provisioning workflows.
+- `tenant:provision` Artisan command for idempotent provisioning/retry of an existing tenant.
 - Feature and unit tests covering registry, membership uniqueness, domain resolution, context, and connection configuration.
 
 ## Tenant lifecycle
@@ -67,4 +68,5 @@ Package integration must be installed and locked through Composer before relying
 - Add Staff and Customer tenant entities.
 - Add membership authorization rules.
 - Add real tenant request integration tests.
+- Run local provisioning against MySQL and verify the dedicated database contains the tenant runtime migration.
 - Then close Phase 1 and move to Identity/RBAC hardening.
