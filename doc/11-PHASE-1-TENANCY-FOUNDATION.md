@@ -79,8 +79,7 @@ Implemented:
 
 Remaining before Phase 1 closure:
 
-- membership authorization rules;
-- local execution of the new tenant integration/isolation and membership authorization tests;
+- local execution of the tenant integration/isolation and membership authorization tests;
 - local verification that the existing MySQL tenant receives the new company core migrations and baseline settings.
 
 Then Phase 1 can close and Identity/RBAC hardening can begin.
