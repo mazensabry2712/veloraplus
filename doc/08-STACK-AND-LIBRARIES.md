@@ -24,17 +24,25 @@
 
 ## 2. Backend packages
 
-Foundation packages:
+Foundation/runtime packages:
 
 - laravel/framework
 - laravel/fortify
 - stancl/tenancy
 - spatie/laravel-permission
-- spatie/laravel-activitylog when the audit implementation uses it
 - brick/money
+- Redis integration through Laravel's native cache/queue APIs
+
+Engineering/dev packages:
+
 - Pest + Laravel plugin
 - Larastan
 - Laravel Pint
+
+Shared optional packages, added when the corresponding feature is implemented:
+
+- spatie/laravel-activitylog — tenant/platform audit history
+- spatie/laravel-medialibrary — managed media/files when needed
 
 Feature-specific packages are added only when required.
 
@@ -70,10 +78,10 @@ CRM/ordering:
 
 Possible later additions:
 
-- DOMPDF integration;
-- Laravel Excel.
+- DOMPDF integration — invoices/reports/PDF documents;
+- Laravel Excel — business exports/imports.
 
-Add them only with a concrete requirement.
+Add them only when the first feature requiring them is implemented.
 
 ## 5. HTTP client policy
 
