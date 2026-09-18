@@ -30,11 +30,10 @@ Exit criteria:
 - no unresolved contradiction between central and tenant data ownership;
 - no code built on an unapproved tenancy assumption.
 
-## 3. Phase 1 — Platform Core
+## 3. Phase 1 — Platform Core / Tenancy Foundation
 
 Build:
 
-- platform account/auth;
 - tenant/company registry;
 - tenant creation;
 - tenant database provisioning;
@@ -42,7 +41,6 @@ Build:
 - tenant domain resolution;
 - memberships;
 - company profile;
-- roles/permissions;
 - staff;
 - locations;
 - customer account/profile model;
