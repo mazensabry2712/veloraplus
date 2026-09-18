@@ -14,7 +14,15 @@ test('an account can create a tenant with a primary domain and owner membership'
     $owner = PlatformAccount::factory()->create();
     $provisioner = Mockery::mock(TenantProvisioner::class);
     $provisioner->shouldReceive('provision')->once()->andReturnUsing(
-        fn (Tenant $tenant): Tenant => $tenant,
+        function (Tenant $tenant): Tenant {
+            $tenant->forceFill([
+                'status' => 'active',
+                'database_status' => 'ready',
+                'database_ready_at' => now(),
+            ])->save();
+
+            return $tenant->refresh();
+        },
     );
     app()->instance(TenantProvisioner::class, $provisioner);
 
