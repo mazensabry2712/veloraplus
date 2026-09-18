@@ -82,9 +82,23 @@ Implemented:
 - factories for tenant-owned core entities;
 - integration coverage for tenant core schema, request context lifecycle, and cross-database isolation.
 
-Remaining before Phase 1 closure:
+## Phase 1 exit criteria
 
-- local execution of the tenant integration/isolation and membership authorization tests;
-- local verification that the existing MySQL tenant receives the new company core migrations and baseline settings.
+All Phase 1 exit checks are complete:
 
-Then Phase 1 can close and Identity/RBAC hardening can begin.
+- Central tenant registry works.
+- Tenant domains resolve from the actual request host.
+- Tenant databases are provisioned and isolated.
+- Tenant context is initialized and cleared safely per request.
+- Company Settings, Locations, Staff, and Customers use the tenant connection.
+- Active membership is required for tenant workspace access.
+- Cross-tenant negative isolation tests pass.
+- Local test suite passes.
+- CI test suite passes.
+- Existing MySQL tenant is migrated and verified.
+
+## Next phase
+
+**Phase 2 — Identity, Authentication & RBAC**
+
+Planned scope starts with Platform Account authentication (Fortify), password/session flows, multi-tenant account access, and tenant-scoped roles/permissions without weakening the existing tenancy boundary.
