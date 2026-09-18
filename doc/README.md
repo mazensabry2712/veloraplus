@@ -20,6 +20,7 @@ Implementation must follow these documents:
 6. 06-APPLICATION-ARCHITECTURE.md
 7. 07-MVP-ROADMAP-AND-ACCEPTANCE.md
 8. 08-STACK-AND-LIBRARIES.md
+9. 09-SCALABILITY-AND-PERFORMANCE.md
 
 ## Locked decisions
 
@@ -46,6 +47,7 @@ Implementation must follow these documents:
 - Company currency, timezone, locale, and tax settings are tenant-specific.
 - Branches/locations are supported from the MVP architecture.
 - Frontend: Blade + Tailwind CSS + Alpine.js + Vanilla JavaScript + Vite.
+- Global performance: stateless application nodes, horizontal scaling, Redis-backed shared state/queues, tenant-aware caching, async processing, CDN/edge readiness, observability, and load testing.
 - Backend: Laravel 13 + PHP 8.4 target + MySQL 8.4 + Redis.
 - Architecture style: modular monolith, not microservices.
 - Booking is the first business module.
@@ -96,3 +98,10 @@ The repository was initialized from a Laravel 13 skeleton. The current starter d
 - Do not couple the Billing domain directly to a single payment provider.
 - Do not create cross-tenant foreign keys between tenant databases and the central database.
 - Do not permanently delete business data only because a paid Feature was disabled.
+
+
+## Global Scale Requirement
+
+VeloraPlus is intended for global usage. The platform must be engineered from the beginning for very fast response times, high concurrency, horizontal scaling, tenant isolation, and measurable reliability.
+
+Detailed rules live in `doc/09-SCALABILITY-AND-PERFORMANCE.md`.
