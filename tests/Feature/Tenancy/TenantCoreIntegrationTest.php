@@ -9,7 +9,6 @@ use App\Models\Staff;
 use App\Models\Tenant;
 use App\Models\TenantDomain;
 use App\Models\TenantMembership;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -17,7 +16,25 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
-uses(RefreshDatabase::class);
+beforeEach(function () {
+    $this->originalTenantTemplate = config('database.connections.tenant_template');
+
+    DB::setDefaultConnection('central');
+
+    expect(Artisan::call('migrate:fresh', [
+        '--database' => 'central',
+        '--force' => true,
+    ]))->toBe(0);
+});
+
+afterEach(function () {
+    DB::purge(TenantDatabaseManager::CONNECTION);
+    DB::setDefaultConnection('central');
+
+    config([
+        'database.connections.tenant_template' => $this->originalTenantTemplate,
+    ]);
+});
 
 function tenantCoreTestDatabase(): string
 {
@@ -40,8 +57,6 @@ function tenantCoreTestDatabase(): string
             'journal_mode' => null,
             'synchronous' => null,
             'transaction_mode' => 'DEFERRED',
-            'host' => null,
-            'port' => null,
         ],
     ]);
 
