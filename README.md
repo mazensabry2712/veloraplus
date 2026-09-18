@@ -1,58 +1,67 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# VeloraPlus
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+VeloraPlus is a global SaaS, multi-tenant, modular business platform.
 
-## About Laravel
+The platform is being rebuilt from a clean Laravel 13 foundation. Booking is the first production business module, followed by future CRM and ERP modules on the same shared platform core.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Architecture
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Multi-tenant SaaS.
+- Dedicated database per company/tenant.
+- Central platform/control database.
+- One platform account can belong to multiple companies.
+- Modular monolith architecture.
+- Backend-authoritative authorization and entitlements.
+- Monthly and yearly composable billing.
+- Initial VeloraPlus subscription payment provider: Kashier.
+- Global-scale performance and horizontal scaling are architecture requirements.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Backend baseline
 
-## Learning Laravel
+- PHP 8.4
+- Laravel 13
+- MySQL 8.4
+- Redis
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Frontend is intentionally Blade + Tailwind CSS + Alpine.js + Vanilla JavaScript + Vite.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Documentation
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+The official project documentation is in doc/README.md.
 
-## Agentic Development
+Important references:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+- doc/01-PRODUCT-BUSINESS-RULES.md
+- doc/02-SAAS-TENANCY-IDENTITY.md
+- doc/03-MODULE-FEATURE-ENTITLEMENT.md
+- doc/04-BILLING-PRICING-PAYMENTS.md
+- doc/05-DATABASE-ARCHITECTURE.md
+- doc/06-APPLICATION-ARCHITECTURE.md
+- doc/07-MVP-ROADMAP-AND-ACCEPTANCE.md
+- doc/08-STACK-AND-LIBRARIES.md
+- doc/09-SCALABILITY-AND-PERFORMANCE.md
+- doc/10-FOUNDATION-IMPLEMENTATION.md
 
-```bash
-composer require laravel/boost --dev
+## Current implementation
 
-php artisan boost:install
-```
+Foundation currently establishes the central PlatformAccount identity model and its persistence boundary.
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+The next implementation stage is the Platform Core / Multi-Tenancy foundation, including tenant registry, dedicated tenant databases, tenant domains, and memberships.
 
-## Contributing
+## Development principle
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Every phase must follow:
 
-## Code of Conduct
+    Documented decision
+        ↓
+    Implementation
+        ↓
+    Tests
+        ↓
+    Review
+        ↓
+    Documentation update
+        ↓
+    Commit
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+No business module should bypass the platform core.
