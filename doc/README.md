@@ -23,6 +23,7 @@ Implementation must follow these documents:
 9. 09-SCALABILITY-AND-PERFORMANCE.md
 10. 10-FOUNDATION-IMPLEMENTATION.md
 11. 11-PHASE-1-TENANCY-FOUNDATION.md
+12. 12-PHASE-2-IDENTITY-AUTH-RBAC.md
 
 ## Locked decisions
 
