@@ -2,7 +2,9 @@
 
 ## Status
 
-Phase 1 is being implemented in incremental slices.
+**Phase 1 — CLOSED / VERIFIED**
+
+The Tenancy Foundation has been implemented and verified locally, in GitHub Actions, and against an existing MySQL tenant database.
 
 ## Implemented in this slice
 
