@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
-final class TenantProvisioner
+final class TenantProvisioner implements TenantProvisionerContract
 {
     public function __construct(
         private readonly TenantDatabaseManager $databaseManager,
