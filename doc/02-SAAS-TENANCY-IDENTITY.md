@@ -224,6 +224,8 @@ It should contain:
 
 A membership is not the same thing as a tenant Staff profile.
 
+For tenant workspace routes, an authenticated Platform Account must have an active Membership for the current Tenant. Tenant context resolution and membership authorization are separate controls; public tenant routes such as public Booking can use tenant context without requiring an account membership.
+
 ## 12. User switching
 
 A multi-company user needs an explicit company switcher.
