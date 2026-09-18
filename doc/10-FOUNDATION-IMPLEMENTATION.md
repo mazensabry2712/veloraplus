@@ -58,6 +58,21 @@ Verification completed:
 
 See `doc/11-PHASE-1-TENANCY-FOUNDATION.md` for the detailed Phase 1 record.
 
-## Next phase
+## Phase 2 status
 
-Phase 2 starts with platform Identity, Authentication, and RBAC. This phase must preserve the existing tenant isolation boundary and reuse the existing `PlatformAccount`, memberships, Staff, and Customer identity model.
+Phase 2 Identity, Authentication, and RBAC is now defined and ready for implementation. The existing `PlatformAccount`, memberships, Staff, and Customer identity model remains the contract; authentication and permission layers must build on top of it without changing tenant isolation.
+
+Implementation order for Phase 2:
+
+1. Install and lock Laravel Fortify and Spatie Laravel Permission.
+2. Configure Fortify around `PlatformAccount`.
+3. Add authentication views and security controls.
+4. Enable Spatie Teams with `tenant_id` and ULID-compatible central migrations.
+5. Establish tenant permission context in `tenant.member` middleware.
+6. Bootstrap tenant roles/permissions and owner assignments.
+7. Add authentication and cross-tenant RBAC tests.
+8. Run Pint, the focused tests, the full suite, and CI.
+
+The detailed phase contract is in `doc/12-PHASE-2-IDENTITY-AUTH-RBAC.md`.
+
+The first implementation gate is the Composer dependency update because the current lockfile predates Fortify and Spatie.
