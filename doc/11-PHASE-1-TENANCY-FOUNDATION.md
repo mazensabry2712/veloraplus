@@ -72,6 +72,7 @@ Implemented:
 - Locations/Branches schema/model;
 - Staff schema/model with optional platform account reference;
 - Customer schema/model with optional customer account reference;
+- active membership authorization middleware for tenant workspace access;
 - tenant model base enforcing the tenant database connection;
 - factories for tenant-owned core entities;
 - integration coverage for tenant core schema, request context lifecycle, and cross-database isolation.
@@ -79,8 +80,7 @@ Implemented:
 Remaining before Phase 1 closure:
 
 - membership authorization rules;
-- local execution of the new tenant integration/isolation tests;
-- membership authorization rules;
+- local execution of the new tenant integration/isolation and membership authorization tests;
 - local verification that the existing MySQL tenant receives the new company core migrations and baseline settings.
 
 Then Phase 1 can close and Identity/RBAC hardening can begin.
