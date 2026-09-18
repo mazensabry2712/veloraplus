@@ -24,6 +24,12 @@ final class TenantProvisioner implements TenantProvisionerContract
                 $this->databaseManager->connect($tenant);
 
                 if (Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('tenant_runtime')) {
+                    $this->ensureTenantRuntime($tenant);
+
+                    if (Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('company_settings')) {
+                        $this->ensureCompanySettings($tenant);
+                    }
+
                     return $tenant;
                 }
             } finally {
@@ -54,6 +60,12 @@ final class TenantProvisioner implements TenantProvisionerContract
                 throw new RuntimeException('Tenant baseline migration completed without creating the tenant_runtime table.');
             }
 
+            $this->ensureTenantRuntime($tenant);
+
+            if (Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('company_settings')) {
+                $this->ensureCompanySettings($tenant);
+            }
+
             $tenant->forceFill([
                 'status' => 'active',
                 'database_status' => 'ready',
@@ -71,6 +83,63 @@ final class TenantProvisioner implements TenantProvisionerContract
             throw $exception;
         } finally {
             $this->databaseManager->disconnect();
+        }
+    }
+    private function ensureTenantRuntime(Tenant $tenant): void
+    {
+        $table = DB::connection(TenantDatabaseManager::CONNECTION)->table('tenant_runtime');
+        $runtime = $table->where('tenant_id', $tenant->getKey())->first();
+
+        if ($runtime === null) {
+            $now = now();
+
+            $table->insert([
+                'id' => (string) Str::ulid(),
+                'tenant_id' => $tenant->getKey(),
+                'schema_version' => '1.0',
+                'provisioned_at' => $now,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            return;
+        }
+
+        if ($runtime->provisioned_at === null) {
+            $table->where('tenant_id', $tenant->getKey())->update([
+                'provisioned_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    private function ensureCompanySettings(Tenant $tenant): void
+    {
+        $table = DB::connection(TenantDatabaseManager::CONNECTION)->table('company_settings');
+        $now = now();
+
+        $settings = [
+            'company.name' => [$tenant->name, 'string'],
+            'company.legal_name' => [$tenant->legal_name, 'string'],
+            'company.country_code' => [$tenant->country_code, 'string'],
+            'company.default_currency' => [$tenant->default_currency, 'string'],
+            'company.timezone' => [$tenant->timezone, 'string'],
+            'company.locale' => [$tenant->locale, 'string'],
+        ];
+
+        foreach ($settings as $key => [$value, $type]) {
+            if ($table->where('key', $key)->exists()) {
+                continue;
+            }
+
+            $table->insert([
+                'id' => (string) Str::ulid(),
+                'key' => $key,
+                'value' => $value,
+                'type' => $type,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
         }
     }
 
