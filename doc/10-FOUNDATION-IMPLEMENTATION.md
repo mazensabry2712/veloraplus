@@ -23,9 +23,6 @@ This document tracks what has actually been implemented in the repository. It is
 
 ### Intentionally not implemented yet
 
-- Tenant database provisioning.
-- Tenant domain/subdomain resolution.
-- Memberships.
 - Roles/permissions package.
 - Module catalog.
 - Entitlements.
@@ -33,7 +30,7 @@ This document tracks what has actually been implemented in the repository. It is
 - Kashier.
 - Booking.
 
-Roles/permissions, Module catalog, Entitlements, Billing, Kashier, and Booking belong to later phases and should not be duplicated or approximated inside Foundation.
+These belong to later phases and should not be duplicated or approximated inside Foundation.
 
 ## Implementation rule
 
@@ -50,7 +47,7 @@ A phase is not complete because code was committed only.
 
 The central tenant registry, domain registry, memberships, tenant context, tenant connection manager, idempotent tenant database provisioning, baseline tenant migration verification, and local MySQL smoke-test path have now been implemented incrementally. See `doc/11-PHASE-1-TENANCY-FOUNDATION.md` for the current Phase 1 implementation status.
 
-The remaining Phase 1 work is Company Settings, Locations/Branches, Staff, Customer entities, membership authorization, and real tenant request integration/isolation tests.
+The remaining Phase 1 work is membership authorization, real tenant request integration/isolation tests, and MySQL verification of the tenant core migrations.
 
 ## Next phase
 
