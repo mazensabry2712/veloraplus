@@ -22,6 +22,7 @@ Implementation must follow these documents:
 8. 08-STACK-AND-LIBRARIES.md
 9. 09-SCALABILITY-AND-PERFORMANCE.md
 10. 10-FOUNDATION-IMPLEMENTATION.md
+11. 11-PHASE-1-TENANCY-FOUNDATION.md
 
 ## Locked decisions
 
