@@ -18,6 +18,8 @@ This document tracks what has actually been implemented in the repository. It is
 - VeloraPlus platform configuration is centralized in `config/velora.php`.
 - Local environment example is aligned with MySQL and Redis-oriented runtime settings.
 - Foundation tests verify platform identity configuration and persistence behavior.
+- Local `php artisan migrate` verified successfully against MySQL and created the central `veloraplus` database.
+- Central migrations for platform accounts, cache, and jobs are currently applying successfully.
 
 ### Intentionally not implemented yet
 
