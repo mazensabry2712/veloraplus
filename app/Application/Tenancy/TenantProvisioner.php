@@ -20,7 +20,15 @@ final class TenantProvisioner implements TenantProvisionerContract
     public function provision(Tenant $tenant): Tenant
     {
         if ($tenant->database_status === 'ready') {
-            return $tenant;
+            try {
+                $this->databaseManager->connect($tenant);
+
+                if (Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('tenant_runtime')) {
+                    return $tenant;
+                }
+            } finally {
+                $this->databaseManager->disconnect();
+            }
         }
 
         $tenant->forceFill([
