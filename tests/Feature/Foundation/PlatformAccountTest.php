@@ -1,7 +1,7 @@
 <?php
 
-use AppModelsPlatformAccount;
-use IlluminateFoundationTestingRefreshDatabase;
+use App\Models\PlatformAccount;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
