@@ -5,14 +5,14 @@ use App\Models\Tenant;
 use App\Models\TenantDomain;
 use App\Models\TenantMembership;
 use App\Application\Tenancy\CreateTenant;
-use App\Application\Tenancy\TenantProvisioner;
+use App\Application\Tenancy\TenantProvisionerContract;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 test('an account can create a tenant with a primary domain and owner membership', function () {
     $owner = PlatformAccount::factory()->create();
-    $provisioner = Mockery::mock(TenantProvisioner::class);
+    $provisioner = Mockery::mock(TenantProvisionerContract::class);
     $provisioner->shouldReceive('provision')->once()->andReturnUsing(
         function (Tenant $tenant): Tenant {
             $tenant->forceFill([
@@ -24,7 +24,7 @@ test('an account can create a tenant with a primary domain and owner membership'
             return $tenant->refresh();
         },
     );
-    app()->instance(TenantProvisioner::class, $provisioner);
+    app()->instance(TenantProvisionerContract::class, $provisioner);
 
     $tenant = app(CreateTenant::class)->execute(
         owner: $owner,
