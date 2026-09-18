@@ -26,7 +26,7 @@ class TenantFactory extends Factory
             'default_currency' => 'EGP',
             'timezone' => 'Africa/Cairo',
             'locale' => 'en',
-            'database_name' => 'veloraplus_tenant_'.strtolower($id),
+            'database_name' => Tenant::databaseNameFor($id),
             'database_host' => env('TENANT_DB_HOST', '127.0.0.1'),
             'database_port' => (int) env('TENANT_DB_PORT', 3306),
             'database_status' => 'ready',
