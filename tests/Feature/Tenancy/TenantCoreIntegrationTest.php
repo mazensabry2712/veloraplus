@@ -8,6 +8,7 @@ use App\Models\Location;
 use App\Models\Staff;
 use App\Models\Tenant;
 use App\Models\TenantDomain;
+use App\Models\TenantMembership;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -264,5 +265,61 @@ test('tenant databases remain isolated from each other', function () {
     } finally {
         cleanupTenantCoreTestDatabase($pathA);
         cleanupTenantCoreTestDatabase($pathB);
+    }
+});
+
+test('tenant membership middleware allows active members and blocks non-members', function () {
+    $path = tenantCoreTestDatabase();
+
+    try {
+        migrateTenantCoreTestDatabase($path);
+
+        $tenant = Tenant::factory()->create([
+            'name' => 'Membership Tenant',
+            'slug' => 'membership-tenant',
+            'database_name' => $path,
+            'database_host' => null,
+            'database_port' => null,
+            'status' => 'active',
+            'database_status' => 'ready',
+        ]);
+
+        TenantDomain::create([
+            'tenant_id' => $tenant->getKey(),
+            'domain' => 'membership-tenant.velora.test',
+            'type' => 'subdomain',
+            'is_primary' => true,
+            'status' => 'active',
+            'verified_at' => now(),
+        ]);
+
+        $member = App\Models\PlatformAccount::factory()->create();
+
+        TenantMembership::create([
+            'tenant_id' => $tenant->getKey(),
+            'account_id' => $member->getKey(),
+            'role_key' => 'owner',
+            'status' => 'active',
+            'joined_at' => now(),
+        ]);
+
+        Route::middleware(['tenant', 'tenant.member'])->get('/__tenant-membership-test', function () {
+            return response()->json(['ok' => true]);
+        });
+
+        $this->actingAs($member)
+            ->withHeader('Host', 'membership-tenant.velora.test')
+            ->get('/__tenant-membership-test')
+            ->assertOk()
+            ->assertJson(['ok' => true]);
+
+        $outsider = App\Models\PlatformAccount::factory()->create();
+
+        $this->actingAs($outsider)
+            ->withHeader('Host', 'membership-tenant.velora.test')
+            ->get('/__tenant-membership-test')
+            ->assertForbidden();
+    } finally {
+        cleanupTenantCoreTestDatabase($path);
     }
 });
