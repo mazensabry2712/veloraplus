@@ -28,7 +28,7 @@ Foundation/runtime packages:
 
 - laravel/framework
 - laravel/fortify
-- stancl/tenancy
+- stancl/tenancy (current stable line verified for Laravel 13; integrate via Composer lock)
 - spatie/laravel-permission
 - brick/money
 - Redis integration through Laravel's native cache/queue APIs
