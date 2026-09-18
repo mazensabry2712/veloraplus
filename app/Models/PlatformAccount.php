@@ -1,13 +1,14 @@
 <?php
 
-namespace AppModels;
+namespace App\Models;
 
-use DatabaseFactoriesPlatformAccountFactory;
-use IlluminateDatabaseEloquentAttributesFillable;
-use IlluminateDatabaseEloquentAttributesHidden;
-use IlluminateDatabaseEloquentFactoriesHasFactory;
-use IlluminateFoundationAuthUser as Authenticatable;
-use IlluminateNotificationsNotifiable;
+use Database\Factories\PlatformAccountFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password', 'status'])]
 #[Hidden(['password', 'remember_token'])]
@@ -30,4 +31,4 @@ class PlatformAccount extends Authenticatable
             'password' => 'hashed',
         ];
     }
-};
+}
