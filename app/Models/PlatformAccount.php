@@ -17,6 +17,8 @@ class PlatformAccount extends Authenticatable
     /** @use HasFactory<PlatformAccountFactory> */
     use HasFactory, HasUlids, Notifiable;
 
+    protected $connection = 'central';
+
     protected $table = 'platform_accounts';
 
     /**
