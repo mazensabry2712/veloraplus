@@ -212,8 +212,7 @@ test('tenant middleware initializes and clears tenant context for a real request
             ]);
         });
 
-        $this->withServerVariables(['HTTP_HOST' => 'request-tenant.velora.test'])
-            ->get('/__tenant-context-test')
+        $this->get('http://request-tenant.velora.test/__tenant-context-test')
             ->assertOk()
             ->assertJson([
                 'tenant_id' => $tenant->getKey(),
@@ -323,16 +322,14 @@ test('tenant membership middleware allows active members and blocks non-members'
         });
 
         $this->actingAs($member)
-            ->withServerVariables(['HTTP_HOST' => 'membership-tenant.velora.test'])
-            ->get('/__tenant-membership-test')
+            ->get('http://membership-tenant.velora.test/__tenant-membership-test')
             ->assertOk()
             ->assertJson(['ok' => true]);
 
         $outsider = App\Models\PlatformAccount::factory()->create();
 
         $this->actingAs($outsider)
-            ->withServerVariables(['HTTP_HOST' => 'membership-tenant.velora.test'])
-            ->get('/__tenant-membership-test')
+            ->get('http://membership-tenant.velora.test/__tenant-membership-test')
             ->assertForbidden();
     } finally {
         cleanupTenantCoreTestDatabase($path);
