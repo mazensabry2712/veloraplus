@@ -9,9 +9,9 @@
     <body>
         <main>
             <nav aria-label="Breadcrumb">
-                <a href="{{ route('public.home') }}">{{ $tenant->name }}</a>
+                <a href="{{ $homeUrl }}">{{ $tenant->name }}</a>
                 /
-                <a href="{{ route('public.services.index') }}">Services</a>
+                <a href="{{ $servicesUrl }}">Services</a>
                 /
                 <span>{{ $service->name }}</span>
             </nav>
@@ -25,11 +25,7 @@
             <dl>
                 <dt>Duration</dt>
                 <dd>{{ $service->duration_minutes }} minutes</dd>
-                <dt>Price</dt>
-                <dd>{{ number_format($service->price_minor / 100, 2) }} {{ $service->currency }}</dd>
             </dl>
-
-            <a href="{{ url('/book/'.$service->slug) }}">Book this service</a>
         </main>
     </body>
 </html>
