@@ -405,9 +405,6 @@ test('owner can issue a platform credit and it appears in the billing overview',
     $tenant = createBillingDashboardTenant($path);
     $owner = addBillingDashboardMember($tenant);
 
-    $context = app(\App\Domain\Tenancy\TenantContext::class);
-    $context->set($tenant);
-
     $this->actingAs($owner)
         ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/credits', [
             'amount_minor' => 2500,
@@ -416,6 +413,9 @@ test('owner can issue a platform credit and it appears in the billing overview',
         ])
         ->assertRedirect('/dashboard')
         ->assertSessionHas('status', 'Platform credit issued successfully.');
+
+    $context = app(\App\Domain\Tenancy\TenantContext::class);
+    $context->set($tenant);
 
     $overview = app(PlatformBillingDashboardService::class)->overview($tenant);
 
