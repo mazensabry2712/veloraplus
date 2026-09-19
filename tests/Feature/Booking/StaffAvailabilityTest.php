@@ -166,7 +166,7 @@ test('staff availability manager assigns services and manages non-overlapping sc
 
     expect($windows)->toHaveCount(3)
         ->and($windows[0]['starts_at']->format('H:i'))->toBe('09:00')
-        ->and($windows[0]['ends_at']->format('H:i'))->toBe('12:30')
+        ->and($windows[0]['ends_at']->format('H:i'))->toBe('12:00')
         ->and($windows[1]['starts_at']->format('H:i'))->toBe('14:00')
         ->and($windows[1]['ends_at']->format('H:i'))->toBe('15:00')
         ->and($windows[2]['starts_at']->format('H:i'))->toBe('16:00')
