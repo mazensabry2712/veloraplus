@@ -433,6 +433,21 @@ Verified locally:
 
 Phase 5 is now CLOSED / VERIFIED.
 
+
+## SEO / Billing integration boundary
+
+Billing is primarily a private commercial domain and does not become an SEO surface.
+
+When public pricing pages are implemented:
+
+- public pricing content may consume the approved Catalog/Pricing results;
+- customer-specific subscription totals, invoices, payment states, credits, refunds, and billing history are never public SEO data;
+- billing/account/checkout routes remain non-indexable;
+- price snapshots in historical invoices must not be reused as current public pricing;
+- SEO must read public commercial catalog state, not private customer billing records.
+
+This keeps Platform SEO separate from Company billing data.
+
 ## 23. Next phase
 
 Phase 6 — Payments & Provider Adapters.
