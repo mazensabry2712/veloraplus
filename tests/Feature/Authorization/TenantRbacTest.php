@@ -61,7 +61,7 @@ test('queue permissions are assigned by role', function () {
 
     setPermissionsTeamId($tenant->getKey());
 
-    $roles = App\\Models\\Role::query()
+    $roles = App\Models\Role::query()
         ->where('tenant_id', $tenant->getKey())
         ->get()
         ->keyBy('name');
