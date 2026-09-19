@@ -16,7 +16,7 @@
                 <ul>
                     @foreach ($services as $service)
                         <li>
-                            <a href="{{ route('public.services.show', ['slug' => $service->slug]) }}">
+                            <a href="{{ $serviceUrls[$service->getKey()] }}">
                                 {{ $service->name }}
                             </a>
                         </li>
