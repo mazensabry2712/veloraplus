@@ -6,7 +6,7 @@ use App\Models\Location;
 use App\Models\Service;
 use App\Models\Staff;
 use App\Models\Tenant;
-use App\Models\StaffTimeOff;
+use App\Models\StaffWorkingHour;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -205,8 +205,8 @@ test('availability rules reject invalid ranges and archived records', function (
 
     $service->delete();
 
-    expect(fn () => $availability->assignService($staff, $service->fresh(['staffServices'])))
-        ->toThrow(Throwable::class);
+    expect(fn () => $availability->assignService($staff, $service))
+        ->toThrow(InvalidArgumentException::class);
 
     $manager->disconnect();
 });
