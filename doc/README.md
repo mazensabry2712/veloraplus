@@ -119,6 +119,8 @@ Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is closed a
 
 Phase 7 — Booking implementation is closed and verified through 7.6: Services, Staff Availability, Appointments, Tenant Payments, Queue, and the Public Booking transaction are implemented and verified.
 
+Phase 8 — Company Dashboard is in progress. The Dashboard Shell is implemented and 8.2.1 Company Profile backend is implemented; remaining Company Foundation slices follow the delivery order in doc/20-PHASE-8-COMPANY-DASHBOARD.md.
+
 SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md. SEO-1 through SEO-4 are implemented and tested; SEO-5 production operations remain pending. The Public Booking transaction is complete in Phase 7.6. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery.
 
 ## Non-negotiable rules
