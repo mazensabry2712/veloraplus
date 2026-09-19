@@ -21,7 +21,9 @@ The goal is to let a company present VeloraPlus-powered business experiences und
 
 ## 2. Commercial model
 
-Custom Domain is a **Catalog Feature**.
+Custom Domain is a **Catalog Feature** under a non-core sellable catalog Module such as `Platform Experience`.
+
+This keeps the existing Catalog rule intact: every Feature belongs to a Module, while cross-cutting capabilities remain separate from Booking/CRM/ERP.
 
 Conceptually:
 
@@ -35,7 +37,7 @@ Entitlement
 Tenant Domain Capability
 ~~~
 
-The Feature may be purchased independently, included in a Bundle, or included in a future higher-tier plan.
+The Feature may be purchased independently or included in a Bundle/subscription configuration.
 
 The exact price, currency, billing cycle, country override, and bundle treatment are catalog data. They are not hard-coded into routing or tenancy code.
 
@@ -253,7 +255,7 @@ active
 failed
 ~~~
 
-The Domain domain should not contain provider-specific certificate payloads.
+The Domain model should not contain provider-specific certificate payloads.
 
 A hostname is not ACTIVE merely because DNS verification succeeded. The platform must also confirm the required routing/edge and TLS readiness.
 
