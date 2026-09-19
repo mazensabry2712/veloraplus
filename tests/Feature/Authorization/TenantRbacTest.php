@@ -54,6 +54,26 @@ test('booking availability permissions are assigned by role', function () {
 });
 
 
+test('queue permissions are assigned by role', function () {
+    $tenant = Tenant::factory()->create();
+    $bootstrapper = app(TenantRbacBootstrapper::class);
+    $bootstrapper->bootstrapForTenant($tenant);
+
+    setPermissionsTeamId($tenant->getKey());
+
+    $roles = App\\Models\\Role::query()
+        ->where('tenant_id', $tenant->getKey())
+        ->get()
+        ->keyBy('name');
+
+    expect($roles['owner']->hasPermissionTo('booking.queues.manage'))->toBeTrue()
+        ->and($roles['manager']->hasPermissionTo('booking.queues.manage'))->toBeTrue()
+        ->and($roles['staff']->hasPermissionTo('booking.queues.view'))->toBeTrue()
+        ->and($roles['staff']->hasPermissionTo('booking.queues.manage'))->toBeFalse()
+        ->and($roles['viewer']->hasPermissionTo('booking.queues.view'))->toBeTrue()
+        ->and($roles['viewer']->hasPermissionTo('booking.queues.manage'))->toBeFalse();
+});
+
 test('booking payment permissions are assigned by role', function () {
     $tenant = Tenant::factory()->create();
     $bootstrapper = app(TenantRbacBootstrapper::class);
