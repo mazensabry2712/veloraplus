@@ -9,6 +9,11 @@ use App\Domain\Tenancy\TenantContext;
 use App\Models\Bundle;
 use App\Models\Feature;
 use App\Models\Module;
+use App\Models\Role;
+use App\Models\TenantMembership;
+use App\Policies\TenantRolePolicy;
+use App\Policies\TenantMembershipPolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -34,6 +39,9 @@ class AppServiceProvider extends ServiceProvider
             'feature' => Feature::class,
             'bundle' => Bundle::class,
         ]);
+
+        Gate::policy(Role::class, TenantRolePolicy::class);
+        Gate::policy(TenantMembership::class, TenantMembershipPolicy::class);
 
         Blade::if('entitled', function (string $capability): bool {
             $tenant = app(TenantContext::class)->get();
