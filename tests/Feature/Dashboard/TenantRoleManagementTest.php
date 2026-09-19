@@ -3,6 +3,7 @@
 use App\Application\Authorization\TenantRbacBootstrapper;
 use App\Infrastructure\Tenancy\TenantDatabaseManager;
 use App\Application\Authorization\TenantRoleManager;
+use App\Domain\Tenancy\TenantContext;
 use App\Models\PlatformAccount;
 use App\Models\Role;
 use App\Models\Tenant;
@@ -244,7 +245,7 @@ test('custom role cannot be mutated from another tenant context', function (): v
     $ownerA = addTenantRoleManagementMember($tenantA);
     addTenantRoleManagementMember($tenantB);
 
-    $manager = app(TenantDatabaseManager::class);
+    app(TenantContext::class)->set($tenantB);
     app(TenantRoleManager::class)->create([
         'name' => 'Tenant B Role',
         'permissions' => ['customers.view'],
