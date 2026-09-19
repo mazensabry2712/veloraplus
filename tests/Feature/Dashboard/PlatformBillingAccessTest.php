@@ -3,6 +3,8 @@
 use App\Application\Authorization\TenantRbacBootstrapper;
 use App\Application\Billing\PlatformBillingDashboardService;
 use App\Application\Billing\SubscriptionService;
+use App\Domain\Billing\RefundStatus;
+use App\Models\PlatformCredit;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformPayment;
 use App\Application\Entitlements\EntitlementService;
@@ -284,6 +286,172 @@ test('owner can create a platform billing checkout and reuse the same pending se
 
     expect(collect(FakeTenantPaymentGateway::$calls)->where('type', 'checkout')->count())->toBe(1)
         ->and(PlatformPayment::query()->where('invoice_id', $invoice->getKey())->where('status', 'pending')->count())->toBe(1);
+});
+
+test('owner can void an open platform invoice', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $owner = addBillingDashboardMember($tenant);
+
+    $feature = billingCatalogItem();
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    $this->actingAs($owner)
+        ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/invoices/'.$invoice->getKey().'/void', [
+            'reason' => 'commercial adjustment',
+        ])
+        ->assertRedirect('/dashboard')
+        ->assertSessionHas('status', 'Platform invoice voided successfully.');
+
+    expect($invoice->refresh()->status->value)->toBe('void');
+});
+
+test('owner can refund a succeeded platform payment and reuse its idempotency key', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $owner = addBillingDashboardMember($tenant);
+
+    $feature = billingCatalogItem();
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    $payment = app(PaymentService::class)->createPending($invoice, 'fake', 'PAY-PLATFORM-1', 'EVENT-1');
+    $payment->update([
+        'metadata' => [
+            'checkout' => [
+                'provider_order_id' => 'FAKE-ORDER-1',
+            ],
+        ],
+    ]);
+    app(PaymentService::class)->markSucceeded($payment);
+
+    config([
+        'velora.payments.platform_provider' => 'fake',
+        'velora.payments.drivers.fake' => FakeTenantPaymentGateway::class,
+    ]);
+    FakeTenantPaymentGateway::reset();
+
+    $host = $tenant->domains()->firstOrFail()->domain;
+
+    $this->actingAs($owner)
+        ->post('http://'.$host.'/dashboard/billing/payments/'.$payment->getKey().'/refund', [
+            'amount_minor' => 2000,
+            'reason' => 'customer request',
+            'idempotency_key' => 'refund-key-1',
+        ])
+        ->assertRedirect('/dashboard')
+        ->assertSessionHas('status', 'Platform payment refund processed successfully.');
+
+    $refund = PlatformRefund::query()
+        ->where('payment_id', $payment->getKey())
+        ->firstOrFail();
+
+    expect($refund->status)->toBe(RefundStatus::Succeeded)
+        ->and($refund->idempotency_key)->toBe('refund-key-1')
+        ->and($refund->initiated_by_account_id)->toBe($owner->getKey())
+        ->and(collect(FakeTenantPaymentGateway::$calls)->where('type', 'refund')->count())->toBe(1);
+
+    $this->actingAs($owner)
+        ->post('http://'.$host.'/dashboard/billing/payments/'.$payment->getKey().'/refund', [
+            'amount_minor' => 2000,
+            'reason' => 'customer request',
+            'idempotency_key' => 'refund-key-1',
+        ])
+        ->assertRedirect('/dashboard');
+
+    expect(PlatformRefund::query()->where('payment_id', $payment->getKey())->count())->toBe(1)
+        ->and(collect(FakeTenantPaymentGateway::$calls)->where('type', 'refund')->count())->toBe(1);
+});
+
+test('owner cannot refund beyond the remaining platform payment amount', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $owner = addBillingDashboardMember($tenant);
+
+    $feature = billingCatalogItem();
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = app(PaymentService::class)->createPending($invoice);
+    app(PaymentService::class)->markSucceeded($payment);
+
+    $this->actingAs($owner)
+        ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/payments/'.$payment->getKey().'/refund', [
+            'amount_minor' => 6000,
+            'reason' => 'too much',
+        ])
+        ->assertRedirect('/dashboard')
+        ->assertSessionHasErrors('billing');
+});
+
+test('owner can issue a platform credit and it appears in the billing overview', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $owner = addBillingDashboardMember($tenant);
+
+    $context = app(\App\Domain\Tenancy\TenantContext::class);
+    $context->set($tenant);
+
+    $this->actingAs($owner)
+        ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/credits', [
+            'amount_minor' => 2500,
+            'currency' => 'EGP',
+            'source' => 'service recovery',
+        ])
+        ->assertRedirect('/dashboard')
+        ->assertSessionHas('status', 'Platform credit issued successfully.');
+
+    $overview = app(PlatformBillingDashboardService::class)->overview($tenant);
+
+    expect($overview['credits'])->toHaveCount(1)
+        ->and($overview['credits']->first()->amount_minor)->toBe(2500)
+        ->and(PlatformCredit::query()->where('tenant_id', $tenant->getKey())->count())->toBe(1);
+});
+
+test('viewer cannot refund a platform payment or issue a platform credit', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $viewer = addBillingDashboardMember($tenant, 'viewer');
+
+    $feature = billingCatalogItem();
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = app(PaymentService::class)->createPending($invoice);
+    app(PaymentService::class)->markSucceeded($payment);
+
+    $host = $tenant->domains()->firstOrFail()->domain;
+
+    $this->actingAs($viewer)
+        ->post('http://'.$host.'/dashboard/billing/payments/'.$payment->getKey().'/refund', [
+            'amount_minor' => 1000,
+            'reason' => 'not allowed',
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($viewer)
+        ->post('http://'.$host.'/dashboard/billing/credits', [
+            'amount_minor' => 1000,
+            'currency' => 'EGP',
+        ])
+        ->assertForbidden();
 });
 
 test('viewer cannot create a platform billing checkout', function (): void {
