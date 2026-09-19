@@ -177,6 +177,19 @@ No Kashier implementation was added to Core Billing. Phase 6 will add provider a
 See doc/16-PHASE-5-BILLING.md for the full contract and verification record.
 
 
+### Cross-cutting Public Web & SEO
+
+SEO/Public Web is documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
+
+Current implementation status:
+
+- Service public slug: implemented in the Booking Services slice;
+- SEO-1 platform foundation: implemented and verified by automated tests;
+- SEO-2 Tenant public surface: pending;
+- SEO-3 Public Services pages: pending;
+- SEO-4 Public Booking SEO integration: pending;
+- custom-domain canonicalization: pending until Custom Domain infrastructure is delivered.
+
 ## Phase 7 status — in progress
 
 Phase 7 Booking is underway on the existing Core.
