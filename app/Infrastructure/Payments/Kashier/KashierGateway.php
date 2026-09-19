@@ -39,9 +39,6 @@ final class KashierGateway implements
     {
         $currency = strtoupper((string) ($context['currency'] ?? ''));
         $amountMinor = (int) ($context['amount_minor'] ?? 0);
-        $credentials = is_array($context['payment_account']['credentials'] ?? null)
-            ? $context['payment_account']['credentials']
-            : [];
         $merchantOrderId = trim((string) ($context['merchant_order_id'] ?? ''));
         $credentials = $this->credentialsForContext($context);
 
