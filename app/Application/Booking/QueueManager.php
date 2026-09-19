@@ -12,6 +12,7 @@ use App\Models\QueueEntry;
 use App\Models\Service;
 use Carbon\CarbonImmutable;
 use DomainException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 final class QueueManager
@@ -29,18 +30,33 @@ final class QueueManager
             ? CarbonImmutable::parse($businessDate, $this->locationTimezone($location))->toDateString()
             : CarbonImmutable::now($this->locationTimezone($location))->toDateString();
 
-        return Queue::query()->firstOrCreate(
-            [
-                'location_id' => $location->getKey(),
-                'service_id' => $service->getKey(),
-                'business_date' => $date,
-            ],
-            [
+        $attributes = [
+            'location_id' => $location->getKey(),
+            'service_id' => $service->getKey(),
+            'business_date' => $date,
+        ];
+
+        $existing = Queue::query()->where($attributes)->first();
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        try {
+            return Queue::query()->create($attributes + [
                 'status' => QueueStatus::Open,
                 'next_position' => 1,
                 'metadata' => $metadata,
-            ],
-        );
+            ]);
+        } catch (QueryException $exception) {
+            if (! in_array((string) $exception->getCode(), ['19', '23000', '23505'], true)) {
+                throw $exception;
+            }
+
+            return Queue::query()
+                ->where($attributes)
+                ->firstOrFail();
+        }
     }
 
     public function open(Queue $queue): Queue
