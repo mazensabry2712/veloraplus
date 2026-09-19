@@ -43,8 +43,6 @@ final class PlatformPaymentCheckoutService
             'merchant_order_id' => $payment->getKey(),
             'amount_minor' => $payment->amount_minor,
             'currency' => $payment->currency,
-            'merchant_redirect_url' => config('velora.payments.kashier.merchant_redirect_url'),
-            'server_webhook_url' => config('velora.payments.kashier.webhook_url'),
             'customer' => $customer,
             'description' => 'VeloraPlus subscription '.$invoice->number,
         ]);

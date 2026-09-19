@@ -3,7 +3,6 @@
 namespace App\Application\Payments;
 
 use App\Application\Billing\PaymentService;
-use App\Domain\Payments\Contracts\PaymentVerificationGateway;
 use App\Domain\Payments\Contracts\PlatformPaymentGateway;
 use App\Domain\Payments\Contracts\WebhookGateway;
 use App\Models\PlatformPayment;
@@ -29,23 +28,30 @@ final class KashierWebhookHandler
     {
         $gateway = $this->gateways->platform('kashier');
 
-        if (! $gateway instanceof PlatformPaymentGateway
-            || ! $gateway instanceof WebhookGateway
-            || ! $gateway instanceof PaymentVerificationGateway) {
-            throw new DomainException('Kashier platform payment capabilities are unavailable.');
+        if (! $gateway instanceof PlatformPaymentGateway || ! $gateway instanceof WebhookGateway) {
+            throw new DomainException('Kashier platform webhook capability is unavailable.');
         }
 
         $event = $gateway->verifyWebhook($payload, $headers);
-        $eventId = hash('sha256', $rawBody);
+        $eventId = hash('sha256', implode('|', [
+            $event['provider'],
+            $event['event'],
+            $event['status'],
+            $event['merchant_order_id'] ?? '',
+            $event['transaction_id'] ?? '',
+            $event['kashier_order_id'] ?? '',
+        ]));
 
-        DB::connection('central')->transaction(function () use ($event, $eventId, $payload): void {
+        $payloadHash = hash('sha256', $rawBody);
+
+        DB::connection('central')->transaction(function () use ($event, $eventId, $payloadHash, $payload): void {
             WebhookEvent::query()->insertOrIgnore([
                 'provider' => 'kashier',
                 'provider_event_id' => $eventId,
                 'event_type' => $event['event'] ?: 'unknown',
                 'status' => 'received',
                 'received_at' => CarbonImmutable::now(),
-                'payload_hash' => $eventId,
+                'payload_hash' => $payloadHash,
                 'payload' => $payload,
             ]);
         });
@@ -59,6 +65,15 @@ final class KashierWebhookHandler
 
             if ($stored->processed_at !== null) {
                 return ['duplicate' => true, 'status' => 'processed'];
+            }
+
+            if ($event['event'] !== 'pay') {
+                $stored->update([
+                    'status' => 'ignored',
+                    'processed_at' => CarbonImmutable::now(),
+                ]);
+
+                return ['duplicate' => false, 'status' => 'ignored'];
             }
 
             $merchantOrderId = trim((string) ($event['merchant_order_id'] ?? ''));
