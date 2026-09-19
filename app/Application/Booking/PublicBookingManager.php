@@ -118,6 +118,10 @@ final class PublicBookingManager
             throw $exception;
         }
 
+        if ((string) $appointment->customer_id !== (string) $customer->getKey()) {
+            $customer->delete();
+        }
+
         if ($amountMinor === 0) {
             $appointment->forceFill([
                 'payment_status' => AppointmentPaymentStatus::Paid,
