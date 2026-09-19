@@ -12,9 +12,9 @@ final class KashierClient
      * @param array<string, mixed> $payload
      * @return array<string, mixed>
      */
-    public function createPaymentSession(array $payload): array
+    public function createPaymentSession(array $payload, ?array $credentials = null): array
     {
-        $response = $this->apiRequest()->post('/v3/payment/sessions', $payload);
+        $response = $this->apiRequest($credentials)->post('/v3/payment/sessions', $payload);
 
         if ($response->failed()) {
             throw new RuntimeException('Kashier payment session creation failed: '.$response->body());
@@ -23,11 +23,11 @@ final class KashierClient
         return $response->json();
     }
 
-    public function getPaymentSessionPayment(string $sessionId): array
+    public function getPaymentSessionPayment(string $sessionId, ?array $credentials = null): array
     {
         $response = Http::baseUrl($this->baseUrl())
             ->acceptJson()
-            ->withHeader('Authorization', $this->secretKey())
+            ->withHeader('Authorization', $this->secretKey($credentials))
             ->timeout(15)
             ->retry(2, 200, throw: false)
             ->get("/v3/payment/sessions/{$sessionId}/payment");
@@ -43,9 +43,9 @@ final class KashierClient
      * @param array<string, mixed> $payload
      * @return array<string, mixed>
      */
-    public function refundOrder(string $orderId, array $payload): array
+    public function refundOrder(string $orderId, array $payload, ?array $credentials = null): array
     {
-        $response = $this->fepRequest()->put("/v3/orders/{$orderId}", $payload);
+        $response = $this->fepRequest($credentials)->put("/v3/orders/{$orderId}", $payload);
 
         if ($response->failed()) {
             throw new RuntimeException('Kashier refund request failed: '.$response->body());
@@ -54,32 +54,32 @@ final class KashierClient
         return $response->json();
     }
 
-    private function apiRequest(): PendingRequest
+    private function apiRequest(?array $credentials = null): PendingRequest
     {
         return Http::baseUrl($this->baseUrl())
             ->acceptJson()
             ->asJson()
             ->withHeaders([
-                'Authorization' => $this->secretKey(),
-                'api-key' => $this->paymentApiKey(),
+                'Authorization' => $this->secretKey($credentials),
+                'api-key' => $this->paymentApiKey($credentials),
             ])
             ->timeout(15)
             ->retry(2, 200, throw: false);
     }
 
-    private function fepRequest(): PendingRequest
+    private function fepRequest(?array $credentials = null): PendingRequest
     {
         return Http::baseUrl($this->fepBaseUrl())
             ->acceptJson()
             ->asJson()
-            ->withHeader('Authorization', $this->secretKey())
+            ->withHeader('Authorization', $this->secretKey($credentials))
             ->timeout(15)
             ->retry(2, 200, throw: false);
     }
 
-    private function secretKey(): string
+    private function secretKey(?array $credentials = null): string
     {
-        $value = (string) config('velora.payments.kashier.secret_key');
+        $value = (string) ($credentials['secret_key'] ?? config('velora.payments.kashier.secret_key'));
 
         if ($value === '') {
             throw new RuntimeException('Kashier secret key is not configured.');
@@ -88,9 +88,9 @@ final class KashierClient
         return $value;
     }
 
-    private function paymentApiKey(): string
+    private function paymentApiKey(?array $credentials = null): string
     {
-        $value = (string) config('velora.payments.kashier.payment_api_key');
+        $value = (string) ($credentials['payment_api_key'] ?? config('velora.payments.kashier.payment_api_key'));
 
         if ($value === '') {
             throw new RuntimeException('Kashier Payment API Key is not configured.');
