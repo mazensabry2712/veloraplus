@@ -27,7 +27,7 @@ test('tenant rbac bootstrap is idempotent and creates default permissions and ro
 
     expect(config('permission.models.permission'))->toBe(App\Models\Permission::class)
         ->and(config('permission.models.role'))->toBe(App\Models\Role::class)
-        ->and(App\Models\Permission::query()->where('guard_name', 'web')->count())->toBe(20)
+        ->and(App\Models\Permission::query()->where('guard_name', 'web')->count())->toBe(22)
         ->and(App\Models\Role::query()->where('tenant_id', $tenant->getKey())->count())->toBe(5)
         ->and(App\Models\Role::query()->where('tenant_id', $tenant->getKey())->pluck('name')->all())
         ->toEqualCanonicalizing(['owner', 'admin', 'manager', 'staff', 'viewer']);
