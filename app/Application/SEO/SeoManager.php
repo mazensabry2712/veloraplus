@@ -4,6 +4,7 @@ namespace App\Application\SEO;
 
 use App\Domain\SEO\SeoMeta;
 use App\Models\CompanySetting;
+use App\Models\Service;
 use App\Models\Tenant;
 
 final class SeoManager
@@ -87,6 +88,100 @@ final class SeoManager
                 'name' => $tenant->name,
                 'url' => $this->tenantUrl($tenant),
             ]],
+        );
+    }
+
+    public function tenantServices(Tenant $tenant): SeoMeta
+    {
+        $url = $this->tenantUrl($tenant, '/services');
+
+        return new SeoMeta(
+            title: 'Services | '.$tenant->name,
+            description: 'Explore services available from '.$tenant->name.'.',
+            canonical: $url,
+            robots: 'index,follow',
+            ogType: 'website',
+            siteName: $tenant->name,
+            locale: $tenant->locale ?: null,
+            schema: [[
+                '@context' => 'https://schema.org',
+                '@type' => 'CollectionPage',
+                'name' => 'Services at '.$tenant->name,
+                'url' => $url,
+            ]],
+        );
+    }
+
+    public function tenantService(Tenant $tenant, Service $service): SeoMeta
+    {
+        $url = $this->tenantUrl($tenant, '/services/'.$service->slug);
+        $title = trim((string) $service->seo_title);
+
+        if ($title === '') {
+            $title = $service->name.' | '.$tenant->name;
+        }
+
+        $description = trim((string) $service->seo_description);
+
+        if ($description === '') {
+            $description = trim((string) $service->description);
+
+            if ($description === '') {
+                $description = 'Learn about '.$service->name.' at '.$tenant->name.'.';
+            }
+        }
+
+        $schemas = [[
+            '@context' => 'https://schema.org',
+            '@type' => 'Service',
+            'name' => $service->name,
+            'url' => $url,
+            'provider' => [
+                '@type' => 'Organization',
+                'name' => $tenant->name,
+                'url' => $this->tenantUrl($tenant),
+            ],
+        ]];
+
+        if ($service->description) {
+            $schemas[0]['description'] = $service->description;
+        }
+
+        $schemas[] = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => $tenant->name,
+                    'item' => $this->tenantUrl($tenant),
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => 'Services',
+                    'item' => $this->tenantUrl($tenant, '/services'),
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 3,
+                    'name' => $service->name,
+                    'item' => $url,
+                ],
+            ],
+        ];
+
+        return new SeoMeta(
+            title: $title,
+            description: Str::limit($description, 320, ''),
+            canonical: $url,
+            robots: 'index,follow',
+            ogType: 'website',
+            siteName: $tenant->name,
+            ogImage: $this->absolutePublicUrl((string) $service->social_image_url),
+            locale: $tenant->locale ?: null,
+            schema: $schemas,
         );
     }
 
