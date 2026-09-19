@@ -6,6 +6,7 @@ use App\Application\Payments\PaymentGatewayManager;
 use App\Application\Payments\PlatformPaymentCheckoutService;
 use App\Domain\Billing\InvoiceStatus;
 use App\Domain\Billing\PaymentStatus;
+use App\Infrastructure\Payments\Kashier\KashierGateway;
 use App\Infrastructure\Payments\Kashier\KashierWebhookVerifier;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformPayment;
@@ -102,6 +103,66 @@ test('kashier creates a hosted payment session through the adapter', function ()
             && $body['order'] === $payment->getKey()
             && $body['merchantId'] === 'MID-TEST';
     });
+});
+
+
+test('kashier tenant checkout uses the selected merchant account credentials', function () {
+    Config::set('velora.payments.kashier.merchant_id', 'GLOBAL-MID');
+    Config::set('velora.payments.kashier.secret_key', 'GLOBAL-SECRET');
+    Config::set('velora.payments.kashier.payment_api_key', 'GLOBAL-API');
+
+    Http::fake([
+        'https://test-api.kashier.io/v3/payment/sessions' => Http::response([
+            'status' => 'CREATED',
+            '_id' => 'TENANT-SESSION-1',
+            'sessionUrl' => 'https://payments.kashier.io/session/TENANT-SESSION-1',
+        ], 200),
+    ]);
+
+    $result = app(KashierGateway::class)->createCheckout([
+        'amount_minor' => 12500,
+        'currency' => 'EGP',
+        'merchant_order_id' => 'TENANT-ORDER-1',
+        'payment_account' => [
+            'reference' => 'CLINIC-ACCOUNT',
+            'credentials' => [
+                'merchant_id' => 'TENANT-MID',
+                'secret_key' => 'TENANT-SECRET',
+                'payment_api_key' => 'TENANT-API',
+                'merchant_redirect_url' => 'https://clinic.example/return',
+                'webhook_url' => 'https://clinic.example/webhooks/kashier',
+            ],
+        ],
+    ]);
+
+    expect($result['session_id'])->toBe('TENANT-SESSION-1');
+
+    Http::assertSent(function ($request) {
+        $body = $request->data();
+
+        return $request->header('Authorization') === ['TENANT-SECRET']
+            && $request->header('api-key') === ['TENANT-API']
+            && $body['merchantId'] === 'TENANT-MID'
+            && $body['merchantRedirect'] === 'https://clinic.example/return'
+            && $body['serverWebhook'] === 'https://clinic.example/webhooks/kashier';
+    });
+});
+
+
+test('kashier tenant checkout rejects incomplete tenant credentials instead of using platform credentials', function () {
+    Config::set('velora.payments.kashier.merchant_id', 'GLOBAL-MID');
+    Config::set('velora.payments.kashier.secret_key', 'GLOBAL-SECRET');
+    Config::set('velora.payments.kashier.payment_api_key', 'GLOBAL-API');
+
+    expect(fn () => app(KashierGateway::class)->createCheckout([
+        'amount_minor' => 12500,
+        'currency' => 'EGP',
+        'merchant_order_id' => 'TENANT-ORDER-INVALID',
+        'payment_account' => [
+            'reference' => 'BROKEN-ACCOUNT',
+            'credentials' => [],
+        ],
+    ]))->toThrow(DomainException::class);
 });
 
 test('kashier webhook signature verification follows the sorted signatureKeys rule', function () {

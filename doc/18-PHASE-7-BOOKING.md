@@ -123,17 +123,28 @@ Validation and concurrency rules:
 
 ### 7.4 Tenant Payments integration
 
-Status: **PENDING**
+Status: **7.4.1 PAYMENT FOUNDATION COMPLETED / 7.4.2 WEBHOOK + REFUND PENDING**
 
-Planned:
+Completed in 7.4.1:
 
-- tenant business payment record;
-- payment intent/checkout boundary;
+- central Tenant payment-provider account registry with encrypted credentials;
+- Tenant payment ledger in the Tenant database;
+- Appointment-linked Tenant Payment records;
 - provider selection through PaymentGatewayManager;
 - company merchant account selection;
-- verified payment result handling;
-- failure/pending/refund boundaries;
-- no Platform Billing leakage.
+- checkout creation from immutable appointment/service snapshots;
+- idempotent single-flight checkout creation;
+- pending/succeeded/failed Tenant Payment lifecycle;
+- Appointment payment-status synchronization;
+- Tenant payment RBAC permissions;
+- explicit separation from Platform Billing records.
+
+Remaining 7.4.2+:
+
+- provider webhook verification and idempotent Tenant payment event handling;
+- provider lookup/reconciliation boundary;
+- Tenant refunds and refund records;
+- production payment operational controls.
 
 ### 7.5 Queue
 
@@ -194,12 +205,18 @@ Current permissions:
 
 - booking.services.view
 - booking.services.manage
+- booking.availability.view
+- booking.availability.manage
+- booking.appointments.view
+- booking.appointments.manage
+- booking.payments.view
+- booking.payments.manage
 
-Owner/admin receive both permissions.
+Owner/admin receive all current Booking permissions.
 
-Manager receives both permissions.
+Manager receives all current Booking permissions except future permissions that have not yet been introduced.
 
-Staff and viewer receive view permission only.
+Staff and viewer receive view-only Booking permissions, including booking.payments.view.
 
 Additional Booking permissions will be introduced with the relevant slice instead of creating the entire future permission matrix prematurely.
 

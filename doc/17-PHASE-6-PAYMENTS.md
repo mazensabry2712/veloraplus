@@ -200,6 +200,14 @@ CI verification completed for implementation commit `b36fc620a859a20d7bacc6839a3
 Phase 6 is now CLOSED / VERIFIED. Local verification after pulling the latest `main` completed successfully:
 
 
+## Tenant Payment implementation boundary
+
+Phase 7.4 consumes the provider-neutral TenantPaymentGateway through PaymentGatewayManager.
+
+Tenant business payment records are Tenant-local. Merchant account configuration remains central in payment_provider_accounts and credentials are encrypted at rest.
+
+Tenant payment application services must never create or mutate platform_payments, platform_invoices, subscriptions, or tenant_entitlements as a side effect of customer checkout.
+
 ## SEO / Payments boundary
 
 Payment flows are transactional and private, not SEO landing pages.
