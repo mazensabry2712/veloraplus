@@ -138,6 +138,7 @@ test('tenant public home resolves from the request host and renders tenant SEO m
         ->assertSee('<title>Velora Clinic | Dental &amp; Medical Care</title>', false)
         ->assertSee('<meta name="description" content="Dental and medical services from Velora Clinic.">', false)
         ->assertSee('<meta name="robots" content="index,follow">', false)
+        ->assertSee('<meta property="og:site_name" content="Velora Clinic">', false)
         ->assertSee('<link rel="canonical" href="https://clinic.velora.test/">', false)
         ->assertSee('<script type="application/ld+json">', false)
         ->assertSee('Velora Clinic', false);
