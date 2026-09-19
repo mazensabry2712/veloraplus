@@ -46,6 +46,7 @@ Important references:
 - doc/12-PHASE-2-IDENTITY-AUTH-RBAC.md
 - doc/13-PHASE-3-MODULE-CATALOG.md
 - doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md
+- doc/15-PHASE-4-ENTITLEMENTS.md
 
 ## Current implementation
 
@@ -55,7 +56,7 @@ Phase 2 — Identity, Authentication & RBAC is closed and verified.
 
 Phase 3 — Module Catalog is closed and verified. It provides the central catalog schema, models, bundle/dependency services, and pricing catalog foundation.
 
-The next implementation stage is Phase 4 — Entitlements.
+Phase 4 — Entitlements is implemented; local verification is the remaining closing gate.
 
 ## Development principle
 
