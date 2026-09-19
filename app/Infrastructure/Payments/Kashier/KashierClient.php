@@ -2,8 +2,8 @@
 
 namespace App\Infrastructure\Payments\Kashier;
 
-use IlluminateHttpClient\PendingRequest;
-use IlluminateSupportFacades\Http;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 final class KashierClient
@@ -23,9 +23,6 @@ final class KashierClient
         return $response->json();
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     public function getPaymentSessionPayment(string $sessionId): array
     {
         $response = Http::baseUrl($this->baseUrl())

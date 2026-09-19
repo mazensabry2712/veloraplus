@@ -1,10 +1,10 @@
 <?php
 
-namespace AppApplicationPayments;
+namespace App\Application\Payments;
 
-use AppDomainBillingPaymentStatus;
-use AppDomainPaymentsContractsCheckoutGateway;
-use AppModelsPlatformPayment;
+use App\Domain\Billing\PaymentStatus;
+use App\Domain\Payments\Contracts\CheckoutGateway;
+use App\Models\PlatformPayment;
 use DomainException;
 
 final class PlatformPaymentCheckoutService

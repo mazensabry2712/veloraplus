@@ -1,9 +1,9 @@
 <?php
 
-namespace AppApplicationPayments;
+namespace App\Application\Payments;
 
-use AppDomainPaymentsContractsPlatformPaymentGateway;
-use AppDomainPaymentsContractsTenantPaymentGateway;
+use App\Domain\Payments\Contracts\PlatformPaymentGateway;
+use App\Domain\Payments\Contracts\TenantPaymentGateway;
 use DomainException;
 
 final class PaymentGatewayManager
