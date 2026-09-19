@@ -24,9 +24,13 @@ Route::middleware('public.tenant')->prefix('services')->name('public.services.')
 });
 
 Route::middleware(['public.tenant', 'noindex', 'throttle:30,1'])->group(function (): void {
-    Route::get('/book/{slug}', [PublicBookingController::class, '__invoke'])
+      Route::get('/book/{slug}', [PublicBookingController::class, '__invoke'])
         ->where('slug', '[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*')
         ->name('public.booking');
+
+    Route::post('/book/{slug}', [PublicBookingController::class, 'store'])
+        ->where('slug', '[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*')
+        ->name('public.booking.store');
 });
 
 Route::get('/sitemap.xml', SitemapController::class)
