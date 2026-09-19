@@ -51,7 +51,9 @@ Phase 1 — Tenancy Foundation is closed and verified.
 
 Phase 2 — Identity, Authentication & RBAC is closed and verified.
 
-Phase 3 — Module Catalog is in progress. The central catalog schema, models, composition services, dependency validation, and pricing catalog foundation are implemented before Entitlements and Billing.
+Phase 3 — Module Catalog is closed and verified. It provides the central catalog schema, models, bundle/dependency services, and pricing catalog foundation.
+
+The next implementation stage is Phase 4 — Entitlements.
 
 ## Development principle
 

@@ -2,9 +2,9 @@
 
 ## Status
 
-**IN PROGRESS — catalog foundation implemented; local verification and CI are the remaining closing gates.**
+**CLOSED / VERIFIED — central Module/Feature/Bundle catalog foundation is implemented and verified.**
 
-Phase 3 turns the documented Module/Feature/Bundle commercial catalog into a central platform domain. Entitlements and Billing remain separate phases.
+Phase 3 establishes the centrally managed commercial catalog. Entitlements and Billing remain separate phases.
 
 ## Scope implemented
 
@@ -98,28 +98,42 @@ Active prices cannot overlap for the same priceable item, billing cycle, currenc
 
 Core Modules cannot receive customer catalog prices.
 
-### Application services
+## Application services
 
-- CatalogManager — module/feature/bundle lifecycle and composition.
-- CatalogDependencyManager — dependency graph and circular-dependency validation.
-- CatalogPriceManager — catalog price validation and overlap protection.
-- CatalogPricingResolver — resolves the current applicable catalog price.
+- `CatalogManager` — module/feature/bundle lifecycle and composition.
+- `CatalogDependencyManager` — dependency graph and circular-dependency validation.
+- `CatalogPriceManager` — catalog price validation and overlap protection.
+- `CatalogPricingResolver` — resolves the current applicable catalog price.
 
 ## Central schema
 
 The Phase 3 migration adds:
 
-- modules
-- features
-- catalog_dependencies
-- bundles
-- bundle_modules
-- bundle_features
-- catalog_prices
+- `modules`
+- `features`
+- `catalog_dependencies`
+- `bundles`
+- `bundle_modules`
+- `bundle_features`
+- `catalog_prices`
 
 No tenant database tables are introduced in this phase.
 
-## Tests
+## Verification completed
+
+Local verification on the current MySQL environment:
+
+- Catalog migration completed successfully.
+- `vendor/bin/pint --dirty --format agent`: passed.
+- `php artisan test --compact`: **38 tests passed, 135 assertions**.
+- `git diff --check`: clean.
+- `git status`: clean and synchronized with `origin/main`.
+
+GitHub Actions:
+
+- Workflow for commit `98bbb45a8d37f1ffbc9b00ec86c2047fde7ada84`: **successful**.
+
+## Test coverage
 
 The catalog feature suite covers:
 
@@ -133,20 +147,13 @@ The catalog feature suite covers:
 - pricing-window overlap protection;
 - lifecycle status changes.
 
-## Verification gate
+## Important boundary
 
-Local:
+Phase 3 defines catalog data and catalog pricing only.
 
-~~~powershell
-vendor/bin/pint --dirty --format agent
-php artisan test --compact
-git diff --check
-git status
-~~~
+It does not activate tenant entitlements, create subscriptions, process payments, or grant business-module access.
 
-Redis is not required for the Phase 3 test suite because phpunit.xml uses CACHE_STORE=array.
-
-Phase 3 closes only after the local suite and GitHub Actions are both green.
+Those responsibilities remain in later phases.
 
 ## Next after Phase 3
 
@@ -161,5 +168,3 @@ Entitlement Resolver / Projection
   ↓
 Tenant Feature Availability
 ~~~
-
-Billing remains after the Entitlement architecture contract.

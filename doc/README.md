@@ -90,9 +90,9 @@ ERP
 
 ## Current repository note
 
-Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 is the Module Catalog and its central schema/services are now implemented; local/CI verification is the remaining gate.
+Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 Module Catalog is also closed and verified.
 
-The repository documentation and implementation order are kept aligned with the current phase so that no business module is started against an incomplete platform core.
+The next implementation stage is Phase 4 — Entitlements. The repository documentation and implementation order are kept aligned with the current phase so that no business module is started against an incomplete platform core.
 
 ## Non-negotiable rules
 

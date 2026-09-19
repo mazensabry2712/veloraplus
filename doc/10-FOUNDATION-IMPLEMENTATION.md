@@ -65,9 +65,9 @@ Verification completed:
 
 See doc/12-PHASE-2-IDENTITY-AUTH-RBAC.md for the detailed Phase 2 record.
 
-## Phase 3 status — in progress
+## Phase 3 status — closed
 
-The Module Catalog foundation is implemented in the central database.
+The Module Catalog is implemented as a central platform domain.
 
 Implemented:
 
@@ -78,13 +78,20 @@ Implemented:
 - circular dependency validation;
 - country/currency/billing-cycle catalog price resolution;
 - integer minor-unit price representation;
-- core-module pricing protection.
+- core-module pricing protection;
+- catalog price effective-window and overlap protection.
 
-Verification still pending:
+Verification completed:
 
-- local Pint + full test suite;
-- local migration run against current MySQL environment;
-- git diff/status checks;
-- GitHub Actions after the catalog commit.
+- Local migration against the current MySQL environment succeeded.
+- Laravel Pint passed.
+- Local test suite: **38 tests passed with 135 assertions**.
+- git diff --check passed.
+- git status clean and synchronized with origin/main.
+- GitHub Actions for commit 98bbb45a8d37f1ffbc9b00ec86c2047fde7ada84: success.
 
 See doc/13-PHASE-3-MODULE-CATALOG.md for the detailed Phase 3 record.
+
+## Next phase — Phase 4 Entitlements
+
+The next implementation stage is Entitlements: translating subscription/billing state into tenant-level module/feature availability without conflating entitlement with user permissions.
