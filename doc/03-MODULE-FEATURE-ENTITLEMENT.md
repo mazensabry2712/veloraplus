@@ -314,6 +314,23 @@ For each Module show:
 
 Initial launch may expose Booking. CRM/ERP catalog definitions may exist as future placeholders, but they must not be purchasable before their implementation is ready.
 
+## 17A. Public Web & SEO entitlement boundary
+
+SEO/Public Web is cross-cutting infrastructure and does not receive a tenant entitlement row by default.
+
+A future commercial decision may introduce separate sellable public-site capabilities, but SEO correctness itself must not be bypassed or enabled only because a UI Feature is active.
+
+When a future public-site Feature exists:
+
+Tenant entitlement
+    +
+Public Web capability
+    ↓
+Public route availability
+    ↓
+SEO policy remains backend-authoritative
+
+See doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
 ## 18. Module states
 
 Suggested:
