@@ -452,3 +452,65 @@ This validates the intended architecture.
 If a future requirement conflicts with a documented rule, do not silently change implementation.
 
 Update the relevant document, decision/changelog, schema/flow documentation, and affected tests before changing behavior.
+
+## 23. Cross-cutting capability — Custom Domains
+
+Custom Domains are intentionally not assigned a numbered MVP phase because they cross Tenancy, Entitlements, Billing, Networking, SSL/TLS, and the public tenant experience.
+
+### Architectural prerequisite
+
+Already established:
+
+- central `tenant_domains` registry;
+- tenant resolution from request host;
+- exact tenant mapping;
+- verified-domain requirement;
+- tenant isolation boundary.
+
+### Delivery dependency
+
+Custom Domain implementation becomes eligible after:
+
+1. Tenancy foundation is stable;
+2. Entitlements can grant/revoke the Custom Domain Feature;
+3. Billing can represent the commercial state;
+4. the production edge/domain provider strategy is selected.
+
+### Production flow
+
+~~~
+Catalog Feature
+  ↓
+Entitlement active
+  ↓
+Company adds hostname
+  ↓
+DNS instructions
+  ↓
+Ownership verification
+  ↓
+Traffic/routing setup
+  ↓
+SSL/TLS ready
+  ↓
+Domain active
+  ↓
+Request host resolves to Tenant
+~~~
+
+### Acceptance requirements
+
+A production Custom Domain implementation must prove:
+
+- customer-owned hostname cannot be claimed without verification;
+- one hostname cannot belong to two Tenants;
+- disabled/unverified hostnames do not route;
+- exact host matching prevents tenant confusion;
+- default VeloraPlus hostname remains usable if the custom domain fails;
+- tenant database isolation remains unchanged;
+- entitlement removal disables custom-domain capability without deleting tenant data;
+- SSL/TLS failure does not silently mark the hostname active;
+- provider failures are observable and retry-safe;
+- domain onboarding and lifecycle actions are auditable.
+
+Custom Domain details are governed by `doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md`.
