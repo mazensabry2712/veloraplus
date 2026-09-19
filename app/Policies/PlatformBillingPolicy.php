@@ -11,13 +11,17 @@ use App\Models\Subscription;
 
 class PlatformBillingPolicy
 {
-    public function view(PlatformAccount $account, TenantContext $context): bool
+    public function view(PlatformAccount $account): bool
     {
+        $context = app(TenantContext::class);
+
         return $context->check() && $account->can('billing.view');
     }
 
-    public function manage(PlatformAccount $account, TenantContext $context): bool
+    public function manage(PlatformAccount $account): bool
     {
+        $context = app(TenantContext::class);
+
         return $context->check() && $account->can('billing.manage');
     }
 
