@@ -63,7 +63,7 @@ function createTenantSettingsTenant(
 
     TenantDomain::create([
         'tenant_id' => $tenant->getKey(),
-        'domain' => 'settings-tenant.velora.test',
+        'domain' => $domain,
         'type' => 'subdomain',
         'is_primary' => true,
         'status' => 'active',
