@@ -46,11 +46,14 @@ function tenantSettingsTestDatabasePath(): string
     return $path;
 }
 
-function createTenantSettingsTenant(string $path): Tenant
-{
+function createTenantSettingsTenant(
+    string $path,
+    string $domain = 'settings-tenant.velora.test',
+    string $slug = 'settings-tenant',
+): Tenant {
     $tenant = Tenant::factory()->create([
         'name' => 'Settings Tenant',
-        'slug' => 'settings-tenant',
+        'slug' => $slug,
         'database_name' => $path,
         'database_host' => null,
         'database_port' => null,
