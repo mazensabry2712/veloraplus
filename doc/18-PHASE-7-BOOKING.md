@@ -166,20 +166,23 @@ Implemented:
 
 ### 7.6 Public Booking
 
-Status: **PENDING**
+Status: **COMPLETED**
 
-Planned:
+Implemented:
 
-- tenant public booking resolution;
-- online-bookable services;
-- staff selection when applicable;
-- availability;
-- time selection;
-- customer details;
-- confirmation;
-- rate limiting;
-- public-data minimization;
-- SEO/public route tests before indexable release.
+- tenant public booking resolution through exact verified host;
+- active online-bookable service filtering;
+- active staff selection for the selected service;
+- customer details validation and Tenant-local public booking customer creation;
+- local date/time handling through the staff location timezone;
+- final appointment availability/concurrency validation through AppointmentManager;
+- free-service confirmation without a payment record;
+- paid booking checkout through TenantPaymentManager;
+- merchant-account preflight before creating paid booking data;
+- idempotent public booking retries without duplicate Customer/Appointment/Checkout side effects;
+- non-indexable transactional route with existing public rate limiting;
+- JSON and browser response handling;
+- end-to-end tests for free/paid flows, idempotency, missing merchant configuration, staff selection, and slot conflicts.
 
 ### 7.7 Public Web & SEO Foundation
 
@@ -199,7 +202,7 @@ SEO-5 remaining:
 - Core Web Vitals review;
 - production domain/custom-domain verification.
 
-Full Public Booking transaction remains pending as part of Phase 7.6. That business slice will implement staff selection, availability selection, customer details, appointment creation/confirmation, and the required payment/notification integration while preserving the SEO-4 non-indexable transactional boundary.
+Full Public Booking transaction is implemented in Phase 7.6. The transactional booking boundary remains non-indexable and consumes the existing Tenant Payment webhook/refund infrastructure.
 
 Custom-domain canonicalization becomes active after the separate Custom Domain infrastructure delivery.
 
