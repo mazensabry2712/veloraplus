@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Dashboard;
 
 use App\Application\Authorization\TenantRbacBootstrapper;
+use App\Models\Permission;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,7 @@ class StoreTenantRoleRequest extends FormRequest
             'permissions' => ['required', 'array'],
             'permissions.*' => [
                 'string',
-                Rule::exists('permissions', 'name')->where(
+                Rule::exists(Permission::class, 'name')->where(
                     fn ($query) => $query->where('guard_name', TenantRbacBootstrapper::GUARD),
                 ),
             ],
