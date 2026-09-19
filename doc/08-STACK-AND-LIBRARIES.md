@@ -20,7 +20,7 @@
 | Testing | Pest |
 | Static analysis | Larastan |
 | Formatting | Laravel Pint |
-| Initial payment provider | Kashier |
+| Initial payment provider adapter | Kashier (provider-neutral gateway architecture) |
 | Custom domain/edge | Provider-neutral internal abstraction; production provider selected later |
 
 ## 2. Backend packages
