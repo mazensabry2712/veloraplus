@@ -401,9 +401,42 @@ Routes:
 
 Tests cover create/update/archive, permission denial, entitlement denial, validation, and cross-tenant route-binding isolation.
 
-#### 8.3.2 Staff Availability
+#### 8.3.2 Staff Availability — Backend implemented
 
-Planned.
+The Dashboard Availability boundary consumes the existing `StaffAvailabilityManager`.
+
+Supported operations:
+
+- assign/unassign an active Booking Service to Staff;
+- create/update/delete recurring working hours;
+- create/update/delete working-hour breaks;
+- create/update/delete Staff Time Off.
+
+Authorization and entitlement:
+
+- active Tenant Membership is required;
+- availability mutations require `booking.availability`;
+- Service assignment additionally requires `booking.services`;
+- `booking.availability.manage` is enforced through the existing Staff policy boundary;
+- nested tenant records are checked against the selected Staff/Working Hour relationships.
+
+Time handling:
+
+- recurring working hours and breaks use local `HH:MM` / `HH:MM:SS` values;
+- Time Off accepts timezone-aware ISO-8601 timestamps and the existing manager normalizes them to UTC;
+- overlapping hours, overlapping breaks, out-of-range breaks, and overlapping time off remain governed by `StaffAvailabilityManager`.
+
+Backend components:
+
+- six Dashboard availability request classes for working hours, breaks, and time off;
+- `BookingAvailabilityController`;
+- existing `StaffAvailabilityManager`;
+- `StaffPolicy::manageAvailability`;
+- `BookingAvailabilityManagementTest`.
+
+Routes include Staff/Service assignment plus nested Working Hours, Breaks, and Time Off mutations under `/dashboard/booking/availability`.
+
+Tests cover successful lifecycle operations, permission denial, entitlement denial, validation/ownership boundaries, and required dual entitlement for Service assignment.
 
 #### 8.3.3 Appointments
 
