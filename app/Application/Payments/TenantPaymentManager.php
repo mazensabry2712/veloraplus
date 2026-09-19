@@ -47,10 +47,6 @@ final class TenantPaymentManager
                 throw new DomainException('Cancelled or no-show appointments cannot receive a payment checkout.');
             }
 
-            if (! in_array($locked->payment_status?->value, ['unpaid', 'failed'], true)) {
-                throw new DomainException('Appointment is not eligible for a new payment checkout.');
-            }
-
             $item = $locked->items->first();
 
             if ($item === null) {
@@ -68,6 +64,10 @@ final class TenantPaymentManager
 
             if ($existing !== null) {
                 return $existing;
+            }
+
+            if (! in_array($locked->payment_status?->value, ['unpaid', 'failed'], true)) {
+                throw new DomainException('Appointment is not eligible for a new payment checkout.');
             }
 
             $provider = strtolower(trim((string) config('velora.payments.tenant_provider')));
