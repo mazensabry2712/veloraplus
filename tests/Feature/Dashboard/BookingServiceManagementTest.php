@@ -106,22 +106,26 @@ function addBookingServiceDashboardMember(Tenant $tenant, string $roleKey = 'own
     return $account;
 }
 
-function enableBookingServicesFeature(Tenant $tenant): void
+function enableBookingServicesFeature(Tenant $tenant, ?Feature $feature = null): Feature
 {
-    $module = Module::factory()->create([
-        'key' => 'booking',
-        'name' => 'Booking',
-        'status' => 'active',
-    ]);
+    if ($feature === null) {
+        $module = Module::factory()->create([
+            'key' => 'booking',
+            'name' => 'Booking',
+            'status' => 'active',
+        ]);
 
-    $feature = Feature::factory()->create([
-        'module_id' => $module->getKey(),
-        'key' => 'booking.services',
-        'name' => 'Booking Services',
-        'status' => 'active',
-    ]);
+        $feature = Feature::factory()->create([
+            'module_id' => $module->getKey(),
+            'key' => 'booking.services',
+            'name' => 'Booking Services',
+            'status' => 'active',
+        ]);
+    }
 
     app(EntitlementService::class)->grant($tenant, $feature);
+
+    return $feature;
 }
 
 afterEach(function (): void {
@@ -285,8 +289,8 @@ test('booking service route binding is tenant aware', function (): void {
     $tenantA = createBookingServiceDashboardTenant($pathA, 'booking-services-a.velora.test', 'booking-services-a');
     $tenantB = createBookingServiceDashboardTenant($pathB, 'booking-services-b.velora.test', 'booking-services-b');
     $ownerA = addBookingServiceDashboardMember($tenantA);
-    enableBookingServicesFeature($tenantA);
-    enableBookingServicesFeature($tenantB);
+    $servicesFeature = enableBookingServicesFeature($tenantA);
+    enableBookingServicesFeature($tenantB, $servicesFeature);
 
     $manager = app(TenantDatabaseManager::class);
     $manager->connect($tenantB);
