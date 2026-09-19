@@ -354,15 +354,68 @@ The test suite covers custom role creation/update, system-role protection, delet
 
 ### 8.3 Booking workspace
 
-Use the existing Booking application services and policies for:
+The Dashboard Booking workspace consumes the already-verified Booking application services and policies. It does not duplicate Booking business rules.
 
-- Services;
-- Staff Availability;
-- Appointments;
-- Queue;
-- Tenant Payments.
+#### 8.3.1 Booking Services — Backend implemented
 
-The Dashboard must consume the existing Tenant Payment boundary for customer payments. It must not route customer Booking payments through Platform Billing.
+The Dashboard Service mutation boundary is implemented on top of the existing `ServiceManager` and `ServicePolicy`.
+
+Supported operations:
+
+- create service;
+- update service;
+- archive service.
+
+The existing ServiceManager remains authoritative for:
+
+- stable public slugs and slug-history redirects;
+- duration and buffer rules;
+- integer money values and currency normalization;
+- deposit bounds;
+- capacity;
+- lifecycle state;
+- online-booking visibility;
+- service SEO fields.
+
+Security boundary:
+
+- active Tenant Membership is required;
+- `booking.services` entitlement is required;
+- `booking.services.manage` permission is required for mutations;
+- tenant-aware route model binding runs after tenant context initialization.
+
+Backend components:
+
+- `StoreBookingServiceRequest`;
+- `UpdateBookingServiceRequest`;
+- `BookingServiceController`;
+- existing `ServiceManager`;
+- existing `ServicePolicy`;
+- `BookingServiceManagementTest`.
+
+Routes:
+
+- `POST /dashboard/booking/services`;
+- `PATCH /dashboard/booking/services/{service}`;
+- `DELETE /dashboard/booking/services/{service}`.
+
+Tests cover create/update/archive, permission denial, entitlement denial, validation, and cross-tenant route-binding isolation.
+
+#### 8.3.2 Staff Availability
+
+Planned.
+
+#### 8.3.3 Appointments
+
+Planned.
+
+#### 8.3.4 Queue
+
+Planned.
+
+#### 8.3.5 Tenant Payments
+
+Planned.
 
 ### 8.4 Billing workspace
 
