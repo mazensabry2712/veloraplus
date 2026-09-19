@@ -4,12 +4,14 @@ namespace Tests\Support;
 
 use App\Domain\Payments\Contracts\CheckoutGateway;
 use App\Domain\Payments\Contracts\RefundGateway;
+use App\Domain\Payments\Contracts\PlatformPaymentGateway;
 use App\Domain\Payments\Contracts\TenantPaymentGateway;
 use App\Domain\Payments\Contracts\TransactionLookupGateway;
 use RuntimeException;
 
 final class FakeTenantPaymentGateway implements
     TenantPaymentGateway,
+    PlatformPaymentGateway,
     CheckoutGateway,
     TransactionLookupGateway,
     RefundGateway
