@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\StaffController;
 use App\Http\Controllers\Dashboard\CustomerController;
 use App\Http\Controllers\Dashboard\TenantMembershipController;
 use App\Http\Controllers\Dashboard\TenantRoleController;
+use App\Http\Controllers\Dashboard\BookingServiceController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
 use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -78,6 +79,20 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])->group(functio
 
     Route::delete('/dashboard/company/roles/{role}', [TenantRoleController::class, 'destroy'])
         ->name('company.roles.destroy');
+});
+
+Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.services', 'noindex'])
+    ->prefix('dashboard/booking/services')
+    ->name('dashboard.booking.services.')
+    ->group(function (): void {
+        Route::post('/', [BookingServiceController::class, 'store'])
+            ->name('store');
+
+        Route::patch('/{service}', [BookingServiceController::class, 'update'])
+            ->name('update');
+
+        Route::delete('/{service}', [BookingServiceController::class, 'destroy'])
+            ->name('destroy');
 });
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
