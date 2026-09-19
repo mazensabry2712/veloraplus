@@ -349,6 +349,19 @@ test('published service slug changes redirect permanently to the current canonic
 
     $response->assertRedirect('https://clinic.velora.test/services/professional-dental-cleaning')
         ->assertStatus(301);
+
+    TenantDomain::query()->create([
+        'tenant_id' => $tenant->getKey(),
+        'domain' => 'alternate.velora.test',
+        'type' => 'subdomain',
+        'is_primary' => false,
+        'status' => 'active',
+    ]);
+
+    $alternate = $this->get('https://alternate.velora.test/services/'.$service->slug);
+
+    $alternate->assertRedirect('https://clinic.velora.test/services/professional-dental-cleaning')
+        ->assertStatus(301);
 });
 
 test('unknown tenant host cannot reach the public home', function () {
