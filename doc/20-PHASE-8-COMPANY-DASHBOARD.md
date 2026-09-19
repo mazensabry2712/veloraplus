@@ -586,7 +586,7 @@ The test suite covers checkout creation, checkout URL propagation, permission/en
 
 The Dashboard Billing workspace is strictly for Company → VeloraPlus Platform Billing. Customer → Company Booking payments remain under the Tenant Payments boundary in 8.3.5.
 
-#### 8.4.1 Subscription & Billing access — Backend implemented
+#### 8.4.1 Subscription & Billing access — Backend implemented and verified
 
 Implemented backend boundary:
 
@@ -602,15 +602,47 @@ Implemented backend boundary:
 
 Existing Billing services remain the financial source of truth. Dashboard code does not write invoices, payments, refunds, credits, or subscription totals directly.
 
-The first 8.4 backend slice is implemented; final verification is pending on the current CI/test run.
+#### 8.4.2 Platform Billing Checkout — Backend implemented and verified
 
-#### 8.4.2 Platform Billing Checkout
+Implemented:
 
-Planned.
+- create a pending Platform Payment from an open invoice;
+- create a hosted checkout session through the configured Platform Payment Gateway;
+- persist checkout/session/provider metadata including the checkout URL;
+- reuse an existing pending checkout session to avoid duplicate sessions;
+- pass the authenticated company billing contact to the provider;
+- keep payment success authoritative through the existing verified webhook/reconciliation path.
 
-#### 8.4.3 Invoices, payments, refunds, and credits
+Route:
 
-Planned.
+- `POST /dashboard/billing/invoices/{invoice}/checkout`
+
+The checkout slice was verified locally at 213 tests / 1099 assertions and the corresponding GitHub Actions run was green.
+
+#### 8.4.3 Invoices, payments, refunds, and credits — Backend implemented
+
+Implemented:
+
+- Billing overview now includes recent Platform Invoices, Platform Payments, Platform Refunds, and Platform Credits;
+- open invoice voiding through `InvoiceService`;
+- partial/full Platform Payment refunds through the provider-neutral `RefundGateway`;
+- refund amount protection remains inside `RefundService`;
+- Platform Refund idempotency keys with a database uniqueness constraint;
+- explicit refund failure lifecycle and billing audit events;
+- initiating Platform Account recorded on Dashboard refunds;
+- Platform Credit issuance through `CreditService`;
+- tenant-safe Policies for billing financial records;
+- all mutations remain behind authenticated tenant membership, `billing.manage`, and `noindex`.
+
+Routes:
+
+- `POST /dashboard/billing/invoices/{invoice}/void`
+- `POST /dashboard/billing/payments/{payment}/refund`
+- `POST /dashboard/billing/credits`
+
+Dashboard Billing remains strictly Company → VeloraPlus. Tenant customer Booking payments remain under 8.3.5 and never create Platform Billing records.
+
+The 8.4.3 backend slice is implemented; final verification is pending on the current CI/test run.
 
 #### 8.4.4 Subscription changes
 
