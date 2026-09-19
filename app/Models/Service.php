@@ -4,12 +4,16 @@ namespace App\Models;
 
 use App\Domain\Booking\ServiceStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'name',
     'slug',
     'description',
+    'seo_title',
+    'seo_description',
+    'social_image_url',
     'duration_minutes',
     'buffer_before_minutes',
     'buffer_after_minutes',
@@ -24,6 +28,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Service extends TenantModel
 {
     use SoftDeletes;
+
+    public function slugRedirects(): HasMany
+    {
+        return $this->hasMany(ServiceSlugRedirect::class);
+    }
 
     protected function casts(): array
     {
