@@ -212,6 +212,59 @@ test('tenant payment provider accounts are stored centrally with encrypted crede
         ->and($account->fresh()->encrypted_credentials['merchant_id'])->toBe('MID-CLINIC');
 });
 
+
+test('tenant payment checkout requires an active merchant account', function (): void {
+    $path = tenantPaymentDatabase();
+    $this->tenantPaymentTestDatabases = [$path];
+
+    migrateTenantPaymentDatabase($path);
+
+    $tenant = Tenant::factory()->create();
+    tenantPaymentContext($tenant);
+    $fixtures = tenantPaymentFixtures($tenant);
+
+    config(['velora.payments.tenant_provider' => 'fake']);
+
+    $calls = [];
+    configureFakeTenantGateway($calls);
+
+    expect(fn () => app(TenantPaymentManager::class)->createCheckout($fixtures['appointment']))
+        ->toThrow(DomainException::class);
+
+    expect(TenantPayment::query()->count())->toBe(0)
+        ->and($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Unpaid);
+});
+
+test('tenant payment cannot be marked succeeded from a failed state', function (): void {
+    $path = tenantPaymentDatabase();
+    $this->tenantPaymentTestDatabases = [$path];
+
+    migrateTenantPaymentDatabase($path);
+
+    $tenant = Tenant::factory()->create();
+    PaymentProviderAccount::query()->create([
+        'tenant_id' => $tenant->getKey(),
+        'provider' => 'fake',
+        'account_reference' => 'FAKE-CLINIC',
+        'status' => 'active',
+    ]);
+
+    tenantPaymentContext($tenant);
+    $fixtures = tenantPaymentFixtures($tenant);
+
+    $calls = [];
+    configureFakeTenantGateway($calls);
+
+    $manager = app(TenantPaymentManager::class);
+    $payment = $manager->createCheckout($fixtures['appointment']);
+    $manager->markFailed($payment, 'Test failure');
+
+    expect(fn () => $manager->markSucceeded($payment))
+        ->toThrow(DomainException::class);
+
+    expect($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Unpaid);
+});
+
 test('tenant payment checkout is idempotent and updates appointment payment state', function (): void {
     $path = tenantPaymentDatabase();
     $this->tenantPaymentTestDatabases = [$path];
