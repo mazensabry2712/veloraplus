@@ -12,6 +12,7 @@ use App\Models\Module;
 use App\Models\Role;
 use App\Models\QueueEntry;
 use App\Models\TenantMembership;
+use App\Models\PlatformCredit;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformPayment;
 use App\Models\PlatformRefund;
@@ -54,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PlatformInvoice::class, PlatformBillingPolicy::class);
         Gate::policy(PlatformPayment::class, PlatformBillingPolicy::class);
         Gate::policy(PlatformRefund::class, PlatformBillingPolicy::class);
+        Gate::policy(PlatformCredit::class, PlatformBillingPolicy::class);
 
         Blade::if('entitled', function (string $capability): bool {
             $tenant = app(TenantContext::class)->get();
