@@ -17,7 +17,7 @@ return new class extends Migration
         DB::table('services')
             ->whereNull('slug')
             ->orderBy('id')
-            ->chunk(100, function ($services): void {
+            ->chunkById(100, function ($services): void {
                 $used = DB::table('services')
                     ->whereNotNull('slug')
                     ->pluck('slug')
