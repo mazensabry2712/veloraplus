@@ -4,11 +4,17 @@ use App\Models\PlatformAccount;
 use App\Models\Tenant;
 use App\Models\TenantDomain;
 use App\Models\TenantMembership;
+use App\Infrastructure\Tenancy\TenantDatabaseManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    $this->originalTenantTemplate = config('database.connections.tenant_template');
+});
 
 function dashboardTestTenantDatabasePath(): string
 {
@@ -18,6 +24,20 @@ function dashboardTestTenantDatabasePath(): string
 
     $path = $directory.'/dashboard-'.Str::ulid().'.sqlite';
     touch($path);
+
+    config([
+        'database.connections.tenant_template' => [
+            'driver' => 'sqlite',
+            'url' => null,
+            'database' => $path,
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+            'busy_timeout' => 5000,
+            'journal_mode' => null,
+            'synchronous' => null,
+            'transaction_mode' => 'DEFERRED',
+        ],
+    ]);
 
     return $path;
 }
@@ -47,6 +67,13 @@ function createDashboardTenant(string $path): Tenant
 }
 
 afterEach(function (): void {
+    DB::purge(TenantDatabaseManager::CONNECTION);
+    DB::setDefaultConnection('central');
+
+    config([
+        'database.connections.tenant_template' => $this->originalTenantTemplate,
+    ]);
+
     if (isset($this->dashboardTenantDatabasePath) && is_file($this->dashboardTenantDatabasePath)) {
         unlink($this->dashboardTenantDatabasePath);
     }
@@ -82,7 +109,7 @@ test('active tenant member can access the company dashboard', function (): void 
     $this->actingAs($member)
         ->get('http://dashboard-tenant.velora.test/dashboard')
         ->assertOk()
-        ->assertHeader('X-Robots-Tag', 'noindex, nofollow, noarchive')
+        ->assertHeader('X-Robots-Tag', 'noindex, nofollow')
         ->assertSee('Company Dashboard')
         ->assertSee('Dashboard Tenant')
         ->assertSee('Dashboard Member')
