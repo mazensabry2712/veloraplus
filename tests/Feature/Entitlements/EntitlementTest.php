@@ -70,12 +70,12 @@ test('inactive or expired entitlements deny access while scheduled removal works
 
     expect($service->hasFeature($tenant, 'booking.queue'))->toBeTrue();
 
-    $service->scheduleRemoval($tenant, $feature, now()->addDay());
+    $service->scheduleRemoval($tenant, $feature, \Carbon\CarbonImmutable::now()->addDay());
 
     expect($service->hasFeature($tenant, 'booking.queue'))->toBeTrue()
         ->and($service->status($tenant, 'booking.queue'))->toBe(EntitlementStatus::ScheduledForRemoval)
-        ->and($service->hasFeature($tenant, 'booking.queue', now()->addDays(2)))->toBeFalse()
-        ->and($service->status($tenant, 'booking.queue', now()->addDays(2)))->toBe(EntitlementStatus::Inactive);
+        ->and($service->hasFeature($tenant, 'booking.queue', \Carbon\CarbonImmutable::now()->addDays(2)))->toBeFalse()
+        ->and($service->status($tenant, 'booking.queue', \Carbon\CarbonImmutable::now()->addDays(2)))->toBe(EntitlementStatus::Inactive);
 });
 
 test('tenant entitlements are isolated between tenants', function () {
