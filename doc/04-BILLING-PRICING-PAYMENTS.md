@@ -250,30 +250,13 @@ currency CHAR(3)
 
 A money library/value object should be used in application code.
 
-## 18. Payment provider abstraction
-
-Use a contract such as PaymentGatewayInterface.
-
-Possible operations:
-
-- create checkout;
-- verify payment;
-- refund;
-- create recurring agreement/token where supported;
-- charge recurring;
-- cancel recurring;
-- parse/verify webhook;
-- retrieve transaction.
-
-Initial adapter: KashierGateway.
-
-## 18A. Payment domains and provider neutrality
+## 18. Payment provider architecture
 
 Payment providers are external payment rails. Core Billing must remain provider-agnostic.
 
-### Platform Billing — Company → VeloraPlus
+There are two separate payment domains.
 
-This domain handles a Company's payment for its VeloraPlus Subscription.
+### Platform Billing — Company → VeloraPlus
 
 ~~~
 Company
@@ -289,8 +272,6 @@ External Payment Provider
 
 ### Tenant Payments — Customer → Company
 
-This domain handles a Company's business payments such as Booking, sales, invoices, and future module transactions.
-
 ~~~
 Customer
   ↓
@@ -303,7 +284,7 @@ Provider Adapter
 Company Merchant Account
 ~~~
 
-The two payment domains are separate:
+The two domains remain financially and operationally separate:
 
 - Platform Billing is owned by the central/control database.
 - Tenant business payments belong to the current Tenant business domain.
@@ -311,24 +292,28 @@ The two payment domains are separate:
 - Tenant Invoice = Company → Customer.
 - Payment ownership, audit trail, provider references, and settlement context remain domain-specific.
 
-### Provider adapter rule
+### Provider-neutral adapter rule
 
-Billing, Booking, CRM, and ERP code must not depend directly on Kashier or any other concrete provider.
+Billing, Booking, CRM, and ERP code must not depend directly on Kashier or another concrete provider.
 
-Use provider-neutral contracts plus a gateway manager/factory that selects an adapter by payment context and provider.
+Use provider-neutral contracts plus a gateway manager/factory that selects a provider adapter by payment context.
 
-Conceptual boundaries:
+Conceptual contracts:
 
 ~~~
 PlatformPaymentGateway
 TenantPaymentGateway
 
-Provider Adapters:
-KashierGateway
-FutureProviderGateway...
+Capability contracts:
+CheckoutGateway
+PaymentVerificationGateway
+RefundGateway
+RecurringPaymentGateway
+WebhookGateway
+TransactionLookupGateway
 ~~~
 
-Capability-specific contracts may cover checkout, verification, refunds, recurring payments, webhook verification, and transaction lookup. A provider is not required to support every capability.
+A provider adapter may implement only the capabilities it supports.
 
 **Kashier is the first provider adapter only. It is not part of Core Billing and is not the permanent payment provider.**
 

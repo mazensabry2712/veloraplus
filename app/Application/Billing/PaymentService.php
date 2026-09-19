@@ -110,19 +110,25 @@ final class PaymentService
         PlatformPayment $payment,
         ?string $reason = null,
     ): PlatformPayment {
-        if ($payment->status !== PaymentStatus::Pending) {
-            throw new DomainException('Only a pending payment can fail.');
-        }
+        return DB::connection('central')->transaction(function () use ($payment, $reason): PlatformPayment {
+            $payment = PlatformPayment::query()
+                ->lockForUpdate()
+                ->findOrFail($payment->getKey());
 
-        $payment->update([
-            'status' => PaymentStatus::Failed,
-            'metadata' => array_merge($payment->metadata ?? [], ['failure_reason' => $reason]),
-        ]);
+            if ($payment->status !== PaymentStatus::Pending) {
+                throw new DomainException('Only a pending payment can fail.');
+            }
 
-        $this->audit->record($payment->tenant, 'payment.failed', $payment, [
-            'reason' => $reason,
-        ]);
+            $payment->update([
+                'status' => PaymentStatus::Failed,
+                'metadata' => array_merge($payment->metadata ?? [], ['failure_reason' => $reason]),
+            ]);
 
-        return $payment->refresh();
+            $this->audit->record($payment->tenant, 'payment.failed', $payment, [
+                'reason' => $reason,
+            ]);
+
+            return $payment->refresh();
+        });
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Application\Billing;
 
+use App\Domain\Billing\BillingMoney;
 use App\Domain\Billing\InvoiceStatus;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformInvoiceItem;
@@ -50,10 +51,16 @@ final class InvoiceService
                 throw new DomainException('Subscription item currencies must match the subscription currency.');
             }
 
-            $subtotal += $item->unit_amount_minor * $item->quantity;
-            $discount += $item->discount_amount_minor;
-            $tax += $item->tax_amount_minor;
-            $total += $item->line_total_minor;
+            $lineSubtotal = BillingMoney::multiply(
+                $item->unit_amount_minor,
+                $item->quantity,
+                $currency,
+            );
+
+            $subtotal = $this->addMoney($subtotal, $lineSubtotal, 'Invoice subtotal');
+            $discount = $this->addMoney($discount, $item->discount_amount_minor, 'Invoice discount');
+            $tax = $this->addMoney($tax, $item->tax_amount_minor, 'Invoice tax');
+            $total = $this->addMoney($total, $item->line_total_minor, 'Invoice total');
         }
 
         return $subscription->getConnection()->transaction(function () use (
@@ -147,4 +154,13 @@ final class InvoiceService
 
         return $invoice->refresh();
     }
+    private function addMoney(int $current, int $increment, string $label): int
+    {
+        if ($increment < 0 || $current > PHP_INT_MAX - $increment) {
+            throw new DomainException("{$label} exceeds the supported integer range.");
+        }
+
+        return $current + $increment;
+    }
+
 }

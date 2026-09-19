@@ -197,6 +197,10 @@ test('invoice lines snapshot subscription item prices and remain immutable after
 
     expect(fn () => $invoice->update(['total_minor' => 1]))
         ->toThrow(DomainException::class);
+
+    expect(fn () => $invoice->delete())
+        ->toThrow(DomainException::class)
+        ->and(PlatformInvoice::query()->whereKey($invoice->getKey())->exists())->toBeTrue();
 });
 
 test('upgrade creates a separate pending subscription item and activates it only after payment', function () {

@@ -31,15 +31,6 @@ final class SubscriptionService
         ?string $countryCode = null,
         int $taxBps = 0,
     ): Subscription {
-        $existing = Subscription::query()
-            ->where('tenant_id', $tenant->getKey())
-            ->get()
-            ->first(fn (Subscription $subscription) => $subscription->isOpen());
-
-        if ($existing !== null) {
-            throw new DomainException('Tenant already has an open subscription.');
-        }
-
         if ($trialDays < 0 || $trialDays > 90) {
             throw new DomainException('Trial days must be between 0 and 90.');
         }
@@ -69,6 +60,19 @@ final class SubscriptionService
             $trialDays,
             $taxBps,
         ): Subscription {
+            $tenant = Tenant::query()
+                ->lockForUpdate()
+                ->findOrFail($tenant->getKey());
+
+            $existing = Subscription::query()
+                ->where('tenant_id', $tenant->getKey())
+                ->get()
+                ->first(fn (Subscription $subscription) => $subscription->isOpen());
+
+            if ($existing !== null) {
+                throw new DomainException('Tenant already has an open subscription.');
+            }
+
             $subscription = Subscription::query()->create([
                 'tenant_id' => $tenant->getKey(),
                 'status' => $trialEndsAt !== null
@@ -262,86 +266,93 @@ final class SubscriptionService
     ): ?PlatformInvoice {
         $at ??= CarbonImmutable::now();
 
-        $subscription = Subscription::query()
-            ->lockForUpdate()
-            ->with('items')
-            ->findOrFail($subscription->getKey());
+        return $subscription->getConnection()->transaction(function () use ($subscription, $at): ?PlatformInvoice {
+                    $at ??= CarbonImmutable::now();
 
-        if ($subscription->current_period_end > $at) {
-            throw new DomainException('Subscription period has not ended yet.');
-        }
+                    $subscription = Subscription::query()
+                        ->lockForUpdate()
+                        ->with('items')
+                        ->findOrFail($subscription->getKey());
 
-        if ($subscription->cancel_at_period_end) {
-            $subscription->update([
-                'status' => SubscriptionStatus::Cancelled,
-                'cancelled_at' => $at,
-            ]);
+                    if ($subscription->current_period_end > $at) {
+                        throw new DomainException('Subscription period has not ended yet.');
+                    }
 
-            $subscription->items->each(fn (SubscriptionItem $item) => $item->update([
-                'status' => SubscriptionItemStatus::Inactive,
-                'ends_at' => $at,
-            ]));
+                    if ($subscription->cancel_at_period_end) {
+                        $subscription->update([
+                            'status' => SubscriptionStatus::Cancelled,
+                            'cancelled_at' => $at,
+                        ]);
 
-            $this->projector->project($subscription->fresh('items'));
-            $this->audit->record($subscription->tenant, 'subscription.cancelled', $subscription);
+                        $subscription->items->each(fn (SubscriptionItem $item) => $item->update([
+                            'status' => SubscriptionItemStatus::Inactive,
+                            'ends_at' => $at,
+                        ]));
 
-            return null;
-        }
+                        $this->projector->project($subscription->fresh('items'));
+                        $this->audit->record($subscription->tenant, 'subscription.cancelled', $subscription);
 
-        $renewalItems = [];
-        foreach ($subscription->items as $item) {
-            if ($item->status === SubscriptionItemStatus::Scheduled) {
-                $item->update([
-                    'status' => SubscriptionItemStatus::Inactive,
-                    'ends_at' => $at,
-                ]);
-                continue;
-            }
+                        return null;
+                    }
 
-            if ($item->status === SubscriptionItemStatus::Active) {
-                $item->update([
-                    'status' => SubscriptionItemStatus::Pending,
-                    'starts_at' => null,
-                    'ends_at' => null,
-                ]);
-                $renewalItems[] = $item->fresh();
-            }
-        }
+                    $renewalItems = [];
+                    foreach ($subscription->items as $item) {
+                        if ($item->status === SubscriptionItemStatus::Scheduled) {
+                            $item->update([
+                                'status' => SubscriptionItemStatus::Inactive,
+                                'ends_at' => $at,
+                            ]);
+                            continue;
+                        }
 
-        $oldEnd = $subscription->current_period_end;
-        $newEnd = $this->advancePeriod($oldEnd, $subscription->billing_cycle);
+                        if ($item->status === SubscriptionItemStatus::Active) {
+                            $item->update([
+                                'status' => SubscriptionItemStatus::Pending,
+                                'starts_at' => null,
+                                'ends_at' => null,
+                            ]);
+                            $renewalItems[] = $item->fresh();
+                        }
+                    }
 
-        $subscription->update([
-            'status' => SubscriptionStatus::PendingPayment,
-            'current_period_start' => $oldEnd,
-            'current_period_end' => $newEnd,
-            'next_billed_at' => $oldEnd,
-        ]);
+                    $oldEnd = $subscription->current_period_end;
+                    $newEnd = $this->advancePeriod($oldEnd, $subscription->billing_cycle);
 
-        $subscription->refresh();
-        $this->projector->project($subscription);
+                    $subscription->update([
+                        'status' => SubscriptionStatus::PendingPayment,
+                        'current_period_start' => $oldEnd,
+                        'current_period_end' => $newEnd,
+                        'next_billed_at' => $oldEnd,
+                    ]);
 
-        if ($renewalItems === []) {
-            $subscription->update([
-                'status' => SubscriptionStatus::Expired,
-                'next_billed_at' => null,
-            ]);
+                    $subscription->refresh();
+                    $this->projector->project($subscription);
 
-            $this->projector->project($subscription->fresh('items'));
-            $this->audit->record($subscription->tenant, 'subscription.expired_no_items', $subscription);
+                    if ($renewalItems === []) {
+                        $subscription->update([
+                            'status' => SubscriptionStatus::Expired,
+                            'next_billed_at' => null,
+                        ]);
 
-            return null;
-        }
+                        $this->projector->project($subscription->fresh('items'));
+                        $this->audit->record($subscription->tenant, 'subscription.expired_no_items', $subscription);
 
-        $invoice = $this->invoices->createForSubscription($subscription, $renewalItems, null, [
-            'type' => 'renewal',
-        ]);
+                        return null;
+                    }
 
-        $this->audit->record($subscription->tenant, 'subscription.renewal_pending_payment', $subscription, [
-            'invoice_id' => $invoice->getKey(),
-        ]);
+                    $invoice = $this->invoices->createForSubscription($subscription, $renewalItems, null, [
+                        'type' => 'renewal',
+                    ]);
 
-        return $invoice;
+                    $this->audit->record($subscription->tenant, 'subscription.renewal_pending_payment', $subscription, [
+                        'invoice_id' => $invoice->getKey(),
+                    ]);
+
+                    return $invoice;
+                }
+
+
+        });
     }
 
     public function activateInvoiceItems(
