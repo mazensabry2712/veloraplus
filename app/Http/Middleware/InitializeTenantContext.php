@@ -26,9 +26,10 @@ final class InitializeTenantContext
         }
 
         $this->context->set($tenant);
-        $this->databaseManager->connect($tenant);
 
         try {
+            $this->databaseManager->connect($tenant);
+
             return $next($request);
         } finally {
             $this->databaseManager->disconnect();
