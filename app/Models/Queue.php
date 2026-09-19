@@ -24,7 +24,7 @@ class Queue extends TenantModel
     protected function casts(): array
     {
         return [
-            'business_date' => 'date',
+            'business_date' => 'string',
             'status' => QueueStatus::class,
             'next_position' => 'integer',
             'metadata' => 'array',
