@@ -5,6 +5,7 @@ use App\Http\Controllers\Public\PublicServiceController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\RobotsController;
 use App\Http\Controllers\Public\SitemapController;
+use App\Http\Controllers\Dashboard\CompanyDashboardController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
 use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -15,6 +16,10 @@ Route::get('/', PublicHomeController::class)
     ->name('public.home');
 
 Route::get('/robots.txt', RobotsController::class)->name('seo.robots');
+Route::get('/dashboard', CompanyDashboardController::class)
+    ->middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
+    ->name('dashboard');
+
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
     Route::get('/', [PublicServiceController::class, 'index'])->name('index');
