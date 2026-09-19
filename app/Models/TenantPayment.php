@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Domain\Payments\TenantPaymentStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'appointment_id',
@@ -44,5 +45,10 @@ class TenantPayment extends TenantModel
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(TenantPaymentRefund::class);
     }
 }
