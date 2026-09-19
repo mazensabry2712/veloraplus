@@ -25,6 +25,7 @@ Implementation must follow these documents:
 11. 11-PHASE-1-TENANCY-FOUNDATION.md
 12. 12-PHASE-2-IDENTITY-AUTH-RBAC.md
 13. 13-PHASE-3-MODULE-CATALOG.md
+14. 14-CUSTOM-DOMAIN-ARCHITECTURE.md
 
 ## Locked decisions
 
@@ -32,7 +33,10 @@ Implementation must follow these documents:
 - One VeloraPlus platform serves many companies.
 - Every company is a tenant with its own database.
 - Default company address: {slug}.velora.com.
-- Custom domains are a future capability and must be supported by the architecture.
+- Custom domains are a first-class cross-cutting capability: the architecture supports verified custom hostnames, tenant routing, SSL/TLS lifecycle, and future edge-provider integration.
+- A Custom Domain is represented commercially as a catalog Feature; whether it is separately priced or included in a Bundle/plan is catalog configuration, not hard-coded application logic.
+- The customer owns and controls the domain registration; VeloraPlus provides onboarding instructions, verification, routing integration, and platform-side lifecycle management.
+- The application remains provider-neutral at the domain boundary; an edge/SSL provider can be selected without changing tenant/business logic.
 - One platform account can own or belong to more than one company.
 - Company data is isolated from every other company.
 - Customer accounts may exist at platform level, while customer business profiles remain company-specific.
@@ -92,7 +96,7 @@ ERP
 
 Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 Module Catalog is also closed and verified.
 
-The next implementation stage is Phase 4 — Entitlements. The repository documentation and implementation order are kept aligned with the current phase so that no business module is started against an incomplete platform core.
+The next implementation stage is Phase 4 — Entitlements. Custom Domain architecture is now explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
 
 ## Non-negotiable rules
 
