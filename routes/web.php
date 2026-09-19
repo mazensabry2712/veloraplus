@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Public\PublicHomeController;
+use App\Http\Controllers\Public\PublicServiceController;
 use App\Http\Controllers\Public\RobotsController;
 use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
@@ -14,7 +15,7 @@ Route::get('/', PublicHomeController::class)
 Route::get('/robots.txt', RobotsController::class)->name('seo.robots');
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
-    Route::get('/', [\App\Http\Controllers\Public\PublicServiceController::class, 'index'])->name('index');
+    Route::get('/', [PublicServiceController::class, 'index'])->name('index');
     Route::get('/{slug}', [\App\Http\Controllers\Public\PublicServiceController::class, 'show'])
         ->where('slug', '[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*')
         ->name('show');
