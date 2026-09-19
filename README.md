@@ -70,7 +70,7 @@ Phase 6 — Payments & Provider Adapters is closed and verified. Kashier is impl
 
 Phase 7 — Booking core is implemented through 7.6: Services, Staff Availability, Appointments, Tenant Payments, Queue, and the Public Booking transaction are implemented and verified. SEO/Public Web is a locked cross-cutting capability; SEO-1 through SEO-4 are implemented and tested, while SEO-5 remains a production deployment/monitoring gate. The canonical contract is doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
 
-Phase 8 — Company Dashboard is planned and documented in doc/20-PHASE-8-COMPANY-DASHBOARD.md; Dashboard implementation has not started yet.
+Phase 8 — Company Dashboard is in progress. 8.1 Dashboard Shell has started; the private `/dashboard` route, tenant membership boundary, shared layout, Overview screen, and access/isolation tests are implemented. CI verification is pending for the latest shell implementation.
 
 ## Development principle
 
