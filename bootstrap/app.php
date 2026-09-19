@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureTenantEntitlement;
 use App\Http\Middleware\InitializeTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => InitializeTenantContext::class,
             'tenant.member' => \App\Http\Middleware\EnsureTenantMembership::class,
+            'entitled' => EnsureTenantEntitlement::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

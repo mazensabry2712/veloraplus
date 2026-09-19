@@ -42,6 +42,11 @@ class Tenant extends Model
         return $this->hasMany(TenantMembership::class);
     }
 
+    public function entitlements(): HasMany
+    {
+        return $this->hasMany(TenantEntitlement::class);
+    }
+
     public function accounts(): BelongsToMany
     {
         return $this->belongsToMany(
