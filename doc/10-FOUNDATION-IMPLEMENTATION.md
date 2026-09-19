@@ -175,3 +175,24 @@ Verification completed:
 No Kashier implementation was added to Core Billing. Phase 6 will add provider adapters.
 
 See doc/16-PHASE-5-BILLING.md for the full contract and verification record.
+
+
+## Phase 6 status — implementation committed / verification pending
+
+Phase 6 Payments & Provider Adapters has been implemented with a provider-neutral gateway boundary and the first concrete Kashier adapter.
+
+Implemented:
+
+- Platform Payment Gateway and Tenant Payment Gateway boundaries;
+- PaymentGatewayManager provider registry;
+- capability-specific checkout, verification, refund, webhook, and transaction lookup contracts;
+- Kashier hosted Payment Session adapter;
+- Kashier payment lookup and refund adapter;
+- Kashier webhook signature verification;
+- central webhook idempotency storage;
+- verified Platform Payment activation through the existing Billing services;
+- provider-neutral tenant payment boundary.
+
+No live credentials were committed. Tenant business payment flows remain unimplemented until their Booking/CRM/ERP domains consume the shared payment layer.
+
+See doc/17-PHASE-6-PAYMENTS.md for the detailed Phase 6 record.
