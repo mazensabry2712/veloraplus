@@ -3,21 +3,24 @@
 namespace App\Models;
 
 use Database\Factories\PlatformAccountFactory;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['name', 'email', 'password', 'status'])]
 #[Hidden(['password', 'remember_token'])]
-class PlatformAccount extends Authenticatable
+class PlatformAccount extends Authenticatable implements MustVerifyEmailContract
 {
     /** @use HasFactory<PlatformAccountFactory> */
-    use HasFactory, HasUlids, Notifiable;
+    use HasFactory, HasRoles, HasUlids, MustVerifyEmailTrait, Notifiable;
 
     protected $connection = 'central';
 
@@ -38,11 +41,6 @@ class PlatformAccount extends Authenticatable
         )->withPivot(['role_key', 'status', 'joined_at']);
     }
 
-    /**
-     * Get the model attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [

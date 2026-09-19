@@ -2,8 +2,7 @@
 
 namespace App\Actions\Fortify;
 
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Models\PlatformAccount;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
@@ -13,13 +12,11 @@ class UpdateUserPassword implements UpdatesUserPasswords
     use PasswordValidationRules;
 
     /**
-     * Validate and update the user's password.
-     *
      * @param  array<string, string>  $input
      *
      * @throws ValidationException
      */
-    public function update(User $user, array $input): void
+    public function update(PlatformAccount $user, array $input): void
     {
         Validator::make($input, [
             'current_password' => ['required', 'string', 'current_password:web'],
@@ -29,7 +26,7 @@ class UpdateUserPassword implements UpdatesUserPasswords
         ])->validateWithBag('updatePassword');
 
         $user->forceFill([
-            'password' => Hash::make($input['password']),
+            'password' => $input['password'],
         ])->save();
     }
 }
