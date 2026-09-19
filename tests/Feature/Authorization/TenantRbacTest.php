@@ -33,6 +33,43 @@ test('tenant rbac bootstrap is idempotent and creates default permissions and ro
         ->toEqualCanonicalizing(['owner', 'admin', 'manager', 'staff', 'viewer']);
 });
 
+test('tenant rbac bootstrap synchronizes a changed membership role', function () {
+    $account = PlatformAccount::factory()->create();
+    $tenant = Tenant::factory()->create();
+
+    TenantMembership::create([
+        'tenant_id' => $tenant->getKey(),
+        'account_id' => $account->getKey(),
+        'role_key' => 'manager',
+        'status' => 'active',
+    ]);
+
+    $bootstrapper = app(TenantRbacBootstrapper::class);
+    $bootstrapper->bootstrapForTenant($tenant);
+
+    setPermissionsTeamId($tenant->getKey());
+    $account->unsetRelation('roles')->unsetRelation('permissions');
+
+    expect($account->hasRole('manager'))->toBeTrue();
+
+    TenantMembership::query()
+        ->where('tenant_id', $tenant->getKey())
+        ->where('account_id', $account->getKey())
+        ->update(['role_key' => 'viewer']);
+
+    $bootstrapper->bootstrapForTenant($tenant);
+
+    setPermissionsTeamId($tenant->getKey());
+    $account->unsetRelation('roles')->unsetRelation('permissions');
+
+    expect($account->hasRole('viewer'))
+        ->toBeTrue()
+        ->and($account->hasRole('manager'))
+        ->toBeFalse()
+        ->and($account->hasPermissionTo('customers.manage'))
+        ->toBeFalse();
+});
+
 test('one platform account can have different roles in different tenants', function () {
     $account = PlatformAccount::factory()->create();
     $tenantA = Tenant::factory()->create();
