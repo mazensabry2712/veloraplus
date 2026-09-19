@@ -7,7 +7,7 @@ use App\Application\SEO\SeoManager;
 use App\Domain\Tenancy\TenantContext;
 use App\Http\Requests\PublicBookingRequest;
 use App\Models\Service;
-use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -50,7 +50,7 @@ final class PublicBookingController
         TenantContext $context,
         PublicBookingManager $bookings,
         SeoManager $seo,
-    ): View|RedirectResponse {
+    ): View|RedirectResponse|JsonResponse {
         if (! $context->check()) {
             abort(404);
         }
@@ -61,11 +61,7 @@ final class PublicBookingController
             abort(404);
         }
 
-        try {
-            $result = $bookings->book($service, $request->validated());
-        } catch (DomainException $exception) {
-            throw $exception;
-        }
+        $result = $bookings->book($service, $request->validated());
 
         if ($request->expectsJson()) {
             return response()->json([
