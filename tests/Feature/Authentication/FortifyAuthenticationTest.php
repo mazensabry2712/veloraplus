@@ -17,7 +17,7 @@ test('fortify authentication views render', function () {
     $this->get('/forgot-password')->assertOk();
     $this->get('/reset-password/test-token')->assertOk();
 
-    $account = PlatformAccount::factory()->create();
+    $account = PlatformAccount::factory()->unverified()->create();
 
     $this->actingAs($account)
         ->get('/email/verify')
@@ -100,7 +100,7 @@ test('password reset request sends a reset notification', function () {
 
     $this->post('/forgot-password', [
         'email' => $account->email,
-    ])->assertRedirect('/forgot-password');
+    ])->assertRedirect(config('fortify.home'));
 
     Notification::assertSentTo($account, ResetPassword::class);
 });
@@ -117,7 +117,7 @@ test('password reset changes the account password', function () {
         'email' => $account->email,
         'password' => 'new-password',
         'password_confirmation' => 'new-password',
-    ])->assertRedirect(config('fortify.home'));
+    ])->assertRedirect('/login');
 
     expect(Hash::check('new-password', $account->fresh()->password))->toBeTrue();
 });
@@ -136,7 +136,7 @@ test('email verification marks the account as verified', function () {
 
     $this->actingAs($account)
         ->get($verificationUrl)
-        ->assertRedirect(config('fortify.home'));
+        ->assertRedirect(config('fortify.home').'?verified=1');
 
     expect($account->fresh()->hasVerifiedEmail())->toBeTrue();
 });
