@@ -190,9 +190,9 @@ Current implementation status:
 - SEO-4 Public Booking SEO integration: implemented and verified by automated tests;
 - custom-domain canonicalization: pending until Custom Domain infrastructure is delivered.
 
-## Phase 7 status — in progress
+## Phase 7 status — closed / verified
 
-Phase 7 Booking is underway on the existing Core.
+Phase 7 Booking is implemented through the complete 7.6 public booking transaction on the existing Core.
 
 ### Implemented and verified
 
@@ -201,6 +201,7 @@ Phase 7 Booking is underway on the existing Core.
 - tenant Services schema;
 - service lifecycle/status;
 - duration, buffers, price, currency, deposit, capacity, online booking visibility;
+- stable Tenant-local public slugs;
 - ServiceManager, policy, factory;
 - Booking service RBAC;
 - ready-tenant provisioning applies pending tenant migrations.
@@ -230,17 +231,50 @@ Phase 7 Booking is underway on the existing Core.
 - appointment RBAC;
 - tenant isolation and negative-path coverage.
 
-CI verification for the merged 7.3 implementation:
+#### 7.4 Tenant Payments
 
-- GitHub Actions Backend Tests: passed;
-- full CI suite: 91 tests, 377 assertions;
-- merge commit: de02ef56b1ab90d2a5290546db19bb6a6a443ebc.
+- tenant payment-provider account registry with encrypted credentials;
+- tenant payment ledger and appointment-linked payments;
+- provider selection and merchant account resolution;
+- idempotent checkout creation;
+- pending/succeeded/failed lifecycle;
+- tenant webhook ledger and payload-hash protection;
+- tenant-specific signature verification;
+- transaction reconciliation;
+- partial/full refunds with idempotency and over-refund protection;
+- appointment payment-state synchronization;
+- strict separation from Platform Billing.
 
-### Pending
+#### 7.5 Queue
 
-- 7.4 Tenant Payments;
-- 7.5 Queue;
-- 7.6 Public Booking.
+- tenant-local queues scoped by Location + Service + business date;
+- locked monotonic queue positions;
+- queue-entry idempotency;
+- appointment linkage validation;
+- waiting/serving/completed/skipped/no-show lifecycle;
+- one serving entry per queue;
+- open/closed queue lifecycle;
+- Queue policy and RBAC;
+- tenant isolation and concurrency coverage.
+
+#### 7.6 Public Booking
+
+- exact verified-host tenant resolution;
+- online-bookable service filtering;
+- staff selection;
+- tenant-local customer creation;
+- staff-location timezone handling;
+- final availability/concurrency validation;
+- free and paid booking flows;
+- merchant-account preflight;
+- idempotent retries without duplicate customer/appointment/checkout side effects;
+- non-indexable, rate-limited transactional route;
+- browser and JSON responses.
+
+CI verification on the current `main` branch:
+
+- GitHub Actions Backend Tests: **passed**;
+- full CI suite: **148 tests, 716 assertions**.
 
 ### Cross-cutting Public Web & SEO
 
@@ -248,13 +282,14 @@ SEO/Public Web is explicitly documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTUR
 
 Current status:
 
-- architecture/contract: locked and documented;
-- implementation: pending;
-- Service public slug: pending;
-- Platform/Tenant public route separation: pending;
-- robots/sitemap/canonical/structured-data implementation: pending.
+- SEO-1 platform foundation: implemented and verified;
+- SEO-2 Tenant public surface: implemented and verified;
+- SEO-3 Public Services pages: implemented and verified;
+- SEO-4 Public Booking SEO boundary: implemented and verified;
+- SEO-5 production operations: pending;
+- custom-domain canonicalization/infrastructure: pending until Custom Domain infrastructure is delivered.
 
-SEO-1 through SEO-3 are required before Public Booking is released as an indexable public surface.
+The full Public Booking transaction is implemented in Phase 7.6. Transactional booking remains non-indexable by design.
 
 ## Phase 6 status — closed / verified
 
