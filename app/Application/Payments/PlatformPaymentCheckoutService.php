@@ -32,6 +32,20 @@ final class PlatformPaymentCheckoutService
             throw new DomainException('Platform payment invoice could not be found.');
         }
 
+        $existingCheckout = $payment->metadata['checkout'] ?? null;
+
+        if (is_array($existingCheckout) && is_string($existingCheckout['checkout_url'] ?? null) && $existingCheckout['checkout_url'] !== '') {
+            return [
+                'provider' => $existingCheckout['provider'] ?? $payment->provider,
+                'session_id' => $existingCheckout['session_id'] ?? null,
+                'checkout_url' => $existingCheckout['checkout_url'],
+                'merchant_order_id' => $existingCheckout['merchant_order_id'] ?? $payment->getKey(),
+                'provider_payment_id' => $existingCheckout['provider_payment_id'] ?? null,
+                'provider_order_id' => $existingCheckout['provider_order_id'] ?? null,
+                'status' => 'REUSED',
+            ];
+        }
+
         $provider = strtolower((string) config('velora.payments.platform_provider'));
         $gateway = $this->gateways->platform($provider);
 
