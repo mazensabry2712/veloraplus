@@ -77,7 +77,6 @@ final class TenantRbacBootstrapper
                 'booking.appointments.view',
                 'booking.payments.view',
                 'booking.queues.view',
-                'booking.queues.manage',
             ],
             'viewer' => [
                 'company.view',
