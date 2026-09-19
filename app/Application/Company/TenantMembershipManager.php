@@ -80,7 +80,7 @@ final class TenantMembershipManager
 
             if ($membership->role_key === 'owner'
                 && ($roleKey !== 'owner' || $status !== 'active')
-                && $this->activeOwnerCount($tenant, $membership) === 1) {
+                && $this->activeOwnerCount($tenant) === 1) {
                 throw new DomainException('The tenant must retain at least one active owner.');
             }
 
@@ -149,13 +149,12 @@ final class TenantMembershipManager
         }
     }
 
-    private function activeOwnerCount(Tenant $tenant, TenantMembership $except): int
+    private function activeOwnerCount(Tenant $tenant): int
     {
         return TenantMembership::query()
             ->where('tenant_id', $tenant->getKey())
             ->where('status', 'active')
             ->where('role_key', 'owner')
-            ->whereKey('!=', $except->getKey())
             ->count();
     }
 }
