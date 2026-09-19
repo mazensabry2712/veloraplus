@@ -3,6 +3,11 @@
 use App\Application\Authorization\TenantRbacBootstrapper;
 use App\Application\Billing\PlatformBillingDashboardService;
 use App\Application\Billing\SubscriptionService;
+use App\Application\Payments\PaymentGatewayManager;
+use App\Domain\Payments\Contracts\CheckoutGateway;
+use App\Domain\Payments\Contracts\PlatformPaymentGateway;
+use App\Models\PlatformInvoice;
+use App\Models\PlatformPayment;
 use App\Application\Entitlements\EntitlementService;
 use App\Infrastructure\Tenancy\TenantDatabaseManager;
 use App\Models\CatalogPrice;
@@ -233,4 +238,97 @@ test('billing policy denies access to a subscription belonging to another tenant
     if (is_file($pathB)) {
         unlink($pathB);
     }
+});
+
+
+test('owner can create a platform billing checkout and reuse the same pending session', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $owner = addBillingDashboardMember($tenant);
+
+    $feature = billingCatalogItem();
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    config(['velora.payments.platform_provider' => 'fake']);
+
+    $gateway = new class implements PlatformPaymentGateway, CheckoutGateway {
+        public int $calls = 0;
+
+        public function provider(): string
+        {
+            return 'fake';
+        }
+
+        public function createCheckout(array $context): array
+        {
+            $this->calls++;
+
+            return [
+                'provider' => 'fake',
+                'session_id' => 'FAKE-SESSION-1',
+                'checkout_url' => 'https://payments.example.test/session/FAKE-SESSION-1',
+                'merchant_order_id' => $context['merchant_order_id'],
+                'provider_payment_id' => 'FAKE-PAYMENT-1',
+                'provider_order_id' => 'FAKE-ORDER-1',
+                'status' => 'CREATED',
+            ];
+        }
+    };
+
+    $manager = Mockery::mock(PaymentGatewayManager::class);
+    $manager->shouldReceive('platform')
+        ->once()
+        ->with('fake')
+        ->andReturn($gateway);
+    app()->instance(PaymentGatewayManager::class, $manager);
+
+    $response = $this->actingAs($owner)
+        ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/invoices/'.$invoice->getKey().'/checkout');
+
+    $response->assertRedirect('/dashboard')
+        ->assertSessionHas('status', 'Platform billing checkout created successfully.')
+        ->assertSessionHas('platform_billing_checkout_url', 'https://payments.example.test/session/FAKE-SESSION-1');
+
+    $payment = PlatformPayment::query()
+        ->where('tenant_id', $tenant->getKey())
+        ->where('invoice_id', $invoice->getKey())
+        ->where('status', 'pending')
+        ->firstOrFail();
+
+    expect($payment->provider)->toBe('fake')
+        ->and($payment->metadata['checkout']['checkout_url'])->toBe('https://payments.example.test/session/FAKE-SESSION-1')
+        ->and(PlatformPayment::query()->where('invoice_id', $invoice->getKey())->where('status', 'pending')->count())->toBe(1);
+
+    $second = $this->actingAs($owner)
+        ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/invoices/'.$invoice->getKey().'/checkout');
+
+    $second->assertRedirect('/dashboard')
+        ->assertSessionHas('platform_billing_checkout_url', 'https://payments.example.test/session/FAKE-SESSION-1');
+
+    expect($gateway->calls)->toBe(1)
+        ->and(PlatformPayment::query()->where('invoice_id', $invoice->getKey())->where('status', 'pending')->count())->toBe(1);
+});
+
+test('viewer cannot create a platform billing checkout', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $viewer = addBillingDashboardMember($tenant, 'viewer');
+
+    $feature = billingCatalogItem();
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    $this->actingAs($viewer)
+        ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/invoices/'.$invoice->getKey().'/checkout')
+        ->assertForbidden();
 });
