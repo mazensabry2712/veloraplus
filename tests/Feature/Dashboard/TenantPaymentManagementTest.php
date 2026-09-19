@@ -268,7 +268,8 @@ test('owner can create a tenant payment checkout without creating platform billi
     $this->actingAs($owner)
         ->post('http://tenant-payments.velora.test/dashboard/booking/payments/appointments/'.$fixtures['appointment']->getKey())
         ->assertRedirect('/dashboard')
-        ->assertSessionHas('status', 'Tenant payment checkout created successfully.');
+        ->assertSessionHas('status', 'Tenant payment checkout created successfully.')
+        ->assertSessionHas('tenant_payment_checkout_url', 'https://pay.example.test/session/1');
 
     dashboardTenantPaymentContext($tenant);
 
