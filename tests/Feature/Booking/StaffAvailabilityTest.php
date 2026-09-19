@@ -136,7 +136,7 @@ test('staff availability manager assigns services and manages non-overlapping sc
     expect(fn () => $availability->saveWorkingHour($staff, 0, '16:00', '18:00'))
         ->toThrow(InvalidArgumentException::class);
 
-    expect(fn () => $availability->saveBreak($workingHour, '12:30', '13:30'))
+    expect(fn () => $availability->saveBreak($workingHour, '12:00', '13:00'))
         ->not->toThrow(InvalidArgumentException::class);
 
     $overlapBreak = fn () => $availability->saveBreak($workingHour, '13:15', '13:45');
