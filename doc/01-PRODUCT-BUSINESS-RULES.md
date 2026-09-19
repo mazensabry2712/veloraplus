@@ -528,6 +528,25 @@ Business request
 
 The detailed technical contract is defined in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md.
 
+## 25A. Public Web & SEO
+
+Public Web + SEO is a cross-cutting platform capability for public company presence. It is not automatically a separate commercial Module or Feature.
+
+The public surface may expose Tenant branding, company information, published Services, and Booking entry points according to the Tenant's enabled public capabilities.
+
+SEO rules:
+
+- public pages are server-rendered and crawlable;
+- each indexable page has a meaningful title, description, and canonical URL;
+- private workspace/account/payment/customer pages are non-indexable;
+- public Service URLs use stable Tenant-local slugs;
+- Tenant public metadata is isolated from other Tenants;
+- canonical host selection follows the active primary public domain;
+- sitemap and robots policies are host-aware;
+- structured data describes only visible public facts;
+- SEO metadata never becomes an authorization mechanism.
+
+The technical contract is defined in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
 ## 26. Deletion and retention
 
 Business data is not hard-deleted merely because a Feature was disabled, a Module was removed, or a Subscription expired.

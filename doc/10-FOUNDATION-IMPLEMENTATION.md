@@ -179,7 +179,69 @@ See doc/16-PHASE-5-BILLING.md for the full contract and verification record.
 
 ## Phase 7 status — in progress
 
-Phase 7 has started with the Services/database foundation slice. The tenant schema now supports the first Booking entity, service application logic is covered by tests, Booking service permissions are part of tenant RBAC, and ready tenant databases apply pending tenant migrations during provisioning/re-provisioning.
+Phase 7 Booking is underway on the existing Core.
+
+### Implemented and verified
+
+#### 7.1 Services
+
+- tenant Services schema;
+- service lifecycle/status;
+- duration, buffers, price, currency, deposit, capacity, online booking visibility;
+- ServiceManager, policy, factory;
+- Booking service RBAC;
+- ready-tenant provisioning applies pending tenant migrations.
+
+#### 7.2 Staff Availability
+
+- working hours;
+- breaks;
+- time off;
+- staff/service assignment;
+- timezone-aware availability calculation;
+- overlap validation;
+- availability RBAC;
+- tenant isolation tests.
+
+#### 7.3 Appointments
+
+- appointments, appointment items, and status histories;
+- customer/staff/location linkage;
+- service snapshots;
+- payment-state foundation;
+- availability-aware creation/rescheduling;
+- Staff-row locking before final conflict validation;
+- cancellation/no-show slot release;
+- lifecycle transitions;
+- idempotency-key handling;
+- appointment RBAC;
+- tenant isolation and negative-path coverage.
+
+CI verification for the merged 7.3 implementation:
+
+- GitHub Actions Backend Tests: passed;
+- full CI suite: 91 tests, 377 assertions;
+- merge commit: de02ef56b1ab90d2a5290546db19bb6a6a443ebc.
+
+### Pending
+
+- 7.4 Tenant Payments;
+- 7.5 Queue;
+- 7.6 Public Booking.
+
+### Cross-cutting Public Web & SEO
+
+SEO/Public Web is explicitly documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
+
+Current status:
+
+- architecture/contract: locked and documented;
+- implementation: pending;
+- Service public slug: pending;
+- Platform/Tenant public route separation: pending;
+- robots/sitemap/canonical/structured-data implementation: pending.
+
+SEO-1 through SEO-3 are required before Public Booking is released as an indexable public surface.
 
 ## Phase 6 status — closed / verified
 

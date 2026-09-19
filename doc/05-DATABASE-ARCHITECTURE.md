@@ -772,3 +772,19 @@ updated_at
 ~~~
 
 Billing audit records remain in the central database and are tenant-scoped.
+
+## Public Web / SEO data
+
+Public SEO defaults are Tenant-owned configuration and use the existing company_settings key/value table with namespaced keys such as:
+
+~~~
+seo.site_title
+seo.site_description
+seo.default_og_image
+seo.robots
+seo.locale
+~~~
+
+Public Service slugs and future page-level SEO overrides belong in the Tenant database because they describe Tenant-owned public content. They must never become shared central business content.
+
+SEO metadata does not create a new cross-database relationship and must follow the existing Tenant isolation boundary.

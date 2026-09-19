@@ -414,13 +414,15 @@ Do not call production ready until:
 6. Entitlements
 7. Billing
 8. Payments
-9. Booking
-10. Dashboard
-11. Customer Portal
-12. QA
-13. Production hardening
-14. CRM
-15. ERP
+9. Booking Core
+10. Public Web + SEO Foundation
+11. Public Booking
+12. Dashboard
+13. Customer Portal
+14. QA
+15. Production hardening
+16. CRM
+17. ERP
 ~~~
 
 ## 20. Product promise
@@ -453,6 +455,10 @@ Company pays VeloraPlus
 Feature activates immediately
   ↓
 Company uses shared Staff/Customers
+  ↓
+SEO/public page is crawlable with canonical metadata
+  ↓
+Public Booking entry point is available
   ↓
 Customer books through public Booking
   ↓
