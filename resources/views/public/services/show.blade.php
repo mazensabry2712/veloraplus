@@ -26,6 +26,8 @@
                 <dt>Duration</dt>
                 <dd>{{ $service->duration_minutes }} minutes</dd>
             </dl>
+
+            <a href="{{ $bookingUrl }}">Book this service</a>
         </main>
     </body>
 </html>
