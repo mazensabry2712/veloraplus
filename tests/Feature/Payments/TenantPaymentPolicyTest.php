@@ -2,7 +2,6 @@
 
 use App\Application\Authorization\TenantRbacBootstrapper;
 use App\Models\PlatformAccount;
-use App\Models\Role;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
