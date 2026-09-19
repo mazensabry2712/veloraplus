@@ -18,6 +18,7 @@ use App\Http\Controllers\Dashboard\BookingAvailabilityController;
 use App\Http\Controllers\Dashboard\AppointmentController;
 use App\Http\Controllers\Dashboard\QueueController;
 use App\Http\Controllers\Dashboard\TenantPaymentController;
+use App\Http\Controllers\Dashboard\PlatformBillingController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
 use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -187,7 +188,15 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.queues',
         Route::post('/{queue}/entries/{entry}/skip', [QueueController::class, 'skip'])
             ->name('entries.skip');
 
-        Route::post('/{queue}/entries/{entry}/no-show', [QueueController::class, 'noShow'])
+        Route::post('/{queue}/entries/{entry}/no-show', [QueueController::clasRoute::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
+    ->prefix('dashboard/billing')
+    ->name('dashboard.billing.')
+    ->group(function (): void {
+        Route::post('/subscription/{subscription}/cancel', [PlatformBillingController::class, 'cancelSubscription'])
+            ->name('subscription.cancel');
+    });
+
+s, 'noShow'])
             ->name('entries.no-show');
     });
 
