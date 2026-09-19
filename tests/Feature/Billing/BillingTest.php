@@ -60,8 +60,9 @@ function paidSubscription(\App\Models\Tenant $tenant, array $items, string $cycl
     );
 
     $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
-    $payment = app(\App\Application\Billing\PaymentService::class)->createPending($invoice, null, null, null);
-    app(\App\Application\Billing\PaymentService::class)->markSucceeded($payment);
+    $paymentService = app(\App\Application\Billing\PaymentService::class);
+    $payment = $paymentService->createPending($invoice);
+    $paymentService->markSucceeded($payment);
 
     return $subscription->fresh('items');
 }
@@ -260,6 +261,9 @@ test('cancellation keeps access until the period ends then closes the subscripti
     billingPrice($feature, 5000);
 
     $subscription = paidSubscription($tenant, [['item' => $feature]]);
+    expect($subscription->fresh('items')->items->first()->status)
+        ->toBe(SubscriptionItemStatus::Active);
+
     app(SubscriptionService::class)->cancelAtPeriodEnd($subscription->fresh());
 
     $end = $subscription->fresh()->current_period_end;
