@@ -99,7 +99,7 @@ Priority:
 1. active primary custom domain when configured and healthy;
 2. otherwise the active primary VeloraPlus hostname.
 
-All indexable Tenant URLs use the canonical host. The current request host must not automatically become canonical.
+All indexable Tenant URLs use the canonical host. The current request host must not automatically become canonical. Canonical host selection is derived from the central tenant_domains registry; Tenant SEO settings cannot choose an arbitrary canonical hostname.
 
 ## 7. URL rules
 
@@ -141,7 +141,6 @@ seo.site_title
 seo.site_description
 seo.default_og_image
 seo.robots
-seo.canonical_host_override
 seo.locale
 ~~~
 
@@ -159,7 +158,7 @@ Tenant SEO default
 Platform fallback
 ~~~
 
-Unknown SEO settings are ignored safely.
+Unknown SEO settings are ignored safely. A Tenant robots preference may refine public crawling behavior, but it can never override system rules that protect private routes, inactive/unverified domains, or tenant isolation.
 
 ## 10. Robots and noindex
 
