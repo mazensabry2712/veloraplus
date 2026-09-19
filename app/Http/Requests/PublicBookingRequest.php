@@ -15,14 +15,6 @@ class PublicBookingRequest extends FormRequest
 
     public function rules(): array
     {
-        $slug = (string) $this->route('slug');
-
-        $service = Service::query()
-            ->where('slug', $slug)
-            ->where('status', 'active')
-            ->where('online_bookable', true)
-            ->first();
-
         return [
             'staff_id' => [
                 'nullable',
