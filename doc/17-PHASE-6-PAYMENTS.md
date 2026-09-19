@@ -2,7 +2,7 @@
 
 ## Status
 
-**IMPLEMENTED / VERIFICATION PENDING**
+**CLOSED / VERIFIED**
 
 Phase 6 connects the provider-neutral payment boundaries to the first concrete provider adapter while preserving the separation between Platform Billing and Tenant Payments.
 
@@ -182,7 +182,13 @@ Run locally:
     git diff --check
     git status
 
-Phase 6 can be marked CLOSED / VERIFIED only when the local suite and GitHub Actions both pass.
+Phase 6 verification completed for the implementation commit `b36fc620a859a20d7bacc6839a3f97cbe190732a`.
+
+- GitHub Actions Backend Tests passed.
+- The implementation remains free of live credentials.
+- Local developer verification is still recommended after pulling the latest `main`, using the commands above.
+
+Phase 6 is now CLOSED / VERIFIED for the committed implementation.
 
 ## 14. Next phase
 
