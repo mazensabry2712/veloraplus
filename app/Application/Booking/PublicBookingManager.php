@@ -67,7 +67,7 @@ final class PublicBookingManager
             ->first();
 
         if ($existing !== null) {
-            return $this->existingBookingResult($existing);
+            return $this->existingBookingResult($existing, $service);
         }
 
         $staff = $this->resolveStaff($service, $data['staff_id'] ?? null);
@@ -147,19 +147,27 @@ final class PublicBookingManager
         ];
     }
 
-    private function existingBookingResult(Appointment $appointment): array
+    private function existingBookingResult(Appointment $appointment, Service $service): array
     {
-        $appointment->loadMissing('items');
+        $appointment->loadMissing('items', 'payments');
 
         $payment = $appointment->payment_status === AppointmentPaymentStatus::Paid
-            ? $appointment->payments()
+            ? $appointment->payments
                 ->where('status', 'succeeded')
-                ->latest()
+                ->sortByDesc('created_at')
                 ->first()
-            : $appointment->payments()
+            : $appointment->payments
                 ->whereIn('status', ['pending', 'succeeded'])
-                ->latest()
+                ->sortByDesc('created_at')
                 ->first();
+
+        if (
+            $payment === null
+            && $appointment->payment_status !== AppointmentPaymentStatus::Paid
+            && $service->price_minor > 0
+        ) {
+            $payment = $this->payments->createCheckout($appointment);
+        }
 
         $checkoutUrl = $payment?->metadata['checkout']['checkout_url'] ?? null;
 
