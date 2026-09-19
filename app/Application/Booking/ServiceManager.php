@@ -23,6 +23,7 @@ final class ServiceManager
     {
         $current = [
             'name' => $service->name,
+            'slug' => $service->slug,
             'description' => $service->description,
             'duration_minutes' => $service->duration_minutes,
             'buffer_before_minutes' => $service->buffer_before_minutes,
@@ -63,6 +64,10 @@ final class ServiceManager
         if ($name === '') {
             throw new DomainException('Service name is required.');
         }
+
+        $slug = $this->resolveUniqueSlug(
+            isset($attributes['slug']) ? (string) $attributes['slug'] : $name,
+        );
 
         $duration = (int) ($attributes['duration_minutes'] ?? 0);
         $bufferBefore = (int) ($attributes['buffer_before_minutes'] ?? 0);
@@ -107,6 +112,7 @@ final class ServiceManager
 
         return [
             'name' => $name,
+            'slug' => $slug,
             'description' => isset($attributes['description']) ? trim((string) $attributes['description']) : null,
             'duration_minutes' => $duration,
             'buffer_before_minutes' => $bufferBefore,
@@ -119,5 +125,24 @@ final class ServiceManager
             'capacity' => $capacity,
             'metadata' => $attributes['metadata'] ?? null,
         ];
+    }
+
+    private function resolveUniqueSlug(string $value): string
+    {
+        $base = \Illuminate\Support\Str::slug(trim($value));
+
+        if ($base === '') {
+            $base = 'service';
+        }
+
+        $slug = $base;
+        $suffix = 2;
+
+        while (Service::withTrashed()->where('slug', $slug)->exists()) {
+            $slug = $base.'-'.$suffix;
+            $suffix++;
+        }
+
+        return $slug;
     }
 }
