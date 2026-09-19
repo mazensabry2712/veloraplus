@@ -436,14 +436,17 @@ test('tenant refunds support idempotent partial and full refunds without platfor
         ],
     ]);
 
-    Http::fake([
-        'https://test-fep.kashier.io/v3/orders/KASHIER-PAID-ORDER' => Http::response([
+    Http::fake(function () {
+        static $refundNumber = 0;
+        $refundNumber++;
+
+        return Http::response([
             'response' => [
                 'status' => 'SUCCESS',
-                'transactionId' => 'REF-1',
+                'transactionId' => 'REF-'.$refundNumber,
             ],
-        ], 200),
-    ]);
+        ], 200);
+    });
 
     $manager = app(TenantPaymentManager::class);
 
@@ -535,7 +538,7 @@ test('full tenant refund synchronizes an appointment to refunded', function (): 
 
     expect($refund->status)->toBe(TenantPaymentRefundStatus::Succeeded)
         ->and($payment->fresh()->status)->toBe(TenantPaymentStatus::Refunded)
-        ->and($appointment->fresh()->payment_status)->toBe('refunded');
+        ->and($appointment->fresh()->payment_status)->toBe(\App\Domain\Booking\AppointmentPaymentStatus::Refunded);
 });
 
 test('tenant refunds reject amounts above the reserved refundable balance', function (): void {
