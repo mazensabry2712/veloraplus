@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — 8.2 COMPANY FOUNDATION**
+**IN PROGRESS — 8.3 BOOKING WORKSPACE**
 
 Phase 8 is the next major product delivery after the completed Phase 7 Booking implementation. It converts the verified Core + Booking backend capabilities into the authenticated Company Dashboard used by tenant members.
 
@@ -95,7 +95,7 @@ Navigation visibility may improve the UX, but it must never be the authorization
 
 ### Current implementation status
 
-8.1 Dashboard Shell is implemented. The private `/dashboard` route, authenticated tenant-membership boundary, noindex policy, shared Dashboard layout, initial Overview screen, and access/isolation tests are in place. Local verification is green with the full test suite.
+8.1 Dashboard Shell is implemented. The private `/dashboard` route, authenticated tenant-membership boundary, noindex policy, shared Dashboard layout, initial Overview screen, and access/isolation tests are in place. Local verification was green before the current Phase 8 additions.
 
 - authenticated tenant layout;
 - sidebar / primary navigation;
@@ -144,7 +144,7 @@ Backend components:
 - `POST /dashboard/company/profile` is the update route;
 - `CompanyProfileTest` covers successful updates, RBAC denial, validation failure, and projection synchronization.
 
-The existing Phase 1–7 regression suite remains green locally.
+The existing Phase 1–7 regression suite was green before the current Phase 8 additions; final full-suite verification for the current batch is pending.
 
 #### 8.2.2 Locations / Branches — Backend implemented
 
