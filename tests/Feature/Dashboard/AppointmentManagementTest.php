@@ -112,22 +112,26 @@ function addAppointmentDashboardMember(Tenant $tenant, string $roleKey = 'owner'
     return $account;
 }
 
-function enableAppointmentEntitlement(Tenant $tenant): void
+function enableAppointmentEntitlement(Tenant $tenant, ?Feature $feature = null): Feature
 {
-    $module = Module::factory()->create([
-        'key' => 'booking',
-        'name' => 'Booking',
-        'status' => 'active',
-    ]);
+    if ($feature === null) {
+        $module = Module::factory()->create([
+            'key' => 'booking',
+            'name' => 'Booking',
+            'status' => 'active',
+        ]);
 
-    $feature = Feature::factory()->create([
-        'module_id' => $module->getKey(),
-        'key' => 'booking.appointments',
-        'name' => 'Appointments',
-        'status' => 'active',
-    ]);
+        $feature = Feature::factory()->create([
+            'module_id' => $module->getKey(),
+            'key' => 'booking.appointments',
+            'name' => 'Appointments',
+            'status' => 'active',
+        ]);
+    }
 
     app(EntitlementService::class)->grant($tenant, $feature);
+
+    return $feature;
 }
 
 function appointmentDashboardFixtures(Tenant $tenant): array
@@ -347,8 +351,8 @@ test('appointment route binding is tenant isolated', function (): void {
     $tenantA = createAppointmentDashboardTenant($pathA, 'appointments-a.velora.test', 'appointments-a');
     $tenantB = createAppointmentDashboardTenant($pathB, 'appointments-b.velora.test', 'appointments-b');
     $ownerA = addAppointmentDashboardMember($tenantA);
-    enableAppointmentEntitlement($tenantA);
-    enableAppointmentEntitlement($tenantB);
+    $appointmentFeature = enableAppointmentEntitlement($tenantA);
+    enableAppointmentEntitlement($tenantB, $appointmentFeature);
 
     $manager = app(TenantDatabaseManager::class);
     $manager->connect($tenantB);
