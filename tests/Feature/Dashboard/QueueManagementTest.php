@@ -111,20 +111,22 @@ function addQueueDashboardMember(Tenant $tenant, string $roleKey = 'owner'): Pla
     return $account;
 }
 
-function enableQueueEntitlement(Tenant $tenant): Feature
+function enableQueueEntitlement(Tenant $tenant, ?Feature $feature = null): Feature
 {
-    $module = Module::factory()->create([
-        'key' => 'booking',
-        'name' => 'Booking',
-        'status' => 'active',
-    ]);
+    if ($feature === null) {
+        $module = Module::factory()->create([
+            'key' => 'booking',
+            'name' => 'Booking',
+            'status' => 'active',
+        ]);
 
-    $feature = Feature::factory()->create([
-        'module_id' => $module->getKey(),
-        'key' => 'booking.queues',
-        'name' => 'Queues',
-        'status' => 'active',
-    ]);
+        $feature = Feature::factory()->create([
+            'module_id' => $module->getKey(),
+            'key' => 'booking.queues',
+            'name' => 'Queues',
+            'status' => 'active',
+        ]);
+    }
 
     app(EntitlementService::class)->grant($tenant, $feature);
 
@@ -289,8 +291,8 @@ test('queue creation validation rejects foreign and invalid resources', function
     $tenantB = createQueueDashboardTenant($pathB, 'queue-b.velora.test', 'queue-b');
     $ownerA = addQueueDashboardMember($tenantA);
     $fixturesB = queueDashboardFixtures($tenantB);
-    enableQueueEntitlement($tenantA);
-    enableQueueEntitlement($tenantB);
+    $queueFeature = enableQueueEntitlement($tenantA);
+    enableQueueEntitlement($tenantB, $queueFeature);
 
     $this->actingAs($ownerA)
         ->post('http://queue-a.velora.test/dashboard/booking/queues', [
