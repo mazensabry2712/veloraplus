@@ -94,6 +94,10 @@ final class TenantPaymentManager
             $amountMinor = $this->appointmentAmountMinor($locked);
             $currency = strtoupper((string) $item->currency);
 
+            if ($amountMinor < 1) {
+                throw new DomainException('Tenant payment checkout requires a positive appointment amount.');
+            }
+
             $shouldCreateCheckout = true;
 
             $payment = TenantPayment::query()->create([
