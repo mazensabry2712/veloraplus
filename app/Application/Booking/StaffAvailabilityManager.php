@@ -96,6 +96,16 @@ final class StaffAvailabilityManager
         ?string $label = null,
         ?StaffBreak $break = null,
     ): StaffBreak {
+        $staff = $workingHour->relationLoaded('staff')
+            ? $workingHour->staff
+            : $workingHour->load('staff')->staff;
+
+        if ($staff === null) {
+            throw new InvalidArgumentException('Working hour staff member was not found.');
+        }
+
+        $this->ensureStaffUsable($staff);
+
         [$startsAt, $endsAt] = $this->normalizeTimeRange($startsAt, $endsAt);
 
         if ($break !== null && (string) $break->staff_working_hour_id !== (string) $workingHour->getKey()) {
