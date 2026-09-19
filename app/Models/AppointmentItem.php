@@ -36,6 +36,6 @@ class AppointmentItem extends TenantModel
 
     public function service(): BelongsTo
     {
-        return $this->belongsTo(Service::class);
+        return $this->belongsTo(Service::class)->withTrashed();
     }
 }
