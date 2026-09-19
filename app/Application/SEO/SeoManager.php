@@ -6,6 +6,7 @@ use App\Domain\SEO\SeoMeta;
 use App\Models\CompanySetting;
 use App\Models\Service;
 use App\Models\Tenant;
+use Illuminate\Support\Str;
 
 final class SeoManager
 {
