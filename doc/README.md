@@ -29,6 +29,7 @@ Implementation must follow these documents:
 15. 15-PHASE-4-ENTITLEMENTS.md
 16. 16-PHASE-5-BILLING.md
 17. 17-PHASE-6-PAYMENTS.md
+18. 18-PHASE-7-BOOKING.md
 
 ## Locked decisions
 
@@ -102,7 +103,7 @@ ERP
 
 Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 Module Catalog is also closed and verified.
 
-Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is closed and verified. Phase 6 — Payments & Provider Adapters is closed and verified; Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
+Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is closed and verified. Phase 6 — Payments & Provider Adapters is closed and verified; Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries. Phase 7 — Booking is now in progress; the first 7.1 slice establishes tenant Services, Booking service permissions/policy, and pending tenant migration application for ready databases. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
 
 ## Non-negotiable rules
 
