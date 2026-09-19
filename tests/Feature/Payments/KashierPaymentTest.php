@@ -91,7 +91,8 @@ test('kashier creates a hosted payment session through the adapter', function ()
     $payment->refresh();
 
     expect($payment->provider)->toBe('kashier')
-        ->and($payment->metadata['checkout']['session_id'])->toBe('SESSION-123');
+        ->and($payment->metadata['checkout']['session_id'])->toBe('SESSION-123')
+        ->and($payment->metadata['checkout']['checkout_url'])->toContain('payments.kashier.io');
 
     Http::assertSent(function ($request) use ($payment) {
         $body = $request->data();
