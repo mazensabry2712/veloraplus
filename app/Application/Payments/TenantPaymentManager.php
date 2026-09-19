@@ -43,6 +43,10 @@ final class TenantPaymentManager
                 throw new DomainException('A valid active customer is required for Tenant Payments.');
             }
 
+            if (in_array($locked->status?->value, ['cancelled', 'no_show'], true)) {
+                throw new DomainException('Cancelled or no-show appointments cannot receive a payment checkout.');
+            }
+
             if (! in_array($locked->payment_status?->value, ['unpaid', 'failed'], true)) {
                 throw new DomainException('Appointment is not eligible for a new payment checkout.');
             }
@@ -249,6 +253,12 @@ final class TenantPaymentManager
                     'failure_reason' => $reason,
                 ]),
             ]);
+
+            if ($locked->appointment_id !== null) {
+                Appointment::query()
+                    ->whereKey($locked->appointment_id)
+                    ->update(['payment_status' => 'failed']);
+            }
 
             return $locked->refresh();
         });
