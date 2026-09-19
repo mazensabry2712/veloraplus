@@ -29,6 +29,7 @@ final class StaffManager
     public function update(Staff $staff, array $attributes): Staff
     {
         $data = $this->normalize(array_replace([
+            'account_id' => $staff->account_id,
             'location_id' => $staff->location_id,
             'name' => $staff->name,
             'phone' => $staff->phone,
