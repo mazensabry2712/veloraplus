@@ -123,17 +123,28 @@ Validation and concurrency rules:
 
 ### 7.4 Tenant Payments integration
 
-Status: **PENDING**
+Status: **7.4.1 PAYMENT FOUNDATION COMPLETED / 7.4.2 WEBHOOK + REFUND PENDING**
 
-Planned:
+Completed in 7.4.1:
 
-- tenant business payment record;
-- payment intent/checkout boundary;
+- central Tenant payment-provider account registry with encrypted credentials;
+- Tenant payment ledger in the Tenant database;
+- Appointment-linked Tenant Payment records;
 - provider selection through PaymentGatewayManager;
 - company merchant account selection;
-- verified payment result handling;
-- failure/pending/refund boundaries;
-- no Platform Billing leakage.
+- checkout creation from immutable appointment/service snapshots;
+- idempotent single-flight checkout creation;
+- pending/succeeded/failed Tenant Payment lifecycle;
+- Appointment payment-status synchronization;
+- Tenant payment RBAC permissions;
+- explicit separation from Platform Billing records.
+
+Remaining 7.4.2+:
+
+- provider webhook verification and idempotent Tenant payment event handling;
+- provider lookup/reconciliation boundary;
+- Tenant refunds and refund records;
+- production payment operational controls.
 
 ### 7.5 Queue
 
