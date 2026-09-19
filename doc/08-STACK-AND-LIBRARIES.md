@@ -21,6 +21,7 @@
 | Static analysis | Larastan |
 | Formatting | Laravel Pint |
 | Initial payment provider | Kashier |
+| Custom domain/edge | Provider-neutral internal abstraction; production provider selected later |
 
 ## 2. Backend packages
 
@@ -138,3 +139,5 @@ Baseline expectations:
 - load/stress testing for critical flows before production scale.
 
 Packages are not added merely for performance. Prefer Laravel/platform capabilities first, then introduce infrastructure or libraries when measured workloads justify them.
+
+Custom Domain / SSL tooling must follow the same approval policy. The core application depends on an internal provider-neutral contract; a specific edge/SSL vendor is an infrastructure decision, not a Domain/Tenancy business dependency.
