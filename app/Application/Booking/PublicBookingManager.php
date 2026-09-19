@@ -4,6 +4,7 @@ namespace App\Application\Booking;
 
 use App\Application\Payments\TenantPaymentManager;
 use App\Domain\Booking\AppointmentPaymentStatus;
+use App\Domain\Payments\TenantPaymentStatus;
 use App\Domain\Tenancy\TenantContext;
 use App\Models\Appointment;
 use App\Models\Customer;
@@ -157,11 +158,14 @@ final class PublicBookingManager
 
         $payment = $appointment->payment_status === AppointmentPaymentStatus::Paid
             ? $appointment->payments
-                ->where('status', 'succeeded')
+                ->where('status', TenantPaymentStatus::Succeeded)
                 ->sortByDesc('created_at')
                 ->first()
             : $appointment->payments
-                ->whereIn('status', ['pending', 'succeeded'])
+                ->whereIn('status', [
+                    TenantPaymentStatus::Pending,
+                    TenantPaymentStatus::Succeeded,
+                ])
                 ->sortByDesc('created_at')
                 ->first();
 
