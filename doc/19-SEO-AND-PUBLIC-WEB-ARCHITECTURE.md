@@ -340,6 +340,8 @@ Browser/production QA must inspect rendered HTML, not only JavaScript state.
 ## 23. Delivery slices
 
 ### SEO-1 — Foundation
+
+Status: **COMPLETED IN THIS SLICE**
 - separate Platform and Tenant public routes;
 - SEO value object/view model;
 - shared Blade SEO component;
