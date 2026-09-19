@@ -363,7 +363,7 @@ Status: **COMPLETED IN THIS SLICE**
 
 ### SEO-3 — Public Services
 
-Status: **PENDING**
+Status: **COMPLETED IN THIS SLICE**
 - stable Service slugs;
 - Service public detail page;
 - page-level SEO overrides;
@@ -371,11 +371,17 @@ Status: **PENDING**
 - slug redirect history.
 
 ### SEO-4 — Public Booking
+
+Status: **PENDING**
+
 - Service landing pages link into Booking;
 - transactional booking state remains non-indexable;
 - public Booking keeps rate limiting and data minimization.
 
 ### SEO-5 — Production SEO
+
+Status: **PENDING**
+
 - Search Console/domain ownership process;
 - sitemap submission;
 - structured-data validation;
