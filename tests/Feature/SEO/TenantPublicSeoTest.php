@@ -339,13 +339,15 @@ test('published service slug changes redirect permanently to the current canonic
         'capacity' => 1,
     ]);
 
+    $oldSlug = $service->slug;
+
     app(ServiceManager::class)->update($service, [
         'slug' => 'professional-dental-cleaning',
     ]);
 
     $manager->disconnect();
 
-    $response = $this->get('https://clinic.velora.test/services/'.$service->slug);
+    $response = $this->get('https://clinic.velora.test/services/'.$oldSlug);
 
     $response->assertRedirect('https://clinic.velora.test/services/professional-dental-cleaning')
         ->assertStatus(301);
@@ -358,7 +360,7 @@ test('published service slug changes redirect permanently to the current canonic
         'status' => 'active',
     ]);
 
-    $alternate = $this->get('https://alternate.velora.test/services/'.$service->slug);
+    $alternate = $this->get('https://alternate.velora.test/services/'.$oldSlug);
 
     $alternate->assertRedirect('https://clinic.velora.test/services/professional-dental-cleaning')
         ->assertStatus(301);
