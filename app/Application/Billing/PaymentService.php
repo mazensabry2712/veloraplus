@@ -45,10 +45,19 @@ final class PaymentService
     public function markSucceeded(
         PlatformPayment $payment,
         ?CarbonImmutable $paidAt = null,
+        ?string $providerPaymentId = null,
+        ?string $providerEventId = null,
+        array $providerMetadata = [],
     ): PlatformPayment {
         $paidAt ??= CarbonImmutable::now();
 
-        return DB::connection('central')->transaction(function () use ($payment, $paidAt): PlatformPayment {
+        return DB::connection('central')->transaction(function () use (
+            $payment,
+            $paidAt,
+            $providerPaymentId,
+            $providerEventId,
+            $providerMetadata,
+        ): PlatformPayment {
             $payment = PlatformPayment::query()
                 ->lockForUpdate()
                 ->findOrFail($payment->getKey());
@@ -87,6 +96,9 @@ final class PaymentService
             $payment->update([
                 'status' => PaymentStatus::Succeeded,
                 'paid_at' => $paidAt,
+                'provider_payment_id' => $providerPaymentId ?: $payment->provider_payment_id,
+                'provider_event_id' => $providerEventId ?: $payment->provider_event_id,
+                'metadata' => array_merge($payment->metadata ?? [], $providerMetadata),
             ]);
 
             $this->invoices->markPaid($invoice, $paidAt);
