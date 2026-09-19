@@ -188,15 +188,7 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.queues',
         Route::post('/{queue}/entries/{entry}/skip', [QueueController::class, 'skip'])
             ->name('entries.skip');
 
-        Route::post('/{queue}/entries/{entry}/no-show', [QueueController::clasRoute::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
-    ->prefix('dashboard/billing')
-    ->name('dashboard.billing.')
-    ->group(function (): void {
-        Route::post('/subscription/{subscription}/cancel', [PlatformBillingController::class, 'cancelSubscription'])
-            ->name('subscription.cancel');
-    });
-
-s, 'noShow'])
+        Route::post('/{queue}/entries/{entry}/no-show', [QueueController::class, 'noShow'])
             ->name('entries.no-show');
     });
 
@@ -212,6 +204,14 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.payments
 
         Route::post('/{payment}/refund', [TenantPaymentController::class, 'refund'])
             ->name('refund');
+    });
+
+Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
+    ->prefix('dashboard/billing')
+    ->name('dashboard.billing.')
+    ->group(function (): void {
+        Route::post('/subscription/{subscription}/cancel', [PlatformBillingController::class, 'cancelSubscription'])
+            ->name('subscription.cancel');
     });
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
