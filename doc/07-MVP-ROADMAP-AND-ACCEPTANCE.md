@@ -99,19 +99,28 @@ Exit criteria:
 
 Build:
 
-- entitlement resolver;
-- entitlement projection if required;
-- module middleware;
-- feature helpers;
-- entitlement-aware navigation;
+- central tenant entitlement projection;
+- deterministic entitlement lifecycle/source model;
+- Module and Feature resolution;
+- Module-to-Feature inheritance;
+- transitive dependency enforcement;
+- idempotent grant/revoke/scheduled-removal operations;
+- projection rebuild boundary for future Billing;
+- entitlement middleware;
+- Blade entitlement helpers;
 - entitlement-aware Policies/Services.
 
 Exit criteria:
 
-- UI visibility changes with entitlement;
-- backend denies inactive features;
+- active Module entitlement exposes its active Features;
+- inactive/expired entitlements are denied;
+- scheduled removal remains active until ends_at;
+- catalog dependencies cannot be bypassed;
+- Tenant A entitlements cannot authorize Tenant B;
 - permissions and entitlements are separate;
-- entitlement state is rebuildable from billing source data.
+- core capabilities do not require tenant entitlement rows;
+- projection can be rebuilt deterministically from future Billing state;
+- UI helpers never replace backend authorization.
 
 ## 7. Phase 5 — Billing
 
