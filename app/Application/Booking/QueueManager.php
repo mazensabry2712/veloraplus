@@ -309,7 +309,7 @@ final class QueueManager
             throw new DomainException('Queue service must match the appointment service.');
         }
 
-        $queueDate = $queue->business_date->format('Y-m-d');
+        $queueDate = CarbonImmutable::parse($queue->business_date, $this->locationTimezone($queue->location))->toDateString();
         $appointmentDate = CarbonImmutable::instance($freshAppointment->starts_at)
             ->timezone($this->locationTimezone($queue->location))
             ->toDateString();
