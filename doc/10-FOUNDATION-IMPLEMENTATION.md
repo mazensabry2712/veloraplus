@@ -177,7 +177,7 @@ No Kashier implementation was added to Core Billing. Phase 6 will add provider a
 See doc/16-PHASE-5-BILLING.md for the full contract and verification record.
 
 
-## Phase 6 status — CI verified / local verification pending
+## Phase 6 status — closed / verified
 
 Phase 6 Payments & Provider Adapters has been implemented with a provider-neutral gateway boundary and the first concrete Kashier adapter.
 
@@ -196,5 +196,14 @@ Implemented:
 No live credentials were committed. Tenant business payment flows remain unimplemented until their Booking/CRM/ERP domains consume the shared payment layer.
 
 GitHub Actions for implementation commit `b36fc620a859a20d7bacc6839a3f97cbe190732a` passed.
+
+Verification completed after pulling the latest `main`:
+
+- `composer install` completed without dependency changes.
+- payment/webhook migration succeeded.
+- Pint passed.
+- full local suite: **72 tests passed with 238 assertions**.
+- `git diff --check` passed.
+- working tree is clean and synchronized with `origin/main`.
 
 See doc/17-PHASE-6-PAYMENTS.md for the detailed Phase 6 record.
