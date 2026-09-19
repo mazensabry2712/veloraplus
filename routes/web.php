@@ -213,6 +213,15 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
         Route::post('/invoices/{invoice}/checkout', [PlatformBillingController::class, 'checkoutInvoice'])
             ->name('invoices.checkout');
 
+        Route::post('/invoices/{invoice}/void', [PlatformBillingController::class, 'voidInvoice'])
+            ->name('invoices.void');
+
+        Route::post('/payments/{payment}/refund', [PlatformBillingController::class, 'refundPayment'])
+            ->name('payments.refund');
+
+        Route::post('/credits', [PlatformBillingController::class, 'issueCredit'])
+            ->name('credits.store');
+
         Route::post('/subscription/{subscription}/cancel', [PlatformBillingController::class, 'cancelSubscription'])
             ->name('subscription.cancel');
     });
