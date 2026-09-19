@@ -39,7 +39,7 @@ test('platform seo manager builds canonical urls from the configured platform ur
 test('platform robots file exposes the platform sitemap and private path exclusions', function () {
     config(['velora.platform.url' => 'https://velora.com']);
 
-    $response = $this->withHeaders(['Host' => 'velora.com'])->get('/robots.txt');
+    $response = $this->withServerVariables(['HTTP_HOST' => 'velora.com'])->get('/robots.txt');
 
     $response->assertSuccessful()
         ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
@@ -53,7 +53,7 @@ test('platform robots file exposes the platform sitemap and private path exclusi
 test('non-platform robots file denies crawling until tenant public seo is enabled', function () {
     config(['velora.platform.url' => 'https://velora.com']);
 
-    $response = $this->withHeaders(['Host' => 'example.com'])->get('/robots.txt');
+    $response = $this->withServerVariables(['HTTP_HOST' => 'example.com'])->get('/robots.txt');
 
     $response->assertSuccessful()
         ->assertSee("User-agent: *
@@ -63,7 +63,7 @@ Disallow: /", false);
 test('platform sitemap contains only the canonical platform home url', function () {
     config(['velora.platform.url' => 'https://velora.com']);
 
-    $response = $this->withHeaders(['Host' => 'velora.com'])->get('/sitemap.xml');
+    $response = $this->withServerVariables(['HTTP_HOST' => 'velora.com'])->get('/sitemap.xml');
 
     $response->assertSuccessful()
         ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
@@ -76,7 +76,7 @@ test('platform sitemap contains only the canonical platform home url', function 
 test('non-platform sitemap is not exposed', function () {
     config(['velora.platform.url' => 'https://velora.com']);
 
-    $this->withHeaders(['Host' => 'example.com'])
+    $this->withServerVariables(['HTTP_HOST' => 'example.com'])
         ->get('/sitemap.xml')
         ->assertNotFound();
 });
