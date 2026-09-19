@@ -222,7 +222,7 @@ test('tenant settings remain isolated between tenant databases', function (): vo
     }
 
     $this->actingAs($ownerA)
-        ->put('http://settings-tenant.velora.test/dashboard/company/settings', [
+        ->put('http://settings-a.velora.test/dashboard/company/settings', [
             'seo' => [
                 'site_title' => 'Tenant A Title',
             ],
