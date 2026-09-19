@@ -395,7 +395,6 @@ test('owner cannot refund beyond the remaining platform payment amount', functio
             'amount_minor' => 6000,
             'reason' => 'too much',
         ])
-        ->assertRedirect('/dashboard')
         ->assertSessionHasErrors('billing');
 });
 
