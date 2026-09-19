@@ -460,3 +460,23 @@ Optimize for:
 not for benchmark numbers at the expense of business correctness.
 
 The system should scale by adding resources and distributing workload, not by rewriting the platform after traffic arrives.
+
+## 24. Custom Domain / Edge scalability
+
+Custom Domain traffic is part of the public edge path and must not turn tenant routing into a central bottleneck.
+
+Requirements:
+
+- domain lookup must be cheap and index-backed;
+- verified domain mappings may be cached;
+- tenant-sensitive cache keys include tenant identity;
+- edge/SSL provider interactions are asynchronous where possible;
+- DNS/SSL health reconciliation runs through retry-safe jobs;
+- provider outages must not corrupt Tenant or billing state;
+- application nodes remain stateless;
+- custom-domain routing must continue to work across horizontally scaled application nodes;
+- default VeloraPlus subdomains remain available as a fallback path.
+
+A domain provider or reverse proxy may terminate TLS and forward the normalized host to the application. The application must trust forwarded host headers only from configured infrastructure.
+
+Custom Domain performance is part of the same p50/p95/p99 and observability model used for public Booking traffic.
