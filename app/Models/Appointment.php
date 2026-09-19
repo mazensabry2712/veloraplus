@@ -64,4 +64,9 @@ class Appointment extends TenantModel
     {
         return $this->hasMany(AppointmentStatusHistory::class)->orderBy('changed_at');
     }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(TenantPayment::class);
+    }
 }
