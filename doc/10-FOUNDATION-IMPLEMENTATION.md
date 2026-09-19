@@ -231,7 +231,7 @@ CI verification for the merged 7.3 implementation:
 
 ### Cross-cutting Public Web & SEO
 
-SEO/Public Web is now explicitly documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
+SEO/Public Web is explicitly documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
 
 Current status:
 
@@ -242,3 +242,34 @@ Current status:
 - robots/sitemap/canonical/structured-data implementation: pending.
 
 SEO-1 through SEO-3 are required before Public Booking is released as an indexable public surface.
+
+## Phase 6 status — closed / verified
+
+Phase 6 Payments & Provider Adapters has been implemented with a provider-neutral gateway boundary and the first concrete Kashier adapter.
+
+Implemented:
+
+- Platform Payment Gateway and Tenant Payment Gateway boundaries;
+- PaymentGatewayManager provider registry;
+- capability-specific checkout, verification, refund, webhook, and transaction lookup contracts;
+- Kashier hosted Payment Session adapter;
+- Kashier payment lookup and refund adapter;
+- Kashier webhook signature verification;
+- central webhook idempotency storage;
+- verified Platform Payment activation through the existing Billing services;
+- provider-neutral tenant payment boundary.
+
+No live credentials were committed. Tenant business payment flows remain unimplemented until their Booking/CRM/ERP domains consume the shared payment layer.
+
+GitHub Actions for implementation commit `b36fc620a859a20d7bacc6839a3f97cbe190732a` passed.
+
+Verification completed after pulling the latest `main`:
+
+- `composer install` completed without dependency changes.
+- payment/webhook migration succeeded.
+- Pint passed.
+- full local suite: **72 tests passed with 238 assertions**.
+- `git diff --check` passed.
+- working tree is clean and synchronized with `origin/main`.
+
+See doc/17-PHASE-6-PAYMENTS.md for the detailed Phase 6 record.
