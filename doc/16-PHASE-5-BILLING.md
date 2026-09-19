@@ -2,7 +2,7 @@
 
 ## Status
 
-**IMPLEMENTED / VERIFICATION PENDING**
+**CLOSED / VERIFIED**
 
 Phase 5 establishes the internal VeloraPlus Billing domain as the commercial source of truth between the central Catalog/Entitlements layers and the later Payment Provider integration.
 
@@ -410,7 +410,7 @@ No tenant can use another tenant's Subscription, Invoice, Payment, Refund, Credi
 
 ## 22. Verification gate
 
-Before closing Phase 5, run:
+Completed verification:
 
 ~~~powershell
 composer install
@@ -421,9 +421,17 @@ git diff --check
 git status
 ~~~
 
-The local tree must be clean except for intentionally untracked user-owned assets.
+Verified locally:
 
-CI must pass before the phase is marked CLOSED / VERIFIED.
+- `composer install` completed without dependency changes.
+- billing migration succeeded.
+- Pint passed.
+- full test suite passed: **65 tests, 216 assertions**.
+- `git diff --check` passed.
+- working tree is clean and synchronized with `origin/main`.
+- GitHub Actions for the final Phase 5 hardening commit `ba37072486b932b93d65783b96ed2aa8b9d17468` succeeded.
+
+Phase 5 is now CLOSED / VERIFIED.
 
 ## 23. Next phase
 
