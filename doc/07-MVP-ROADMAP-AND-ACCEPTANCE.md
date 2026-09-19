@@ -53,7 +53,28 @@ Exit criteria:
 - no cross-tenant business access;
 - switching company context is safe.
 
-## 4. Phase 2 — Module Catalog
+## 4. Phase 2 — Identity, Authentication & RBAC
+
+Build:
+
+- PlatformAccount authentication;
+- registration, login/logout, password reset, email verification;
+- tenant memberships;
+- tenant-scoped RBAC;
+- default tenant roles and permissions;
+- permission-team isolation;
+- membership/role synchronization.
+
+Exit criteria:
+
+- authenticated accounts use PlatformAccount;
+- suspended accounts are rejected;
+- tenant membership is required for tenant workspace access;
+- roles and permissions are isolated by tenant;
+- the same account can have different roles across tenants;
+- default RBAC bootstrap is idempotent.
+
+## 5. Phase 3 — Module Catalog
 
 Build:
 
@@ -74,7 +95,7 @@ Exit criteria:
 - dependencies are validated;
 - circular dependencies are rejected.
 
-## 5. Phase 3 — Entitlements
+## 6. Phase 4 — Entitlements
 
 Build:
 
@@ -92,7 +113,7 @@ Exit criteria:
 - permissions and entitlements are separate;
 - entitlement state is rebuildable from billing source data.
 
-## 6. Phase 4 — Billing
+## 7. Phase 5 — Billing
 
 Build:
 
@@ -119,7 +140,7 @@ Exit criteria:
 - verified payment activates a paid Feature;
 - feature removal takes effect at period end.
 
-## 7. Phase 5 — Kashier integration
+## 8. Phase 6 — Kashier integration
 
 Build:
 
@@ -139,7 +160,7 @@ Exit criteria:
 - failed payments do not grant access;
 - provider references are traceable.
 
-## 8. Phase 6 — Booking Module
+## 9. Phase 7 — Booking Module
 
 Build:
 
@@ -190,7 +211,7 @@ Build:
 - confirmation;
 - rate limiting.
 
-## 9. Phase 7 — Company Dashboard
+## 10. Phase 8 — Company Dashboard
 
 Build:
 
@@ -219,7 +240,7 @@ Active Features
 User Permissions
 ~~~
 
-## 10. Phase 8 — Customer Portal
+## 11. Phase 9 — Customer Portal
 
 Build:
 
@@ -231,7 +252,7 @@ Build:
 - documents;
 - messages where implemented.
 
-## 11. Phase 9 — Production QA
+## 12. Phase 10 — Production QA
 
 Test categories:
 
@@ -256,7 +277,7 @@ Registration, company setup, module purchase, payment return, dashboard, booking
 ### Database
 MySQL 8.4 regression and migration correctness.
 
-## 12. MVP critical negative tests
+## 13. MVP critical negative tests
 
 1. Company A cannot read Company B customers.
 2. Company A cannot read Company B appointments.
@@ -274,7 +295,7 @@ MySQL 8.4 regression and migration correctness.
 14. Re-activating a Feature reuses retained business data.
 15. Bundle discount is reflected correctly in invoice lines.
 
-## 13. Definition of done
+## 14. Definition of done
 
 A feature is not done merely because a page works.
 
@@ -300,7 +321,7 @@ UI integrated
 Documentation updated
 ~~~
 
-## 14. Future CRM phase
+## 15. Future CRM phase
 
 CRM should start after Core + Booking MVP is stable.
 
@@ -317,7 +338,7 @@ Recommended order:
 
 CRM reuses Customer, Staff, Company, Locations, Files, Notifications, Billing, and Audit.
 
-## 15. Future ERP phase
+## 16. Future ERP phase
 
 ERP follows the same Core.
 
@@ -333,7 +354,7 @@ Recommended order:
 8. Expenses.
 9. Finance/accounting.
 
-## 16. Scalability & performance gate
+## 17. Scalability & performance gate
 
 Before calling a high-traffic flow production-ready:
 
@@ -349,7 +370,7 @@ Before calling a high-traffic flow production-ready:
 
 See `doc/09-SCALABILITY-AND-PERFORMANCE.md`.
 
-## 17. Release gates
+## 18. Release gates
 
 Do not call production ready until:
 
@@ -364,7 +385,7 @@ Do not call production ready until:
 - monitoring is operational;
 - deployment procedure is documented.
 
-## 18. Implementation order
+## 19. Implementation order
 
 ~~~
 1. Foundation
@@ -384,13 +405,13 @@ Do not call production ready until:
 15. ERP
 ~~~
 
-## 19. Product promise
+## 20. Product promise
 
 The user should experience VeloraPlus as one system.
 
 Buying another Module must feel like turning on a new capability inside the same company workspace, not creating a second application or second set of customers/staff.
 
-## 20. Final acceptance scenario
+## 21. Final acceptance scenario
 
 ~~~
 User registers
@@ -426,7 +447,7 @@ Company sees everything in one Dashboard
 
 This validates the intended architecture.
 
-## 21. Change control
+## 22. Change control
 
 If a future requirement conflicts with a documented rule, do not silently change implementation.
 

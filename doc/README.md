@@ -89,7 +89,9 @@ ERP
 
 ## Current repository note
 
-The repository was initialized from a Laravel 13 skeleton. The current starter dependencies are not considered the final VeloraPlus dependency set yet. Dependency installation is part of the Foundation implementation phase and must follow the stack documented here.
+Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is also closed and verified. Phase 3 is the Module Catalog.
+
+The repository documentation and implementation order are kept aligned with the current phase so that no business module is started against an incomplete platform core.
 
 ## Non-negotiable rules
 

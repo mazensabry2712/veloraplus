@@ -41,12 +41,16 @@ Important references:
 - doc/08-STACK-AND-LIBRARIES.md
 - doc/09-SCALABILITY-AND-PERFORMANCE.md
 - doc/10-FOUNDATION-IMPLEMENTATION.md
+- doc/11-PHASE-1-TENANCY-FOUNDATION.md
+- doc/12-PHASE-2-IDENTITY-AUTH-RBAC.md
 
 ## Current implementation
 
-Foundation currently establishes the central PlatformAccount identity model and its persistence boundary.
+Phase 1 — Tenancy Foundation is closed and verified.
 
-The next implementation stage is the Platform Core / Multi-Tenancy foundation, including tenant registry, dedicated tenant databases, tenant domains, and memberships.
+Phase 2 — Identity, Authentication & RBAC is closed and verified. It establishes PlatformAccount authentication, tenant memberships, tenant-scoped Spatie RBAC, default roles/permissions, role synchronization, and permission-team isolation.
+
+The next implementation stage is Phase 3 — Module Catalog: Modules, Features, dependencies, Bundles, and catalog/pricing structures.
 
 ## Development principle
 

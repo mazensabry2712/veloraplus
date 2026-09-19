@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — authentication and tenant-scoped RBAC implementation is in place; local and CI verification remain the closing gates.**
+**CLOSED / VERIFIED — authentication and tenant-scoped RBAC implementation is complete.**
 
 Phase 2 establishes the platform authentication boundary and tenant-scoped authorization model without changing the Phase 1 tenancy contract.
 
@@ -223,17 +223,27 @@ RBAC coverage includes:
 
 ## Verification gate
 
-Run locally from C:\Herd\veloraplus:
+Phase 2 closing verification was completed with:
+
+- CI for commit `30cd810`: successful.
+- Local automated suite on the Phase 2 implementation: 29 tests passed with 112 assertions.
+- Existing tenant `velora-clinic`: RBAC bootstrap succeeded.
+- Tenant RBAC state: 5 roles and 12 permissions present.
+- Owner membership: `role_key=owner`, `status=active`.
+- PlatformAccount authorization check under the `velora-clinic` permission team resolved the `owner` role.
+- Permission team context was explicitly reset to `null` after verification.
+- `CACHE_STORE=array` was used only for the local bootstrap verification because local Redis is not running; production architecture remains Redis-backed.
+
+For routine local verification from `C:\Herd\veloraplus`:
 
 ~~~powershell
-php artisan optimize:clear
 vendor/bin/pint --dirty --format agent
 php artisan test --compact
 git diff --check
 git status
 ~~~
 
-Phase 2 closes only after the local suite and GitHub Actions are both green.
+`php artisan optimize:clear` requires the local Redis service while `CACHE_STORE` is configured for Redis.
 
 ## Dependency versions
 
