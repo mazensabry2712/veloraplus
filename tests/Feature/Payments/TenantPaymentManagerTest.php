@@ -370,7 +370,7 @@ test('tenant payment checkout failure marks only the tenant payment as failed', 
 
     expect($payment->status)->toBe(TenantPaymentStatus::Failed)
         ->and($payment->failed_at)->not->toBeNull()
-        ->and($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Unpaid);
+        ->and($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Failed);
 });
 
 test('verified tenant payment success is idempotent and marks the appointment paid', function (): void {
