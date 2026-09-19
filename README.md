@@ -43,14 +43,15 @@ Important references:
 - doc/10-FOUNDATION-IMPLEMENTATION.md
 - doc/11-PHASE-1-TENANCY-FOUNDATION.md
 - doc/12-PHASE-2-IDENTITY-AUTH-RBAC.md
+- doc/13-PHASE-3-MODULE-CATALOG.md
 
 ## Current implementation
 
 Phase 1 — Tenancy Foundation is closed and verified.
 
-Phase 2 — Identity, Authentication & RBAC is closed and verified. It establishes PlatformAccount authentication, tenant memberships, tenant-scoped Spatie RBAC, default roles/permissions, role synchronization, and permission-team isolation.
+Phase 2 — Identity, Authentication & RBAC is closed and verified.
 
-The next implementation stage is Phase 3 — Module Catalog: Modules, Features, dependencies, Bundles, and catalog/pricing structures.
+Phase 3 — Module Catalog is in progress. The central catalog schema, models, composition services, dependency validation, and pricing catalog foundation are implemented before Entitlements and Billing.
 
 ## Development principle
 

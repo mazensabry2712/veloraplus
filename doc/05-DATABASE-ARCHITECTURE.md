@@ -72,34 +72,88 @@ updated_at
 
 ### Catalog
 
+The implemented central catalog schema is:
+
 ~~~
-platform_modules
-platform_features
-module_features
-feature_dependencies
+modules
+--------
+id
+key
+name
+description
+status
+is_core
+sort_order
+metadata
+
+features
+--------
+id
+module_id
+key
+name
+description
+status
+billing_mode
+is_required
+is_individually_purchasable
+sort_order
+metadata
+
+catalog_dependencies
+---------------------
+id
+dependent_type
+dependent_id
+dependency_type
+dependency_id
+metadata
+
 bundles
-bundle_items
+-------
+id
+key
+name
+description
+status
+discount_bps
+sort_order
+metadata
+
+bundle_modules
+--------------
+bundle_id
+module_id
+
+bundle_features
+---------------
+bundle_id
+feature_id
 ~~~
+
+Module/Feature/Bundle catalog data is central and uses ULIDs. Polymorphic dependency and price targets are protected by application-level validation because a relational FK cannot target multiple catalog tables.
 
 ### Prices
 
-Central price catalog concept:
+Central price catalog:
 
 ~~~
 catalog_prices
 --------------
 id
-catalog_type
-catalog_id / catalog_key
-country_code
-currency
+priceable_type
+priceable_id
 billing_cycle
+currency
+country_code
 amount_minor
-is_active
+status
 effective_from
-effective_until
+effective_to
 metadata
 ~~~
+
+Prices support Module, Feature, and Bundle targets, monthly/yearly cycles, global prices with optional country overrides, integer minor-unit amounts, lifecycle status, and effective windows.
 
 ### Subscriptions
 
@@ -456,6 +510,16 @@ number
 ~~~
 
 ## 10. Uniqueness rules
+
+Catalog-specific rules include:
+
+- module key unique;
+- feature key unique;
+- bundle key unique;
+- bundle/module membership unique;
+- bundle/feature membership unique;
+- catalog dependency edge unique;
+- active pricing dimensions must not overlap at the application layer.
 
 Examples:
 

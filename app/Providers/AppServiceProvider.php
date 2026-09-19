@@ -5,6 +5,10 @@ namespace App\Providers;
 use App\Application\Tenancy\TenantProvisioner;
 use App\Application\Tenancy\TenantProvisionerContract;
 use App\Domain\Tenancy\TenantContext;
+use App\Models\Bundle;
+use App\Models\Feature;
+use App\Models\Module;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Relation::morphMap([
+            'module' => Module::class,
+            'feature' => Feature::class,
+            'bundle' => Bundle::class,
+        ]);
     }
 }

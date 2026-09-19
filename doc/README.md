@@ -24,6 +24,7 @@ Implementation must follow these documents:
 10. 10-FOUNDATION-IMPLEMENTATION.md
 11. 11-PHASE-1-TENANCY-FOUNDATION.md
 12. 12-PHASE-2-IDENTITY-AUTH-RBAC.md
+13. 13-PHASE-3-MODULE-CATALOG.md
 
 ## Locked decisions
 
@@ -66,7 +67,7 @@ Architecture
     ↓
 Central Registry + Tenant Infrastructure
     ↓
-Identity / Membership
+Identity / Authentication / RBAC
     ↓
 Company / Staff / Customer
     ↓
@@ -89,7 +90,7 @@ ERP
 
 ## Current repository note
 
-Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is also closed and verified. Phase 3 is the Module Catalog.
+Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 is the Module Catalog and its central schema/services are now implemented; local/CI verification is the remaining gate.
 
 The repository documentation and implementation order are kept aligned with the current phase so that no business module is started against an incomplete platform core.
 
@@ -104,9 +105,8 @@ The repository documentation and implementation order are kept aligned with the 
 - Do not create cross-tenant foreign keys between tenant databases and the central database.
 - Do not permanently delete business data only because a paid Feature was disabled.
 
-
 ## Global Scale Requirement
 
-VeloraPlus is intended for global usage. The platform must be engineered from the beginning for very fast response times, high concurrency, horizontal scaling, tenant isolation, and measurable reliability.
+VeloraPlus is intended for global usage. The platform must be engineered from the beginning for very fast response times, high concurrency, tenant isolation, and measurable reliability.
 
-Detailed rules live in `doc/09-SCALABILITY-AND-PERFORMANCE.md`.
+Detailed rules live in doc/09-SCALABILITY-AND-PERFORMANCE.md.
