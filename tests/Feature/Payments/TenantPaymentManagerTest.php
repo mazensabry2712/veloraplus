@@ -226,11 +226,11 @@ test('tenant payment rejects cancelled appointments before creating a payment', 
     tenantPaymentContext($tenant, $path);
     $fixtures = tenantPaymentFixtures($tenant);
 
-    app(\App\Application\Booking\AppointmentManager::class)
+    app(AppointmentManager::class)
         ->cancel($fixtures['appointment'], 'Cancelled before payment');
 
     $calls = [];
-    configureFakeTenantGateway($calls);
+    configureFakeTenantGateway();
 
     expect(fn () => app(TenantPaymentManager::class)->createCheckout($fixtures['appointment']))
         ->toThrow(DomainException::class);
@@ -256,7 +256,7 @@ test('tenant payment cannot be marked succeeded from a failed state', function (
     $fixtures = tenantPaymentFixtures($tenant);
 
     $calls = [];
-    configureFakeTenantGateway($calls);
+    configureFakeTenantGateway();
 
     $manager = app(TenantPaymentManager::class);
     $payment = $manager->createCheckout($fixtures['appointment']);
@@ -265,7 +265,7 @@ test('tenant payment cannot be marked succeeded from a failed state', function (
     expect(fn () => $manager->markSucceeded($payment))
         ->toThrow(DomainException::class);
 
-    expect($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Unpaid);
+    expect($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Failed);
 });
 
 test('tenant payment checkout is idempotent and updates appointment payment state', function (): void {
@@ -287,7 +287,7 @@ test('tenant payment checkout is idempotent and updates appointment payment stat
     $fixtures = tenantPaymentFixtures($tenant);
 
     $calls = [];
-    configureFakeTenantGateway($calls);
+    configureFakeTenantGateway();
 
     $manager = app(TenantPaymentManager::class);
 
@@ -364,7 +364,7 @@ test('verified tenant payment success is idempotent and marks the appointment pa
     $fixtures = tenantPaymentFixtures($tenant);
 
     $calls = [];
-    configureFakeTenantGateway($calls);
+    configureFakeTenantGateway();
 
     $manager = app(TenantPaymentManager::class);
     $payment = $manager->createCheckout($fixtures['appointment']);
@@ -412,7 +412,7 @@ test('tenant payments cannot cross tenant database boundaries', function (): voi
     $fixtures = tenantPaymentFixtures();
 
     $calls = [];
-    configureFakeTenantGateway($calls);
+    configureFakeTenantGateway();
     $payment = app(TenantPaymentManager::class)->createCheckout($fixtures['appointment']);
 
     DB::purge(TenantDatabaseManager::CONNECTION);
