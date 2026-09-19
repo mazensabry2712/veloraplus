@@ -166,7 +166,7 @@ Planned:
 
 ### 7.7 Public Web & SEO Foundation
 
-Status: **SEO-1 + SEO-2 + SEO-3 COMPLETED / SEO-4+ PENDING — CROSS-CUTTING**
+Status: **SEO-1 + SEO-2 + SEO-3 + SEO-4 COMPLETED / SEO-5 PENDING — CROSS-CUTTING**
 
 Prerequisite completed: the Service entity now has a stable Tenant-local `slug` field. Public Service pages remain pending until SEO/public routing is implemented.
 
@@ -196,6 +196,8 @@ Remaining SEO-4+ work:
 - structured data / JSON-LD;
 - Open Graph/social metadata;
 - public HTML, sitemap, robots, canonical, and Tenant-isolation tests.
+
+Full Public Booking transaction remains pending as part of Phase 7.6; this slice only completes its SEO/public-web boundary.
 
 Sequencing rule:
 

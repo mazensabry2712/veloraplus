@@ -262,8 +262,52 @@ test('tenant public services expose only active online-bookable services with SE
         ->assertSee('"@type":"Service"', false)
         ->assertSee('Dental Cleaning', false);
 
+    $show->assertSee(
+        '<a href="https://clinic.velora.test/book/dental-cleaning">Book this service</a>',
+        false,
+    );
+
     expect($public->slug)->toBe('dental-cleaning')
         ->and($hidden->online_bookable)->toBeFalse();
+});
+
+
+test('public booking entry is non-indexable and canonicalizes to the service page', function () {
+    $path = seoTenantDatabase();
+    $this->seoTenantDatabases = [$path];
+
+    $tenant = createSeoTenant(
+        slug: 'clinic',
+        name: 'Velora Clinic',
+        primaryDomain: 'clinic.velora.test',
+        path: $path,
+    );
+
+    config(['velora.tenancy.base_domain' => 'velora.test']);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    app(ServiceManager::class)->create([
+        'name' => 'Dental Cleaning',
+        'slug' => 'dental-cleaning',
+        'duration_minutes' => 45,
+        'price_minor' => 25000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'online_bookable' => true,
+        'capacity' => 1,
+    ]);
+
+    $manager->disconnect();
+
+    $response = $this->get('https://clinic.velora.test/book/dental-cleaning');
+
+    $response->assertSuccessful()
+        ->assertHeader('X-Robots-Tag', 'noindex, nofollow')
+        ->assertSee('<meta name="robots" content="noindex,nofollow">', false)
+        ->assertSee('<link rel="canonical" href="https://clinic.velora.test/services/dental-cleaning">', false)
+        ->assertSee('<h1>Book Dental Cleaning</h1>', false);
 });
 
 test('tenant sitemap includes only public service URLs', function () {

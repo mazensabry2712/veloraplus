@@ -76,6 +76,7 @@ final class PublicServiceController
             'service' => $service,
             'homeUrl' => $seo->tenantUrl($tenant),
             'servicesUrl' => $seo->tenantUrl($tenant, '/services'),
+            'bookingUrl' => $seo->tenantUrl($tenant, '/book/'.$service->slug),
             'seo' => $seo->tenantService($tenant, $service),
         ]);
     }

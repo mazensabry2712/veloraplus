@@ -187,7 +187,7 @@ Current implementation status:
 - SEO-1 platform foundation: implemented and verified by automated tests;
 - SEO-2 Tenant public surface: implemented and verified by automated tests;
 - SEO-3 Public Services pages: implemented and verified by automated tests;
-- SEO-4 Public Booking SEO integration: pending;
+- SEO-4 Public Booking SEO integration: implemented and verified by automated tests;
 - custom-domain canonicalization: pending until Custom Domain infrastructure is delivered.
 
 ## Phase 7 status — in progress

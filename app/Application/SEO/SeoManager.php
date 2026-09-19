@@ -186,6 +186,20 @@ final class SeoManager
         );
     }
 
+    public function tenantBooking(Tenant $tenant, Service $service): SeoMeta
+    {
+        $serviceUrl = $this->tenantUrl($tenant, '/services/'.$service->slug);
+
+        return new SeoMeta(
+            title: 'Book '.$service->name.' | '.$tenant->name,
+            description: 'Booking page for '.$service->name.' at '.$tenant->name.'.',
+            canonical: $serviceUrl,
+            robots: 'noindex,nofollow',
+            ogType: 'website',
+            siteName: $tenant->name,
+            locale: $tenant->locale ?: null,
+        );
+    }
     public function isPlatformHost(string $host): bool
     {
         $platformHost = parse_url((string) config('velora.platform.url'), PHP_URL_HOST)
