@@ -340,7 +340,10 @@ Browser/production QA must inspect rendered HTML, not only JavaScript state.
 ## 23. Delivery slices
 
 ### SEO-1 — Foundation
-- separate Platform and Tenant public routes;
+
+Status: **COMPLETED IN THIS SLICE — PLATFORM FOUNDATION**
+- establish the centralized SEO contract and Platform public endpoints;
+- Tenant public route separation remains in SEO-2;
 - SEO value object/view model;
 - shared Blade SEO component;
 - Platform metadata defaults;

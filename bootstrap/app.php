@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureTenantEntitlement;
 use App\Http\Middleware\InitializeTenantContext;
+use App\Http\Middleware\NoIndexRobots;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => InitializeTenantContext::class,
             'tenant.member' => \App\Http\Middleware\EnsureTenantMembership::class,
             'entitled' => EnsureTenantEntitlement::class,
+            'noindex' => NoIndexRobots::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

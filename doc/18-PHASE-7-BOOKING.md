@@ -166,11 +166,22 @@ Planned:
 
 ### 7.7 Public Web & SEO Foundation
 
-Status: **PENDING / CROSS-CUTTING**
+Status: **SEO-1 PLATFORM FOUNDATION COMPLETED / SEO-2+ PENDING — CROSS-CUTTING**
 
 Prerequisite completed: the Service entity now has a stable Tenant-local `slug` field. Public Service pages remain pending until SEO/public routing is implemented.
 
-Planned:
+Completed in SEO-1:
+
+- centralized SEO metadata/value object;
+- reusable Blade SEO component;
+- platform metadata configuration;
+- platform canonical URL generation;
+- platform robots.txt;
+- platform sitemap.xml;
+- explicit noindex middleware alias;
+- automated SEO foundation tests.
+
+Remaining SEO-2+ work:
 
 - Platform and Tenant public-route separation;
 - server-rendered public pages;
