@@ -7,7 +7,6 @@ use App\Domain\Tenancy\TenantContext;
 use App\Models\Service;
 use App\Models\ServiceSlugRedirect;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 final class PublicServiceController
@@ -75,6 +74,8 @@ final class PublicServiceController
         return view('public.services.show', [
             'tenant' => $tenant,
             'service' => $service,
+            'homeUrl' => $seo->tenantUrl($tenant),
+            'servicesUrl' => $seo->tenantUrl($tenant, '/services'),
             'seo' => $seo->tenantService($tenant, $service),
         ]);
     }
