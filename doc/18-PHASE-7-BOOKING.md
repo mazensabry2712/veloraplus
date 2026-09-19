@@ -123,7 +123,7 @@ Validation and concurrency rules:
 
 ### 7.4 Tenant Payments integration
 
-Status: **7.4.1 PAYMENT FOUNDATION COMPLETED / 7.4.2 WEBHOOK + REFUND PENDING**
+Status: **7.4.1 + 7.4.2 COMPLETED**
 
 Completed in 7.4.1:
 
@@ -139,12 +139,14 @@ Completed in 7.4.1:
 - Tenant payment RBAC permissions;
 - explicit separation from Platform Billing records.
 
-Remaining 7.4.2+:
+Completed in 7.4.2:
 
-- provider webhook verification and idempotent Tenant payment event handling;
-- provider lookup/reconciliation boundary;
-- Tenant refunds and refund records;
-- production payment operational controls.
+- tenant-local webhook event ledger with idempotency and payload-hash protection;
+- tenant-specific provider signature verification;
+- provider transaction reconciliation;
+- partial/full Tenant refunds with idempotency and over-refund protection;
+- Appointment payment-state synchronization after verified success/full refund;
+- no Platform Billing side effects from Tenant customer payment flows.
 
 ### 7.5 Queue
 
