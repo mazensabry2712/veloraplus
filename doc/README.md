@@ -114,7 +114,7 @@ Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is closed a
 
 Phase 7 — Booking is in progress. Slices 7.1 Services, 7.2 Staff Availability, and 7.3 Appointments are implemented and verified. 7.4 Tenant Payments, 7.5 Queue, and 7.6 Public Booking remain pending.
 
-SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md. Its first foundation slices are required before the public Booking surface is production-ready. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery.
+SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md. SEO-1 through SEO-4 are implemented and tested; SEO-5 production operations remain pending. The full Public Booking transaction remains a separate Phase 7.6 business delivery. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery.
 
 ## Non-negotiable rules
 
