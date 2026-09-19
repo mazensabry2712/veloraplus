@@ -456,6 +456,10 @@ Feature activates immediately
   ↓
 Company uses shared Staff/Customers
   ↓
+SEO/public page is crawlable with canonical metadata
+  ↓
+Public Booking entry point is available
+  ↓
 Customer books through public Booking
   ↓
 Customer has company-specific profile/history
