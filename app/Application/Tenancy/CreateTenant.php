@@ -2,6 +2,7 @@
 
 namespace App\Application\Tenancy;
 
+use App\Application\Authorization\TenantRbacBootstrapper;
 use App\Models\PlatformAccount;
 use App\Models\Tenant;
 use App\Models\TenantDomain;
@@ -13,6 +14,7 @@ final class CreateTenant
 {
     public function __construct(
         private readonly TenantProvisionerContract $provisioner,
+        private readonly TenantRbacBootstrapper $rbacBootstrapper,
     ) {}
 
     public function execute(
@@ -25,7 +27,7 @@ final class CreateTenant
         $tenant = DB::connection('central')->transaction(function () use ($owner, $name, $slug, $domain, $attributes): Tenant {
             $tenantId = (string) Str::ulid();
 
-            $tenant = Tenant::create([ 
+            $tenant = Tenant::create([
                 'id' => $tenantId,
                 'name' => $name,
                 'legal_name' => $attributes['legal_name'] ?? null,
@@ -63,6 +65,9 @@ final class CreateTenant
             return $tenant;
         });
 
-        return $this->provisioner->provision($tenant);
+        $tenant = $this->provisioner->provision($tenant);
+        $this->rbacBootstrapper->bootstrapForTenant($tenant);
+
+        return $tenant->refresh();
     }
 }

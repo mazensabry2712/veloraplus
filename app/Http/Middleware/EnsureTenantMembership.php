@@ -23,10 +23,24 @@ final class EnsureTenantMembership
             abort(401);
         }
 
-        if (! $this->authorizer->canAccess($account, $this->context->current())) {
+        if ($account->status !== 'active') {
             abort(403);
         }
 
-        return $next($request);
+        $tenant = $this->context->current();
+
+        if (! $this->authorizer->canAccess($account, $tenant)) {
+            abort(403);
+        }
+
+        setPermissionsTeamId($tenant->getKey());
+        $account->unsetRelation('roles')->unsetRelation('permissions');
+
+        try {
+            return $next($request);
+        } finally {
+            $account->unsetRelation('roles')->unsetRelation('permissions');
+            setPermissionsTeamId(null);
+        }
     }
 }

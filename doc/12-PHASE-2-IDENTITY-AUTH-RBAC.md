@@ -2,20 +2,32 @@
 
 ## Status
 
-**IN PROGRESS — architecture and dependency preparation complete; package installation is the next implementation gate.**
+**IN PROGRESS — authentication and tenant-scoped RBAC implementation is in place; local and CI verification remain the closing gates.**
 
 Phase 2 establishes the platform authentication boundary and tenant-scoped authorization model without changing the Phase 1 tenancy contract.
 
-## Goals
+## Completed implementation slices
 
-- Authenticate one central PlatformAccount.
-- Keep authentication state in the central/control database.
-- Support registration, login, logout, email verification, and password reset.
-- Reuse one account across multiple tenants.
-- Scope Roles and Permissions by Tenant.
-- Keep Membership authorization separate from Role/Permission authorization.
-- Prevent role/permission state from leaking between tenant contexts.
-- Keep authorization metadata central so it can safely reference the central PlatformAccount and Tenant identities.
+### Authentication
+
+- PlatformAccount is the central authentication model.
+- Fortify is registered as an application provider.
+- Registration, login/logout, password reset, and email verification are enabled.
+- Suspended accounts are rejected during authentication.
+- Fortify views are mapped to minimal Blade templates so the backend routes work before the final frontend pass.
+- All published Fortify actions were migrated away from the removed App\Models\User class.
+
+### Tenant-scoped RBAC
+
+- Spatie Laravel Permission Teams is enabled with tenant_id.
+- Custom ULID Role and Permission models are configured.
+- PlatformAccount uses HasRoles.
+- tenant.member establishes the active permission team from TenantContext and clears it in a finally block.
+- Cached roles and permissions relations are unset when the team context changes.
+- Suspended authenticated accounts are blocked from tenant workspace middleware.
+- Default roles and permissions are bootstrapped idempotently.
+- New tenant creation runs RBAC bootstrap after tenant database provisioning.
+- Existing tenants can be bootstrapped with php artisan tenants:bootstrap-rbac.
 
 ## Canonical identity flow
 
@@ -37,8 +49,6 @@ Role / Permission Check
 Business Action
 ~~~
 
-tenant and tenant.member remain separate middleware boundaries.
-
 - tenant resolves and connects the company database.
 - tenant.member verifies active membership and establishes the Spatie permission team.
 - Permission/role middleware or Policies execute only after the tenant permission team is established.
@@ -53,8 +63,8 @@ Phase 2 initial Fortify feature set:
 - Login/logout.
 - Password reset.
 - Email verification.
-
-Two-factor authentication is intentionally a later security slice after the base authentication flow is stable.
+- Two-factor authentication is intentionally deferred.
+- Passkeys are intentionally deferred.
 
 The authenticated model remains App\Models\PlatformAccount on the central connection.
 
@@ -95,23 +105,11 @@ The same PlatformAccount can have different role assignments in each tenant.
 
 The permission team is derived from the resolved tenant context, never from an arbitrary request field.
 
-At the end of the request, the permission team must be reset to null to avoid state leakage in long-running workers.
+At the end of the request, the permission team is reset to null to avoid state leakage in long-running workers.
 
-When permission team context changes inside a request, cached roles and permissions relations on the account must be unset before authorization checks.
+When the permission team changes inside a request, cached roles and permissions relations on the account are unset before authorization checks.
 
-## ULID policy
-
-VeloraPlus uses ULIDs for platform identities. Therefore:
-
-- Role IDs use ULIDs.
-- Permission IDs use ULIDs.
-- Role/Permission pivot foreign keys use ULIDs.
-- model_id uses a ULID-compatible column.
-- tenant_id uses the central tenants.id ULID.
-
-The package's migration must be customized for these identifier types before the first RBAC migration is run.
-
-## Default roles
+## Default roles and permission matrix
 
 Initial tenant roles:
 
@@ -123,11 +121,7 @@ Initial tenant roles:
 | staff | Day-to-day operational access |
 | viewer | Read-only operational access |
 
-These are bootstrap roles, not the final limit on custom tenant roles.
-
-## Core permissions
-
-Initial platform-core permission vocabulary:
+Initial permissions:
 
 - company.view
 - company.update
@@ -142,7 +136,17 @@ Initial platform-core permission vocabulary:
 - settings.view
 - settings.manage
 
-Booking-specific permissions are intentionally deferred until the Booking module is implemented.
+Default assignments:
+
+| Role | Permissions |
+|---|---|
+| owner | all 12 |
+| admin | all 12 |
+| manager | company.view, members.view, staff.view/manage, customers.view/manage, locations.view/manage, settings.view |
+| staff | company.view, staff.view, customers.view/manage, locations.view |
+| viewer | all six *.view permissions |
+
+These are bootstrap roles, not the final limit on custom tenant roles. Booking-specific permissions are intentionally deferred until the Booking module.
 
 ## Membership vs Role
 
@@ -156,7 +160,7 @@ Role/Permission answers:
 
 Both checks are required for protected tenant workspace actions.
 
-tenant_memberships.role_key remains the membership's primary role identifier for bootstrap/UI context. Spatie assignments are the authoritative permission source once RBAC is active.
+tenant_memberships.role_key remains the membership role identifier for bootstrap/UI context. Spatie assignments are the authoritative permission source once RBAC is active.
 
 ## Tenant creation
 
@@ -165,91 +169,76 @@ When a new Tenant is created:
 1. The central Tenant record is created.
 2. The primary domain and Owner Membership are created.
 3. The dedicated tenant database is provisioned.
-4. The tenant's default RBAC roles are created in the central database.
-5. The owner's PlatformAccount receives the owner role for that tenant.
+4. Default tenant RBAC roles and permissions are created.
+5. Every active membership with a recognized default role_key receives the matching tenant role.
 6. The tenant can then enter protected workspace routes.
 
-The process must be idempotent.
+The RBAC bootstrap operation is idempotent and safe to repeat.
 
 ## Existing tenant migration
 
-Existing tenants, including velora-clinic, require an explicit RBAC bootstrap after the package migration is installed.
+Existing tenants, including velora-clinic, can be bootstrapped with:
 
-The bootstrap must:
+~~~powershell
+php artisan tenants:bootstrap-rbac
+~~~
 
-- create missing default roles for each existing tenant;
-- create missing core permissions;
-- sync default role permissions;
-- assign owner to each active Owner Membership;
-- remain safe to run more than once.
+A single tenant can be targeted by ULID or slug:
+
+~~~powershell
+php artisan tenants:bootstrap-rbac velora-clinic
+~~~
 
 ## Security requirements
 
 - Suspended Platform Accounts cannot authenticate.
+- Suspended authenticated accounts cannot pass tenant membership middleware.
 - Passwords are hashed through Laravel's password hashing.
-- Login and password-recovery endpoints are rate limited.
+- Login is rate limited by Fortify/Laravel.
 - Permission decisions are server-side.
 - Tenant identity comes from the trusted host/domain registry.
-- A user cannot gain access to another tenant by changing tenant_id in a request.
+- A user cannot gain access to another tenant by changing a request tenant_id.
 - Permission team context is always reset after the request.
 - Secrets are never stored in source code.
 
-## Test requirements
+## Test coverage added
 
-Phase 2 must include coverage for:
+Authentication coverage includes:
 
-### Authentication
+- authentication views;
+- successful and failed login;
+- suspended account rejection;
+- registration and verification notification;
+- password reset notification;
+- password reset completion;
+- email verification.
 
-- login page renders;
-- active account can authenticate;
-- invalid credentials are rejected;
-- suspended account is rejected;
-- registration creates a PlatformAccount;
-- email verification is required where protected routes use verified;
-- password reset request and password reset flow work.
+RBAC coverage includes:
 
-### Tenant RBAC
+- idempotent role/permission bootstrap;
+- different roles for the same account across tenants;
+- tenant team setup and cleanup;
+- membership/suspended-account negative cases;
+- automatic owner-role bootstrap during new tenant creation.
 
-- same account can hold different roles in different tenants;
-- permissions in Tenant A do not apply in Tenant B;
-- active membership is required;
-- non-member is forbidden even if another tenant grants the account permissions;
-- permission team is established from tenant context;
-- permission team is cleared after the request.
+## Verification gate
 
-### Negative security tests
+Run locally from C:\Herd\veloraplus:
 
-- forged tenant identifier does not switch permission context;
-- role assignment for Tenant A cannot authorize Tenant B;
-- a suspended account cannot access tenant workspace routes;
-- missing permission is forbidden;
-- membership and permission checks remain independent.
+~~~powershell
+php artisan optimize:clear
+vendor/bin/pint --dirty --format agent
+php artisan test --compact
+git diff --check
+git status
+~~~
 
-## Dependency gate
+Phase 2 closes only after the local suite and GitHub Actions are both green.
 
-The selected versions verified for the current date are:
+## Dependency versions
 
-- laravel/fortify 1.39.0;
-- spatie/laravel-permission 8.3.0.
-
-Laravel 13 compatibility is documented for both packages. The repository must commit the resulting Composer lockfile after installation.
-
-## Exit criteria
-
-Phase 2 closes only when:
-
-- Fortify is installed and configured.
-- PlatformAccount authentication works.
-- Email verification and password reset are tested.
-- Spatie Permission Teams is installed with tenant_id.
-- ULID-compatible RBAC migrations pass on MySQL and test SQLite.
-- Default roles and permissions are bootstrapped.
-- Owner role is assigned per tenant.
-- Tenant permission context is established and cleared safely.
-- Cross-tenant RBAC negative tests pass.
-- Full local test suite passes.
-- GitHub Actions passes.
-- Documentation is synchronized with the final implementation.
+- laravel/fortify 1.39.0
+- spatie/laravel-permission 8.3.0
 
 ## Next after Phase 2
 
