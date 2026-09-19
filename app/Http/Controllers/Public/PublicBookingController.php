@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Public;
 
 use App\Application\Booking\PublicBookingManager;
 use App\Application\SEO\SeoManager;
+use App\Domain\Booking\AppointmentPaymentStatus;
 use App\Domain\Tenancy\TenantContext;
+use DomainException;
 use App\Http\Requests\PublicBookingRequest;
 use App\Models\Service;
 use Illuminate\Http\JsonResponse;
@@ -88,7 +90,7 @@ final class PublicBookingController
             return redirect()->away($result['checkout_url']);
         }
 
-        if ($result['appointment']->payment_status !== \App\Domain\Booking\AppointmentPaymentStatus::Paid) {
+        if ($result['appointment']->payment_status !== AppointmentPaymentStatus::Paid) {
             throw ValidationException::withMessages([
                 'booking' => 'The booking was created, but payment could not be initialized. Please retry.',
             ]);
