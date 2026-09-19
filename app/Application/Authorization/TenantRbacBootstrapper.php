@@ -31,6 +31,8 @@ final class TenantRbacBootstrapper
         'booking.availability.manage',
         'booking.appointments.view',
         'booking.appointments.manage',
+        'booking.payments.view',
+        'booking.payments.manage',
     ];
 
     /**
@@ -57,6 +59,8 @@ final class TenantRbacBootstrapper
                 'booking.availability.manage',
                 'booking.appointments.view',
                 'booking.appointments.manage',
+                'booking.payments.view',
+                'booking.payments.manage',
             ],
             'staff' => [
                 'company.view',
@@ -67,6 +71,7 @@ final class TenantRbacBootstrapper
                 'booking.services.view',
                 'booking.availability.view',
                 'booking.appointments.view',
+                'booking.payments.view',
             ],
             'viewer' => [
                 'company.view',
@@ -78,6 +83,7 @@ final class TenantRbacBootstrapper
                 'booking.services.view',
                 'booking.availability.view',
                 'booking.appointments.view',
+                'booking.payments.view',
             ],
         ];
     }
