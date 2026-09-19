@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Application\Booking\PublicBookingManager;
 use App\Application\SEO\SeoManager;
 use App\Domain\Tenancy\TenantContext;
-use App\Models\Service;
 use App\Http\Requests\PublicBookingRequest;
-use App\Application\Booking\PublicBookingManager;
+use App\Models\Service;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -18,8 +18,7 @@ final class PublicBookingController
         TenantContext $context,
         SeoManager $seo,
         PublicBookingManager $bookings,
-    ): View
-    {
+    ): View {
         if (! $context->check()) {
             abort(404);
         }
@@ -44,9 +43,7 @@ final class PublicBookingController
             'seo' => $seo->tenantBooking($tenant, $service),
         ]);
     }
-}
 
-    
     public function store(
         PublicBookingRequest $request,
         string $slug,
@@ -89,3 +86,4 @@ final class PublicBookingController
             'serviceUrl' => $seo->tenantUrl($context->current(), '/services/'.$service->slug),
         ]);
     }
+}
