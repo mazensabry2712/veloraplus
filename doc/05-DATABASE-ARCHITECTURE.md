@@ -773,7 +773,7 @@ updated_at
 
 Billing audit records remain in the central database and are tenant-scoped.
 
-### Tenant public-web / SEO data
+## Public Web / SEO data
 
 Public SEO defaults are Tenant-owned configuration and use the existing company_settings key/value table with namespaced keys such as:
 
