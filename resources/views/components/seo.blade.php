@@ -9,7 +9,7 @@
 <meta property="og:description" content="{{ $seo->description }}">
 <meta property="og:url" content="{{ $seo->canonical }}">
 <meta property="og:type" content="{{ $seo->ogType }}">
-<meta property="og:site_name" content="{{ config('velora.seo.platform.site_name', 'VeloraPlus') }}">
+<meta property="og:site_name" content="{{ $seo->siteName }}">
 
 @if ($seo->ogImage)
     <meta property="og:image" content="{{ $seo->ogImage }}">
