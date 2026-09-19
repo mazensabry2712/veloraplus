@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — 8.1 DASHBOARD SHELL**
+**IN PROGRESS — 8.2 COMPANY FOUNDATION**
 
 Phase 8 is the next major product delivery after the completed Phase 7 Booking implementation. It converts the verified Core + Booking backend capabilities into the authenticated Company Dashboard used by tenant members.
 
@@ -95,7 +95,7 @@ Navigation visibility may improve the UX, but it must never be the authorization
 
 ### Current implementation status
 
-8.1 Dashboard Shell has started. The current implementation includes the private `/dashboard` route, authenticated tenant-membership boundary, noindex policy, shared Dashboard layout, initial Overview screen, and access/isolation tests. CI verification is pending for the latest implementation commit.
+8.1 Dashboard Shell is implemented. The private `/dashboard` route, authenticated tenant-membership boundary, noindex policy, shared Dashboard layout, initial Overview screen, and access/isolation tests are in place. Local verification is green with the full test suite.
 
 - authenticated tenant layout;
 - sidebar / primary navigation;
@@ -108,7 +108,120 @@ Navigation visibility may improve the UX, but it must never be the authorization
 
 ### 8.2 Company foundation
 
-- Company Profile;
+Company Foundation is now in progress.
+
+#### 8.2.1 Company Profile — Backend implemented
+
+The Company Profile backend uses the existing Core tenancy model and tenant-scoped RBAC.
+
+Source of truth:
+
+- `tenants` in the central platform database is authoritative for company profile fields used by routing, localization, currency, and platform context.
+- `company_settings` in the tenant database is a synchronized tenant-local projection for `company.*` settings already used by tenant features such as SEO.
+
+Implemented fields:
+
+- `name`;
+- `legal_name`;
+- `industry`;
+- `country_code`;
+- `default_currency`;
+- `timezone`;
+- `locale`.
+
+Authorization:
+
+- active tenant membership is required;
+- tenant-scoped `company.update` is required;
+- `TenantPolicy` verifies that the policy target is the current tenant context;
+- the existing RBAC system is reused.
+
+Backend components:
+
+- `UpdateCompanyProfileRequest` validates and normalizes input;
+- `CompanyProfileManager` owns profile persistence and projection synchronization;
+- `CompanyProfileController` is the HTTP boundary;
+- `POST /dashboard/company/profile` is the update route;
+- `CompanyProfileTest` covers successful updates, RBAC denial, validation failure, and projection synchronization.
+
+The existing Phase 1–7 regression suite remains green locally.
+
+#### 8.2.2 Locations / Branches
+
+Planned.
+
+#### 8.2.3 Tenant settings
+
+Planned.
+
+#### 8.2.4 Staff
+
+Planned.
+
+#### 8.2.5 Customers
+
+Planned.
+
+#### 8.2.6 Users and memberships
+
+Planned.
+
+#### 8.3 Booking workspace
+
+Use the existing Booking application services and policies for:
+
+- Services;
+- Staff Availability;
+- Appointments;
+- Queue;
+- Tenant Payments.
+
+The Dashboard must consume the existing Tenant Payment boundary for customer payments. It must not route customer Booking payments through Platform Billing.
+
+### 8.4 Billing workspace
+
+Expose the existing Platform Billing domain to authorized tenant members:
+
+- current subscription;
+- subscription items;
+- pricing context;
+- invoices;
+- payment state;
+- refunds / credits where appropriate.
+
+Billing UI must never rewrite financial state directly. State changes go through the existing Billing application services.
+
+### 8.5 Module Marketplace
+
+Build the tenant-facing catalog surface on top of the existing:
+
+- Modules;
+- Features;
+- Bundles;
+- Prices;
+- Entitlements;
+- subscription flow.
+
+The UI must distinguish:
+
+- available but not owned;
+- active;
+- scheduled for removal;
+- unavailable because of dependencies or commercial state.
+
+Purchasing/activation must require the established Billing + Payment + Entitlement flow.
+
+### 8.6 Usage and settings
+
+Provide authorized views for:
+
+- entitlement limits;
+- tenant configuration;
+- localization/timezone/currency presentation;
+- integration settings that already have a backend contract.
+
+Future settings that need new business logic remain out of this slice.
+
 - Locations / Branches;
 - tenant settings;
 - staff listing and management;
