@@ -5,7 +5,6 @@ namespace App\Application\SEO;
 use App\Domain\SEO\SeoMeta;
 use App\Models\CompanySetting;
 use App\Models\Tenant;
-use App\Models\TenantDomain;
 
 final class SeoManager
 {
