@@ -111,9 +111,9 @@ function addBookingAvailabilityMember(Tenant $tenant, string $roleKey = 'owner')
     return $account;
 }
 
-function enableBookingAvailabilityFeature(Tenant $tenant, string $key): void
+function enableBookingAvailabilityFeature(Tenant $tenant, string $key, ?Module $module = null): Module
 {
-    $module = Module::factory()->create([
+    $module ??= Module::factory()->create([
         'key' => 'booking',
         'name' => 'Booking',
         'status' => 'active',
@@ -127,6 +127,8 @@ function enableBookingAvailabilityFeature(Tenant $tenant, string $key): void
     ]);
 
     app(EntitlementService::class)->grant($tenant, $feature);
+
+    return $module;
 }
 
 function availabilityLocation(Tenant $tenant): Location
@@ -298,8 +300,8 @@ test('owner can assign a booking service to staff when both entitlements exist',
 
     $tenant = createBookingAvailabilityDashboardTenant($path);
     $owner = addBookingAvailabilityMember($tenant);
-    enableBookingAvailabilityFeature($tenant, 'booking.availability');
-    enableBookingAvailabilityFeature($tenant, 'booking.services');
+    $bookingModule = enableBookingAvailabilityFeature($tenant, 'booking.availability');
+    enableBookingAvailabilityFeature($tenant, 'booking.services', $bookingModule);
 
     $location = availabilityLocation($tenant);
     $staff = availabilityStaff($tenant, $location);
