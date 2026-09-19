@@ -17,6 +17,7 @@ use App\Http\Controllers\Dashboard\BookingServiceController;
 use App\Http\Controllers\Dashboard\BookingAvailabilityController;
 use App\Http\Controllers\Dashboard\AppointmentController;
 use App\Http\Controllers\Dashboard\QueueController;
+use App\Http\Controllers\Dashboard\TenantPaymentController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
 use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -188,6 +189,20 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.queues',
 
         Route::post('/{queue}/entries/{entry}/no-show', [QueueController::class, 'noShow'])
             ->name('entries.no-show');
+    });
+
+Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.payments', 'noindex'])
+    ->prefix('dashboard/booking/payments')
+    ->name('dashboard.booking.payments.')
+    ->group(function (): void {
+        Route::post('/appointments/{appointment}', [TenantPaymentController::class, 'createCheckout'])
+            ->name('appointments.checkout');
+
+        Route::post('/{payment}/reconcile', [TenantPaymentController::class, 'reconcile'])
+            ->name('reconcile');
+
+        Route::post('/{payment}/refund', [TenantPaymentController::class, 'refund'])
+            ->name('refund');
     });
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
