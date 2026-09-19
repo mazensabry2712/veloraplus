@@ -263,7 +263,7 @@ test('tenant webhook rejects invalid signatures before changing payment state', 
 
     tenantFinancialContext($tenant, $path);
 
-    expect(TenantPayment::query()->value('status'))->toBe(TenantPaymentStatus::Pending->value)
+    expect(TenantPayment::query()->first()->status)->toBe(TenantPaymentStatus::Pending)
         ->and(TenantPaymentWebhookEvent::query()->count())->toBe(0);
 });
 
