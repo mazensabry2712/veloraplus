@@ -39,7 +39,13 @@ final class KashierGateway implements
     {
         $currency = strtoupper((string) ($context['currency'] ?? ''));
         $amountMinor = (int) ($context['amount_minor'] ?? 0);
+        $credentials = is_array($context['payment_account']['credentials'] ?? null)
+            ? $context['payment_account']['credentials']
+            : [];
         $merchantOrderId = trim((string) ($context['merchant_order_id'] ?? ''));
+        $credentials = is_array($context['payment_account']['credentials'] ?? null)
+            ? $context['payment_account']['credentials']
+            : [];
 
         if (! in_array($currency, ['EGP', 'USD', 'EUR', 'GBP'], true)) {
             throw new DomainException('Kashier Phase 6 supports EGP, USD, EUR, and GBP.');
@@ -60,13 +66,13 @@ final class KashierGateway implements
             'amount' => $this->minorToDecimal($amountMinor),
             'currency' => $currency,
             'order' => $merchantOrderId,
-            'merchantRedirect' => (string) config('velora.payments.kashier.merchant_redirect_url'),
+            'merchantRedirect' => (string) ($credentials['merchant_redirect_url'] ?? config('velora.payments.kashier.merchant_redirect_url')),
             'display' => 'en',
             'type' => 'one-time',
             'allowedMethods' => (string) config('velora.payments.kashier.allowed_methods', 'card,wallet'),
-            'merchantId' => (string) config('velora.payments.kashier.merchant_id'),
+            'merchantId' => (string) ($credentials['merchant_id'] ?? config('velora.payments.kashier.merchant_id')),
             'interactionSource' => 'ECOMMERCE',
-            'serverWebhook' => (string) config('velora.payments.kashier.webhook_url'),
+            'serverWebhook' => (string) ($credentials['webhook_url'] ?? config('velora.payments.kashier.webhook_url')),
             'failureRedirect' => false,
             'customer' => array_filter([
                 'email' => $context['customer']['email'] ?? null,
@@ -82,7 +88,7 @@ final class KashierGateway implements
             throw new DomainException('Kashier checkout configuration is incomplete.');
         }
 
-        $response = $this->client->createPaymentSession($payload);
+        $response = $this->client->createPaymentSession($payload, $credentials ?: null);
 
         $sessionId = (string) ($response['_id'] ?? '');
         $checkoutUrl = (string) ($response['sessionUrl'] ?? '');
@@ -96,6 +102,8 @@ final class KashierGateway implements
             'session_id' => $sessionId,
             'checkout_url' => $checkoutUrl,
             'merchant_order_id' => $merchantOrderId,
+            'provider_payment_id' => $response['paymentId'] ?? $response['transactionId'] ?? null,
+            'provider_order_id' => $response['orderId'] ?? null,
             'status' => strtoupper((string) ($response['status'] ?? 'CREATED')),
         ];
     }
