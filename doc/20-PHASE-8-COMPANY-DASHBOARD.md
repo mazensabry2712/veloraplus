@@ -234,9 +234,42 @@ Backend components:
 
 The Staff test suite covers CRUD lifecycle, RBAC denial, inactive-location validation, and cross-tenant location assignment protection.
 
-#### 8.2.5 Customers
+#### 8.2.5 Customers — Backend implemented
 
-Planned.
+The Customer backend manages company-specific Customer Profiles inside the current tenant database.
+
+Implemented fields:
+
+- `name`;
+- `phone`;
+- `email`;
+- `status`;
+- `source`;
+- `notes`.
+
+Implemented operations:
+
+- create;
+- update;
+- archive via soft delete with explicit `inactive` state.
+
+Rules:
+
+- Customer Profiles remain tenant-local;
+- `customer_account_id` is preserved during profile updates and remains a future account/portal integration point;
+- no cross-tenant Customer Profile can be addressed through another tenant host;
+- Customer management reuses the existing `customers.view/manage` permissions.
+
+Backend components:
+
+- `CustomerManager`;
+- `StoreCustomerRequest`;
+- `UpdateCustomerRequest`;
+- `CustomerPolicy`;
+- `CustomerController`;
+- `CustomerManagementTest`.
+
+The test suite covers CRUD lifecycle, RBAC denial, input validation, and cross-tenant record isolation.
 
 #### 8.2.6 Users and memberships
 
