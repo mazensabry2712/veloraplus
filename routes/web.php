@@ -15,6 +15,7 @@ use App\Http\Controllers\Dashboard\TenantMembershipController;
 use App\Http\Controllers\Dashboard\TenantRoleController;
 use App\Http\Controllers\Dashboard\BookingServiceController;
 use App\Http\Controllers\Dashboard\BookingAvailabilityController;
+use App\Http\Controllers\Dashboard\AppointmentController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
 use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -134,6 +135,29 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.availabi
 
         Route::delete('/staff/{staff}/time-off/{timeOff}', [BookingAvailabilityController::class, 'destroyTimeOff'])
             ->name('time-off.destroy');
+    });
+
+Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.appointments', 'noindex'])
+    ->prefix('dashboard/booking/appointments')
+    ->name('dashboard.booking.appointments.')
+    ->group(function (): void {
+        Route::post('/', [AppointmentController::class, 'store'])
+            ->name('store');
+
+        Route::patch('/{appointment}', [AppointmentController::class, 'reschedule'])
+            ->name('reschedule');
+
+        Route::post('/{appointment}/confirm', [AppointmentController::class, 'confirm'])
+            ->name('confirm');
+
+        Route::post('/{appointment}/complete', [AppointmentController::class, 'complete'])
+            ->name('complete');
+
+        Route::post('/{appointment}/cancel', [AppointmentController::class, 'cancel'])
+            ->name('cancel');
+
+        Route::post('/{appointment}/no-show', [AppointmentController::class, 'noShow'])
+            ->name('no-show');
     });
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
