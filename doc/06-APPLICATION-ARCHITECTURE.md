@@ -612,6 +612,44 @@ The application is a modular monolith.
 Do not split Booking, CRM, and ERP into separate repositories/services merely because they are Modules.
 
 
+## 30A. Public Web & SEO boundary
+
+Public web concerns are cross-cutting application concerns and must remain separate from business transaction logic.
+
+Public-page flow:
+
+~~~
+Trusted Host
+  ↓
+Tenant Domain Resolver
+  ↓
+Tenant Context
+  ↓
+Public Query
+  ↓
+SEO Manager
+  ↓
+Blade SSR Response
+~~~
+
+SEO responsibilities are centralized around:
+
+- SEO metadata/view model;
+- canonical URL generation;
+- host-aware robots policy;
+- sitemap generation;
+- structured-data generation;
+- public indexing/noindex decisions.
+
+Platform public pages and Tenant public pages are separate configuration spaces.
+
+Tenant SEO defaults use the existing Tenant company settings foundation. Public Service SEO uses stable Tenant-local slugs and optional page-level overrides.
+
+Authenticated dashboard/account pages remain outside the public SEO surface and use an explicit non-indexing policy.
+
+The public web layer must never access another Tenant's business data, expose private Customer/Appointment/payment information, or treat sitemap/robots output as an authorization mechanism.
+
+See doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md for the full public-web and SEO contract.
 ## 31. Global-scale performance rule
 
 VeloraPlus is intended for global usage and high concurrency.
