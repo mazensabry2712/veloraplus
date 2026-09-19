@@ -6,7 +6,6 @@ use App\Domain\Billing\CreditEntryType;
 use App\Models\PlatformCredit;
 use App\Models\Tenant;
 use DomainException;
-use Illuminate\Support\Facades\DB;
 
 final class CreditService
 {

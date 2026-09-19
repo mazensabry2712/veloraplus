@@ -177,7 +177,8 @@ test('upgrade invoice only bills the new pending item and activates it after pay
 
     expect($subscription->items()->where('catalog_key', 'booking.queue')->first()->refresh()->status)
         ->toBe(SubscriptionItemStatus::Active)
-        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'booking.queue'))->toBeTrue();
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'booking.queue'))->toBeTrue()
+        ->and(\App\Models\BillingAudit::query()->where('action', 'subscription.items_added')->exists())->toBeTrue();
 });
 
 test('scheduled downgrade keeps entitlement until period end', function () {
@@ -197,6 +198,7 @@ test('scheduled downgrade keeps entitlement until period end', function () {
     app(SubscriptionService::class)->scheduleRemoval($item);
 
     expect($item->refresh()->status)->toBe(SubscriptionItemStatus::ScheduledForRemoval)
+        ->and(\App\Models\BillingAudit::query()->where('action', 'subscription.item_removal_scheduled')->exists())->toBeTrue()
         ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'booking.queue'))->toBeTrue()
         ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature(
             $tenant,
@@ -223,7 +225,22 @@ test('invoice snapshots remain unchanged after the catalog price changes', funct
     $tenant = Tenant::factory()->create();
     $module = billingModule();
     $feature = billingFeature($module, 'booking.queue');
-    billingPrice($feature, 5000, 50000);
+    $manager = app(\App\Application\Catalog\CatalogPriceManager::class);
+
+    $manager->add($feature, [
+        'billing_cycle' => 'monthly',
+        'currency' => 'EGP',
+        'amount_minor' => 5000,
+        'effective_from' => now()->subMinutes(2),
+        'effective_to' => now()->addMinute(),
+    ]);
+
+    $manager->add($feature, [
+        'billing_cycle' => 'yearly',
+        'currency' => 'EGP',
+        'amount_minor' => 50000,
+        'effective_from' => now()->subMinutes(2),
+    ]);
 
     $subscription = app(SubscriptionService::class)->start(
         $tenant,
@@ -237,11 +254,11 @@ test('invoice snapshots remain unchanged after the catalog price changes', funct
 
     expect($invoiceLine->unit_amount_minor)->toBe(5000);
 
-    app(\App\Application\Catalog\CatalogPriceManager::class)->add($feature, [
+    $manager->add($feature, [
         'billing_cycle' => 'monthly',
         'currency' => 'EGP',
         'amount_minor' => 9000,
-        'effective_from' => now()->addMinute(),
+        'effective_from' => now()->addMinutes(2),
     ]);
 
     expect($invoice->refresh()->total_minor)->toBe(5000)

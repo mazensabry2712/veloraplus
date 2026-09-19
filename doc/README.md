@@ -27,6 +27,7 @@ Implementation must follow these documents:
 13. 13-PHASE-3-MODULE-CATALOG.md
 14. 14-CUSTOM-DOMAIN-ARCHITECTURE.md
 15. 15-PHASE-4-ENTITLEMENTS.md
+16. 16-PHASE-5-BILLING.md
 
 ## Locked decisions
 
@@ -97,7 +98,7 @@ ERP
 
 Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 Module Catalog is also closed and verified.
 
-Phase 4 — Entitlements is closed and verified. The next implementation stage is Phase 5 — Billing. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
+Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is currently under implementation and remains open until local and CI verification passes. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
 
 ## Non-negotiable rules
 

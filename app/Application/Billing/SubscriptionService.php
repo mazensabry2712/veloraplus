@@ -161,6 +161,16 @@ final class SubscriptionService
 
             $this->createItems($subscription, $breakdown, $trial);
 
+            $this->audit->record(
+                $subscription->tenant,
+                'subscription.items_added',
+                $subscription,
+                null,
+                $subscription->status->value,
+                null,
+                ['items_count' => count($breakdown->lines), 'trial' => $trial],
+            );
+
             if ($trial) {
                 $this->projector->sync($subscription->refresh());
 
@@ -190,6 +200,14 @@ final class SubscriptionService
                 'status' => SubscriptionItemStatus::ScheduledForRemoval,
                 'ends_at' => $item->subscription->current_period_end,
             ]);
+
+            $this->audit->record(
+                $item->subscription->tenant,
+                'subscription.item_removal_scheduled',
+                $item,
+                SubscriptionItemStatus::Active->value,
+                SubscriptionItemStatus::ScheduledForRemoval->value,
+            );
 
             $this->projector->sync($item->subscription->refresh());
 
@@ -234,12 +252,9 @@ final class SubscriptionService
         }
 
         $from = $subscription->status->value;
-        $newStatus = $subscription->status === SubscriptionStatus::Active
-            ? SubscriptionStatus::Active
-            : SubscriptionStatus::Active;
 
         $subscription->update([
-            'status' => $newStatus,
+            'status' => SubscriptionStatus::Active,
             'next_billed_at' => $subscription->current_period_end,
         ]);
 
