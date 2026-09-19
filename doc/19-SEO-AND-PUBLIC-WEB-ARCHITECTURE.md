@@ -114,7 +114,7 @@ All indexable Tenant URLs use the canonical host. The current request host must 
 
 ## 8. Service SEO prerequisite
 
-The Service schema now has a stable Tenant-local `slug` field. Before indexable Service pages are released, public routing and SEO rendering still need to be implemented.
+The Service schema has a stable Tenant-local `slug` field, and SEO-3 now provides the public Service routes and SEO rendering.
 
 Recommended URL:
 

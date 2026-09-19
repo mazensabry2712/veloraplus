@@ -168,42 +168,24 @@ Planned:
 
 Status: **SEO-1 + SEO-2 + SEO-3 + SEO-4 COMPLETED / SEO-5 PENDING — CROSS-CUTTING**
 
-Prerequisite completed: the Service entity now has a stable Tenant-local `slug` field. Public Service pages remain pending until SEO/public routing is implemented.
+Completed:
 
-Completed in SEO-1:
+- SEO-1: centralized SEO metadata/value object, reusable Blade component, Platform metadata, canonical URL generation, robots.txt, sitemap.xml, and noindex middleware;
+- SEO-2: Tenant public home, Tenant SEO settings, canonical primary-domain handling, Tenant robots/sitemap, and exact-host Tenant isolation;
+- SEO-3: stable Service slugs, public Service listing/detail pages, Service SEO overrides, Service JSON-LD/BreadcrumbList structured data, sitemap Service entries, and permanent slug redirects;
+- SEO-4: Booking entry route with explicit noindex, canonicalization to the Service page, public rate limiting, and Service-to-Booking linking.
 
-- centralized SEO metadata/value object;
-- reusable Blade SEO component;
-- platform metadata configuration;
-- platform canonical URL generation;
-- platform robots.txt;
-- platform sitemap.xml;
-- explicit noindex middleware alias;
-- automated SEO foundation tests.
+SEO-5 remaining:
 
-Remaining SEO-4+ work:
+- production Search Console/domain ownership and sitemap submission;
+- structured-data validation and crawl/index monitoring;
+- Core Web Vitals review;
+- production domain/custom-domain verification.
 
-- Platform and Tenant public-route separation;
-- server-rendered public pages;
-- centralized SEO metadata/view model;
-- canonical host and URL generation;
-- dynamic robots.txt;
-- dynamic sitemap.xml;
-- private-route noindex policy;
-- Tenant SEO defaults through company settings;
-- stable public Service slugs;
-- Service public detail pages;
-- structured data / JSON-LD;
-- Open Graph/social metadata;
-- public HTML, sitemap, robots, canonical, and Tenant-isolation tests.
+Full Public Booking transaction remains pending as part of Phase 7.6. That business slice will implement staff selection, availability selection, customer details, appointment creation/confirmation, and the required payment/notification integration while preserving the SEO-4 non-indexable transactional boundary.
 
-Full Public Booking transaction remains pending as part of Phase 7.6; this slice only completes its SEO/public-web boundary.
+Custom-domain canonicalization becomes active after the separate Custom Domain infrastructure delivery.
 
-Sequencing rule:
-
-- SEO-1 through SEO-3 must be completed before Public Booking is released as an indexable public surface.
-- SEO does not depend on Tenant Payments.
-- Custom-domain canonicalization becomes active after the Custom Domain infrastructure delivery.
 ## 3. Authorization
 
 Booking permissions are tenant-scoped through the existing RBAC team boundary.
