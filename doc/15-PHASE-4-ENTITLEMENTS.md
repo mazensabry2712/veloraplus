@@ -2,7 +2,7 @@
 
 ## Status
 
-**IMPLEMENTED — awaiting local verification gate.**
+**CLOSED / VERIFIED**
 
 Phase 4 establishes the tenant entitlement layer between the central commercial catalog and future Billing. It provides a deterministic tenant-scoped projection and reusable backend/UI enforcement without introducing subscriptions or payment processing.
 
@@ -350,14 +350,15 @@ git diff --check
 git status
 ~~~
 
-Phase 4 becomes CLOSED / VERIFIED only after:
+Phase 4 is now CLOSED / VERIFIED. The untracked local `public/logo.png` remains outside the repository and was intentionally not modified.
 
-- local migration succeeds;
-- Pint passes;
-- full local test suite passes;
-- no diff/check errors;
-- working tree is clean and synchronized with `origin/main`;
-- GitHub Actions for the implementation commit is successful.
+- local migration succeeded;
+- Pint passed;
+- full local test suite passed: **50 tests, 166 assertions**;
+- `git diff --check` passed;
+- local `main` is synchronized with `origin/main`;
+- GitHub Actions for the final implementation fix commit `b67009f5b0082a0a9c978cfee5a87af8d8c81703` succeeded;
+- the only local status item is an untracked `public/logo.png`, which was left untouched and is not part of the repository.
 
 ## 20. Next phase
 
