@@ -538,9 +538,49 @@ Routes are under `/dashboard/booking/queues` for Queue lifecycle and Queue Entry
 
 Tests cover queue lifecycle, entry processing, permission/entitlement boundaries, resource validation, nested-record ownership, and existing QueueManager behavior.
 
-#### 8.3.5 Tenant Payments
+#### 8.3.5 Tenant Payments — Backend implemented
 
-Planned.
+The Dashboard Tenant Payments boundary consumes the existing provider-neutral `TenantPaymentManager` and keeps Customer → Company payments separate from Platform Billing.
+
+Supported operations:
+
+- create a Tenant payment checkout for an eligible Appointment;
+- reconcile a pending Tenant Payment through the configured provider lookup capability;
+- request a partial or full refund for a succeeded Tenant Payment.
+
+Security and entitlement:
+
+- active Tenant Membership is required;
+- `booking.payments` entitlement is required;
+- `booking.payments.manage` is required for the exposed mutations;
+- route model binding resolves `Appointment` and `TenantPayment` inside the current Tenant context;
+- encrypted merchant credentials remain centrally stored and are never returned by the Dashboard API boundary.
+
+State integrity:
+
+- Dashboard cannot mark a payment succeeded directly;
+- successful payment state is still established by the existing verified webhook/reconciliation path;
+- refund amounts remain bounded by the remaining refundable payment amount;
+- idempotent checkout/refund behavior remains owned by `TenantPaymentManager`;
+- full refund transitions the Tenant Payment and linked Appointment payment state through the existing manager;
+- no Platform Invoice or Platform Payment records are created by customer Booking payment actions.
+
+Backend components:
+
+- `RefundTenantPaymentRequest`;
+- `TenantPaymentController`;
+- existing `TenantPaymentManager`;
+- existing `TenantPaymentPolicy`;
+- expanded `FakeTenantPaymentGateway` test adapter;
+- `TenantPaymentManagementTest`.
+
+Routes:
+
+- `POST /dashboard/booking/payments/appointments/{appointment}`;
+- `POST /dashboard/booking/payments/{payment}/reconcile`;
+- `POST /dashboard/booking/payments/{payment}/refund`.
+
+The test suite covers checkout creation, checkout URL propagation, permission/entitlement boundaries, reconciliation, full refund, validation, and separation from Platform Billing.
 
 ### 8.4 Billing workspace
 
