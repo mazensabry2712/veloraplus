@@ -10,6 +10,7 @@ use App\Http\Controllers\Dashboard\CompanyProfileController;
 use App\Http\Controllers\Dashboard\LocationController;
 use App\Http\Controllers\Dashboard\TenantSettingsController;
 use App\Http\Controllers\Dashboard\StaffController;
+use App\Http\Controllers\Dashboard\CustomerController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
 use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -48,6 +49,15 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])->group(functio
 
     Route::delete('/dashboard/company/staff/{staff}', [StaffController::class, 'destroy'])
         ->name('company.staff.destroy');
+
+    Route::post('/dashboard/company/customers', [CustomerController::class, 'store'])
+        ->name('company.customers.store');
+
+    Route::patch('/dashboard/company/customers/{customer}', [CustomerController::class, 'update'])
+        ->name('company.customers.update');
+
+    Route::delete('/dashboard/company/customers/{customer}', [CustomerController::class, 'destroy'])
+        ->name('company.customers.destroy');
 });
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
