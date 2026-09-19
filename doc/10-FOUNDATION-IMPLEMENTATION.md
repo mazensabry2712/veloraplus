@@ -142,7 +142,7 @@ Current status:
 
 This documentation update does not claim that custom-domain provisioning or SSL automation is already implemented.
 
-## Phase 5 status — implementation committed / verification pending
+## Phase 5 status — closed / verified
 
 Phase 5 Billing has been implemented on the central platform side.
 
@@ -162,4 +162,16 @@ Implemented:
 
 No Kashier implementation was added to Core Billing. Phase 6 will add provider adapters.
 
-See doc/16-PHASE-5-BILLING.md for the full contract and verification gate.
+Verification completed:
+
+- local `composer install` completed;
+- billing migration succeeded;
+- Pint passed;
+- full local suite: **65 tests passed with 216 assertions**;
+- `git diff --check` passed;
+- local working tree is clean and synchronized with `origin/main`;
+- GitHub Actions for final Phase 5 hardening commit `ba37072486b932b93d65783b96ed2aa8b9d17468`: success.
+
+No Kashier implementation was added to Core Billing. Phase 6 will add provider adapters.
+
+See doc/16-PHASE-5-BILLING.md for the full contract and verification record.
