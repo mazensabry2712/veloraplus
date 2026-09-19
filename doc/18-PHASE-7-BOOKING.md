@@ -160,8 +160,34 @@ Planned:
 - customer details;
 - confirmation;
 - rate limiting;
-- public-data minimization.
+- public-data minimization;
+- SEO/public route tests before indexable release.
 
+### 7.7 Public Web & SEO Foundation
+
+Status: **PENDING / CROSS-CUTTING**
+
+Planned:
+
+- Platform and Tenant public-route separation;
+- server-rendered public pages;
+- centralized SEO metadata/view model;
+- canonical host and URL generation;
+- dynamic robots.txt;
+- dynamic sitemap.xml;
+- private-route noindex policy;
+- Tenant SEO defaults through company settings;
+- stable public Service slugs;
+- Service public detail pages;
+- structured data / JSON-LD;
+- Open Graph/social metadata;
+- public HTML, sitemap, robots, canonical, and Tenant-isolation tests.
+
+Sequencing rule:
+
+- SEO-1 through SEO-3 must be completed before Public Booking is released as an indexable public surface.
+- SEO does not depend on Tenant Payments.
+- Custom-domain canonicalization becomes active after the Custom Domain infrastructure delivery.
 ## 3. Authorization
 
 Booking permissions are tenant-scoped through the existing RBAC team boundary.
@@ -239,4 +265,4 @@ For each slice, run:
     git diff --check
     git status
 
-Phase 7 cannot be marked CLOSED until Services, Availability, Appointments, Tenant Payments, Queue, Public Booking, authorization, isolation, concurrency, documentation, and final verification are complete.
+Phase 7 cannot be marked CLOSED until Services, Availability, Appointments, Tenant Payments, Queue, Public Booking, Public Web/SEO foundation, authorization, isolation, concurrency, documentation, and final verification are complete.
