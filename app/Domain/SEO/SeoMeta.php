@@ -13,6 +13,7 @@ final readonly class SeoMeta
         public string $canonical,
         public string $robots = 'index,follow',
         public string $ogType = 'website',
+        public string $siteName = 'VeloraPlus',
         public ?string $ogImage = null,
         public ?string $locale = null,
         public array $schema = [],
