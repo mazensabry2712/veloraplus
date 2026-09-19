@@ -10,9 +10,11 @@ use App\Models\Bundle;
 use App\Models\Feature;
 use App\Models\Module;
 use App\Models\Role;
+use App\Models\QueueEntry;
 use App\Models\TenantMembership;
 use App\Policies\TenantRolePolicy;
 use App\Policies\TenantMembershipPolicy;
+use App\Policies\QueuePolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Blade;
@@ -42,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(Role::class, TenantRolePolicy::class);
         Gate::policy(TenantMembership::class, TenantMembershipPolicy::class);
+        Gate::policy(QueueEntry::class, QueuePolicy::class);
 
         Blade::if('entitled', function (string $capability): bool {
             $tenant = app(TenantContext::class)->get();
