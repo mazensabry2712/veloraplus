@@ -148,6 +148,23 @@ test('kashier tenant checkout uses the selected merchant account credentials', f
     });
 });
 
+
+test('kashier tenant checkout rejects incomplete tenant credentials instead of using platform credentials', function () {
+    Config::set('velora.payments.kashier.merchant_id', 'GLOBAL-MID');
+    Config::set('velora.payments.kashier.secret_key', 'GLOBAL-SECRET');
+    Config::set('velora.payments.kashier.payment_api_key', 'GLOBAL-API');
+
+    expect(fn () => app(KashierGateway::class)->createCheckout([
+        'amount_minor' => 12500,
+        'currency' => 'EGP',
+        'merchant_order_id' => 'TENANT-ORDER-INVALID',
+        'payment_account' => [
+            'reference' => 'BROKEN-ACCOUNT',
+            'credentials' => [],
+        ],
+    ]))->toThrow(DomainException::class);
+});
+
 test('kashier webhook signature verification follows the sorted signatureKeys rule', function () {
     $data = [
         'amount' => '1',
