@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'tenant_id',
     'payment_id',
+    'idempotency_key',
     'amount_minor',
     'currency',
     'status',
