@@ -12,6 +12,15 @@ return [
         'database_prefix' => env('VELORA_TENANT_DATABASE_PREFIX', 'veloraplus_tenant_'),
     ],
 
+    'seo' => [
+        'platform' => [
+            'site_name' => env('VELORA_SEO_SITE_NAME', 'VeloraPlus'),
+            'title' => env('VELORA_SEO_TITLE', 'VeloraPlus — SaaS Business Platform'),
+            'description' => env('VELORA_SEO_DESCRIPTION', 'VeloraPlus is a modular SaaS platform for running business operations.'),
+            'locale' => env('VELORA_SEO_LOCALE', 'en_US'),
+        ],
+    ],
+
     'payments' => [
         'platform_provider' => env('VELORA_PLATFORM_PAYMENT_PROVIDER', 'kashier'),
         'tenant_provider' => env('VELORA_TENANT_PAYMENT_PROVIDER', 'kashier'),
