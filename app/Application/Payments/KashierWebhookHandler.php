@@ -10,6 +10,7 @@ use App\Models\WebhookEvent;
 use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 final class KashierWebhookHandler
 {
@@ -46,6 +47,7 @@ final class KashierWebhookHandler
 
         DB::connection('central')->transaction(function () use ($event, $eventId, $payloadHash, $payload): void {
             WebhookEvent::query()->insertOrIgnore([
+                'id' => (string) Str::ulid(),
                 'provider' => 'kashier',
                 'provider_event_id' => $eventId,
                 'event_type' => $event['event'] ?: 'unknown',
