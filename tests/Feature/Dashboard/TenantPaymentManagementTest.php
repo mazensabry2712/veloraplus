@@ -389,7 +389,7 @@ test('refund validation prevents non-positive and over-refund amounts', function
             'amount_minor' => 60000,
             'reason' => 'Too much',
         ])
-        ->assertRedirect('/dashboard');
+        ->assertSessionHasErrors('payment');
 
     dashboardTenantPaymentContext($tenant);
 
