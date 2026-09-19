@@ -232,7 +232,37 @@ test('tenant payment checkout requires an active merchant account', function ():
         ->toThrow(DomainException::class);
 
     expect(TenantPayment::query()->count())->toBe(0)
-        ->and($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Unpaid);
+        ->and($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Failed);
+});
+
+
+test('tenant payment rejects cancelled appointments before creating a payment', function (): void {
+    $path = tenantPaymentDatabase();
+    $this->tenantPaymentTestDatabases = [$path];
+
+    migrateTenantPaymentDatabase($path);
+
+    $tenant = Tenant::factory()->create();
+    PaymentProviderAccount::query()->create([
+        'tenant_id' => $tenant->getKey(),
+        'provider' => 'fake',
+        'account_reference' => 'FAKE-CLINIC',
+        'status' => 'active',
+    ]);
+
+    tenantPaymentContext($tenant);
+    $fixtures = tenantPaymentFixtures($tenant);
+
+    app(\App\Application\Booking\AppointmentManager::class)
+        ->cancel($fixtures['appointment'], 'Cancelled before payment');
+
+    $calls = [];
+    configureFakeTenantGateway($calls);
+
+    expect(fn () => app(TenantPaymentManager::class)->createCheckout($fixtures['appointment']))
+        ->toThrow(DomainException::class);
+
+    expect(TenantPayment::query()->count())->toBe(0);
 });
 
 test('tenant payment cannot be marked succeeded from a failed state', function (): void {
