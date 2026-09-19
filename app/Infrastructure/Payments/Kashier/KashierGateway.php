@@ -43,9 +43,7 @@ final class KashierGateway implements
             ? $context['payment_account']['credentials']
             : [];
         $merchantOrderId = trim((string) ($context['merchant_order_id'] ?? ''));
-        $credentials = is_array($context['payment_account']['credentials'] ?? null)
-            ? $context['payment_account']['credentials']
-            : [];
+        $credentials = $this->credentialsForContext($context);
 
         if (! in_array($currency, ['EGP', 'USD', 'EUR', 'GBP'], true)) {
             throw new DomainException('Kashier Phase 6 supports EGP, USD, EUR, and GBP.');
@@ -138,9 +136,7 @@ final class KashierGateway implements
     {
         $orderId = trim((string) ($context['kashier_order_id'] ?? ''));
         $amountMinor = (int) ($context['amount_minor'] ?? 0);
-        $credentials = is_array($context['payment_account']['credentials'] ?? null)
-            ? $context['payment_account']['credentials']
-            : [];
+        $credentials = $this->credentialsForContext($context);
 
         if ($orderId === '' || $amountMinor < 1) {
             throw new DomainException('Kashier refund requires order id and positive amount.');
@@ -218,6 +214,37 @@ final class KashierGateway implements
     public function retrieveTransaction(string $reference): array
     {
         return $this->verifyPayment($this->client->getPaymentSessionPayment($reference));
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     * @return array<string, string>
+     */
+    private function credentialsForContext(array $context): array
+    {
+        if (! array_key_exists('payment_account', $context)) {
+            return [];
+        }
+
+        $credentials = $context['payment_account']['credentials'] ?? null;
+
+        if (! is_array($credentials)) {
+            throw new DomainException('Tenant payment account credentials are invalid.');
+        }
+
+        foreach ([
+            'merchant_id',
+            'secret_key',
+            'payment_api_key',
+            'merchant_redirect_url',
+            'webhook_url',
+        ] as $key) {
+            if (trim((string) ($credentials[$key] ?? '')) === '') {
+                throw new DomainException("Tenant Kashier credential [{$key}] is missing.");
+            }
+        }
+
+        return $credentials;
     }
 
     private function minorToDecimal(int $amountMinor): string
