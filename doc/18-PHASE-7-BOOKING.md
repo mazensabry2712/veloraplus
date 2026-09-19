@@ -87,19 +87,38 @@ Validation rules:
 
 ### 7.3 Appointments
 
-Status: **PENDING**
+Status: **COMPLETED IN THIS SLICE**
 
-Planned:
+Implemented:
 
-- appointment creation;
-- service/customer/staff/location linkage;
-- start/end timestamps;
-- appointment items;
-- lifecycle;
-- reschedule;
-- cancel;
-- payment state;
-- idempotency where the request can be retried.
+- tenant appointments table with ULID identifiers;
+- Customer, Staff, and Location linkage;
+- UTC-aware start/end timestamps;
+- explicit scheduling block timestamps including Service before/after buffers;
+- appointment item service snapshots for historical name, duration, price, quantity, currency, and line total;
+- appointment status history;
+- appointment payment-state foundation, kept separate from Tenant Payments integration;
+- AppointmentManager application service;
+- transactional creation with Staff row locking before final conflict validation;
+- conflict detection that ignores cancelled/no-show appointments;
+- reschedule with the same availability and concurrency checks;
+- cancel, confirm, complete, and no-show lifecycle transitions;
+- idempotency-key support for safe request retries;
+- Booking appointment RBAC permissions.
+
+Validation and concurrency rules:
+
+- only active staff, active services, and non-archived customers can receive appointments;
+- the selected service must be assigned to the selected staff member;
+- the appointment location must match the staff member's configured location;
+- appointment time, including service buffers, must fit completely inside computed staff availability;
+- appointments cannot cross local calendar days in this slice;
+- the Staff row is locked inside the transaction before the final overlap check and allocation;
+- concurrent attempts for the same staff are serialized at the staff-row boundary;
+- cancelled and no-show appointments release their scheduling slot;
+- appointment creation with the same idempotency key returns the existing appointment when the request payload matches;
+- reusing an idempotency key for a different appointment is rejected;
+- Service capacity remains stored as a service property but is not used for shared/group concurrent allocation in this slice; exclusive Staff scheduling is the authoritative conflict rule until resource/group booking is introduced.
 
 ### 7.4 Tenant Payments integration
 
