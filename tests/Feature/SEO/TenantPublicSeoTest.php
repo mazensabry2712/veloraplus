@@ -198,6 +198,13 @@ test('tenant robots and sitemap use the tenant canonical domain', function () {
         ->assertDontSee('alternate.velora.test');
 });
 
+test('unknown tenant host cannot reach the public home', function () {
+    config(['velora.platform.url' => 'https://velora.com']);
+
+    $this->get('https://unknown.velora.test/')
+        ->assertNotFound();
+});
+
 test('tenant public pages are isolated by exact hostname', function () {
     $firstPath = seoTenantDatabase();
     $secondPath = seoTenantDatabase();
