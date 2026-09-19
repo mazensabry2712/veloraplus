@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Dashboard;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateTenantSettingsRequest extends FormRequest
 {
@@ -24,7 +25,12 @@ class UpdateTenantSettingsRequest extends FormRequest
             'seo.robots' => [
                 'nullable',
                 'string',
-                'in:index,follow,noindex,nofollow,index,nofollow,noindex,follow',
+                Rule::in([
+                    'index,follow',
+                    'noindex,nofollow',
+                    'index,nofollow',
+                    'noindex,follow',
+                ]),
             ],
             'seo.locale' => [
                 'nullable',
@@ -35,9 +41,6 @@ class UpdateTenantSettingsRequest extends FormRequest
         ];
     }
 
-    /**
-     * Normalize nullable SEO values before persistence.
-     */
     protected function prepareForValidation(): void
     {
         $seo = is_array($this->input('seo')) ? $this->input('seo') : [];
