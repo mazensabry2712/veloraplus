@@ -232,7 +232,7 @@ test('tenant payment checkout requires an active merchant account', function ():
         ->toThrow(DomainException::class);
 
     expect(TenantPayment::query()->count())->toBe(0)
-        ->and($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Failed);
+        ->and($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Unpaid);
 });
 
 
