@@ -13,10 +13,17 @@ class UpdateTenantMembershipRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge([
-            'role_key' => $this->filled('role_key') ? trim((string) $this->input('role_key')) : null,
-            'status' => $this->filled('status') ? strtolower(trim((string) $this->input('status'))) : null,
-        ]);
+        $normalized = [];
+
+        if ($this->filled('role_key')) {
+            $normalized['role_key'] = trim((string) $this->input('role_key'));
+        }
+
+        if ($this->filled('status')) {
+            $normalized['status'] = strtolower(trim((string) $this->input('status')));
+        }
+
+        $this->merge($normalized);
     }
 
     public function rules(): array
