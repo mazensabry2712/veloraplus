@@ -52,7 +52,7 @@ final class KashierWebhookHandler
                 'status' => 'received',
                 'received_at' => CarbonImmutable::now(),
                 'payload_hash' => $payloadHash,
-                'payload' => $payload,
+                'payload' => json_encode($payload, JSON_THROW_ON_ERROR),
             ]);
         });
 
