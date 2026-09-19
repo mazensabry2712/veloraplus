@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — 8.4 PLATFORM BILLING WORKSPACE**
+**IN PROGRESS — 8.4.4 SUBSCRIPTION CHANGES**
 
 Phase 8 is the next major product delivery after the completed Phase 7 Booking implementation. It converts the verified Core + Booking backend capabilities into the authenticated Company Dashboard used by tenant members.
 
@@ -619,7 +619,7 @@ Route:
 
 The checkout slice was verified locally at 213 tests / 1099 assertions and the corresponding GitHub Actions run was green.
 
-#### 8.4.3 Invoices, payments, refunds, and credits — Backend implemented
+#### 8.4.3 Invoices, payments, refunds, and credits — Backend implemented and verified
 
 Implemented:
 
@@ -642,7 +642,7 @@ Routes:
 
 Dashboard Billing remains strictly Company → VeloraPlus. Tenant customer Booking payments remain under 8.3.5 and never create Platform Billing records.
 
-The 8.4.3 backend slice is implemented; final verification is pending on the current CI/test run.
+The 8.4.3 backend slice is implemented and locally verified. The dedicated Platform Billing/Billing tests pass at 26 tests / 110 assertions, and the full local regression suite is green at 218 tests / 1129 assertions.
 
 #### 8.4.4 Subscription changes
 
