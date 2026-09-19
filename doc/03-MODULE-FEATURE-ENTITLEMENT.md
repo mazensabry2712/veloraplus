@@ -71,6 +71,16 @@ A Feature should have:
 - required/optional behavior;
 - metadata.
 
+Cross-cutting platform capabilities follow the same hierarchy. For example, Custom Domain belongs under a non-core catalog Module such as `Platform Experience`; it is not a standalone Feature outside the Module catalog.
+
+Typical example:
+
+~~~
+Platform Experience
+├── Custom Domain
+└── White Label (future)
+~~~
+
 Use stable machine keys such as:
 
 ~~~
