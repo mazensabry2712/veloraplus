@@ -166,68 +166,9 @@ Planned.
 
 Planned.
 
-#### 8.3 Booking workspace
+#### 8.2.7 Roles and permissions administration
 
-Use the existing Booking application services and policies for:
-
-- Services;
-- Staff Availability;
-- Appointments;
-- Queue;
-- Tenant Payments.
-
-The Dashboard must consume the existing Tenant Payment boundary for customer payments. It must not route customer Booking payments through Platform Billing.
-
-### 8.4 Billing workspace
-
-Expose the existing Platform Billing domain to authorized tenant members:
-
-- current subscription;
-- subscription items;
-- pricing context;
-- invoices;
-- payment state;
-- refunds / credits where appropriate.
-
-Billing UI must never rewrite financial state directly. State changes go through the existing Billing application services.
-
-### 8.5 Module Marketplace
-
-Build the tenant-facing catalog surface on top of the existing:
-
-- Modules;
-- Features;
-- Bundles;
-- Prices;
-- Entitlements;
-- subscription flow.
-
-The UI must distinguish:
-
-- available but not owned;
-- active;
-- scheduled for removal;
-- unavailable because of dependencies or commercial state.
-
-Purchasing/activation must require the established Billing + Payment + Entitlement flow.
-
-### 8.6 Usage and settings
-
-Provide authorized views for:
-
-- entitlement limits;
-- tenant configuration;
-- localization/timezone/currency presentation;
-- integration settings that already have a backend contract.
-
-Future settings that need new business logic remain out of this slice.
-
-- Locations / Branches;
-- tenant settings;
-- staff listing and management;
-- customers listing and management;
-- users and membership administration;
-- roles and permissions administration.
+Planned.
 
 Only capabilities supported by the existing Core contracts should be exposed. New business capabilities require their own application services, policies, migrations, tests, and documentation.
 
