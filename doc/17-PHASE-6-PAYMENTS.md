@@ -199,6 +199,20 @@ CI verification completed for implementation commit `b36fc620a859a20d7bacc6839a3
 
 Phase 6 is now CLOSED / VERIFIED. Local verification after pulling the latest `main` completed successfully:
 
+
+## SEO / Payments boundary
+
+Payment flows are transactional and private, not SEO landing pages.
+
+When public checkout and Booking payment flows are implemented:
+
+- checkout, payment return, webhook, transaction, invoice, refund, and payment-status URLs remain outside the primary indexable surface;
+- browser return URLs never become SEO canonical URLs;
+- provider references, transaction identifiers, merchant credentials, and payment payloads never appear in public metadata or JSON-LD;
+- public pricing/service pages may link to checkout/Booking, but transactional state remains non-indexable.
+
+The detailed public/transactional boundary is defined in `doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md`.
+
 ## 14. Next phase
 
 Phase 7 — Booking Module.

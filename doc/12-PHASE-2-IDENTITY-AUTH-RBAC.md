@@ -221,6 +221,22 @@ RBAC coverage includes:
 - membership/suspended-account negative cases;
 - automatic owner-role bootstrap during new tenant creation.
 
+
+## SEO / Private Route integration
+
+Phase 2 authentication creates private/public boundary implications for SEO.
+
+Authentication pages and tenant workspace pages are not public SEO landing pages.
+
+When the public SEO layer is implemented:
+
+- login/register/account/password-reset and authenticated workspace routes receive an explicit non-indexing policy;
+- authentication and authorization state must never be rendered into public structured data;
+- SEO metadata must not expose tenant membership, roles, permissions, customer identity, or private business data;
+- public routes must not require tenant membership merely to be crawlable.
+
+The detailed public/private indexing contract is defined in `doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md`.
+
 ## Verification gate
 
 Phase 2 closing verification was completed with:
