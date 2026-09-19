@@ -29,6 +29,11 @@ final class PublicServiceController
         return view('public.services.index', [
             'tenant' => $tenant,
             'services' => $services,
+            'serviceUrls' => $services->mapWithKeys(
+                fn (Service $service): array => [
+                    $service->getKey() => $seo->tenantUrl($tenant, '/services/'.$service->slug),
+                ],
+            ),
             'seo' => $seo->tenantServices($tenant),
         ]);
     }
