@@ -173,7 +173,7 @@ final class KashierGateway implements
      * @param array<string, string|string[]|null> $headers
      * @return array<string, mixed>
      */
-    public function verifyWebhook(array $payload, array $headers): array
+    public function verifyWebhook(array $payload, array $headers, ?array $credentials = null): array
     {
         $data = $payload['data'] ?? null;
 
@@ -189,7 +189,11 @@ final class KashierGateway implements
             $signature = $signature[0] ?? null;
         }
 
-        $this->verifier->verify($data, is_string($signature) ? $signature : null);
+        $this->verifier->verify(
+            $data,
+            is_string($signature) ? $signature : null,
+            $this->webhookApiKey($credentials),
+        );
 
         return [
             'provider' => $this->provider(),
@@ -208,9 +212,20 @@ final class KashierGateway implements
     /**
      * @return array<string, mixed>
      */
-    public function retrieveTransaction(string $reference): array
+    public function retrieveTransaction(string $reference, ?array $credentials = null): array
     {
-        return $this->verifyPayment($this->client->getPaymentSessionPayment($reference));
+        return $this->verifyPayment($this->client->getPaymentSessionPayment($reference, $credentials));
+    }
+
+    private function webhookApiKey(?array $credentials): string
+    {
+        $value = (string) ($credentials['payment_api_key'] ?? config('velora.payments.kashier.payment_api_key'));
+
+        if ($value === '') {
+            throw new DomainException('Kashier webhook API key is not configured.');
+        }
+
+        return $value;
     }
 
     /**
