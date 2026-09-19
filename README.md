@@ -15,6 +15,7 @@ The platform is being rebuilt from a clean Laravel 13 foundation. Booking is the
 - Monthly and yearly composable billing.
 - Initial VeloraPlus subscription payment provider: Kashier.
 - Global-scale performance and horizontal scaling are architecture requirements.
+- Custom domains are architecturally supported and designed as a tenant-aware, sellable catalog Feature.
 
 ## Backend baseline
 
@@ -44,6 +45,7 @@ Important references:
 - doc/11-PHASE-1-TENANCY-FOUNDATION.md
 - doc/12-PHASE-2-IDENTITY-AUTH-RBAC.md
 - doc/13-PHASE-3-MODULE-CATALOG.md
+- doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md
 
 ## Current implementation
 
