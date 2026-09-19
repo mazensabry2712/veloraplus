@@ -174,40 +174,80 @@ The slug must be unique among active tenant domains.
 
 ## 9. Custom domains
 
-Custom domains are not required for MVP delivery, but the system must support a domain registry.
+Custom domains are architecturally supported but are not required to be enabled for the first MVP release.
 
-Conceptual entity:
+The central domain registry is the source of truth for mapping hostnames to Tenants.
+
+Conceptual relationship:
 
 ~~~
-tenant_domains
---------------
-id
-tenant_id
-domain
-type
-is_primary
-status
-verified_at
-created_at
-updated_at
+Tenant
+  │
+  ├── default platform hostname
+  │      {slug}.velora.com
+  │
+  └── custom hostnames
+         app.customer-domain.com
+         booking.customer-domain.com
 ~~~
 
-Routing must resolve any verified domain to exactly one Tenant.
+The customer owns the domain registration. VeloraPlus does not provision the customer's registrar account; it provides DNS instructions, verifies control, and manages the platform-side lifecycle.
 
-## 10. Domain security
+Custom Domain is a catalog Feature. Its commercial availability is controlled by Entitlement; price/inclusion is catalog configuration.
+
+## 10. Custom domain onboarding and lifecycle
+
+Expected lifecycle:
+
+~~~
+pending
+  ↓
+verifying
+  ↓
+provisioning
+  ↓
+active
+  ↓
+disabled / failed
+~~~
+
+A custom domain must not become routable until server-side verification succeeds.
+
+Verification and SSL state are separate concerns:
+
+~~~
+Ownership verification
++
+Traffic/routing configuration
++
+SSL/TLS readiness
+=
+Domain active
+~~~
+
+The selected edge/domain provider is an infrastructure decision and must remain behind an internal application boundary.
+
+## 11. Domain security
 
 A request is not accepted merely because a domain string exists in input.
 
-The domain must be resolved from the actual request host using the trusted domain registry.
+The domain must be resolved from the actual trusted request host using the central domain registry.
 
-Expected controls:
+Required controls:
 
-- normalized hostname handling;
-- duplicate prevention;
-- verification state;
-- exact tenant mapping;
+- normalized/canonical hostname storage;
+- lowercase and scheme/path/port rejection during input normalization;
+- duplicate hostname prevention;
+- exact hostname matching;
+- explicit verification state;
+- tenant mapping to exactly one Tenant;
+- rejection of reserved VeloraPlus platform hostnames;
 - HTTPS in production;
-- safe forwarded-host handling.
+- safe forwarded-host handling;
+- no routing based on a user-supplied tenant_id;
+- no activation from a browser redirect alone.
+
+Detailed domain security, DNS, SSL, and provider boundaries are defined in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md.
 
 ## 11. Membership
 
@@ -289,7 +329,8 @@ When switching:
 - tenant database connection changes;
 - permissions are recalculated;
 - entitlements are recalculated;
-- tenant-scoped caches/state are isolated.
+- tenant-scoped caches/state are isolated;
+- domain-derived tenant context is resolved again on the new request.
 
 ## 14. Customer account privacy
 
