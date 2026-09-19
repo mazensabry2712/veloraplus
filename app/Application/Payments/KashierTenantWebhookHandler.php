@@ -10,8 +10,6 @@ use App\Models\PaymentProviderAccount;
 use App\Models\Tenant;
 use App\Models\TenantPayment;
 use DomainException;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 final class KashierTenantWebhookHandler
 {
