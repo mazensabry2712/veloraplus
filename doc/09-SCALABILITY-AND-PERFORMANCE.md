@@ -461,6 +461,22 @@ not for benchmark numbers at the expense of business correctness.
 
 The system should scale by adding resources and distributing workload, not by rewriting the platform after traffic arrives.
 
+## 23A. Public Web & SEO performance
+
+Public SEO pages are part of the high-traffic public edge path.
+
+Requirements:
+
+- server-render public HTML without unnecessary client-side rendering;
+- keep SEO metadata generation lightweight;
+- avoid N+1 queries on public Service and Tenant pages;
+- cache safe public content with Tenant/domain-aware keys;
+- cache robots and sitemap responses briefly when safe;
+- keep private Tenant/business data outside public caches;
+- monitor public page p50/p95/p99 latency and error rates;
+- review Core Web Vitals during production QA.
+
+Dynamic Booking availability is request-specific and must not become a stale SEO cache source.
 ## 24. Custom Domain / Edge scalability
 
 Custom Domain traffic is part of the public edge path and must not turn tenant routing into a central bottleneck.
