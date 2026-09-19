@@ -114,7 +114,7 @@ All indexable Tenant URLs use the canonical host. The current request host must 
 
 ## 8. Service SEO prerequisite
 
-The current Service schema has no dedicated public slug. Before indexable Service pages are released, add a stable per-Tenant public slug.
+The Service schema now has a stable Tenant-local `slug` field. Before indexable Service pages are released, public routing and SEO rendering still need to be implemented.
 
 Recommended URL:
 
@@ -128,7 +128,8 @@ Rules:
 - slug is derived from the public name but may be manually controlled;
 - published slug changes preserve the old URL through redirect history when that feature is implemented;
 - archived/unpublished services are not indexable and are excluded from the sitemap;
-- Service database ULIDs are not human-facing SEO URLs.
+- Service database ULIDs are not human-facing SEO URLs;
+- current Service slugs are stable across Service name changes because the manager preserves the stored slug on rename.
 
 ## 9. Metadata model
 

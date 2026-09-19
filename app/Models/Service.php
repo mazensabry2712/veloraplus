@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'name',
+    'slug',
     'description',
     'duration_minutes',
     'buffer_before_minutes',

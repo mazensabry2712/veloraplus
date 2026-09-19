@@ -31,6 +31,7 @@ Implemented:
 - tenant services table;
 - ULID service identifiers;
 - service name and description;
+- stable Tenant-local public slug for future SEO/public Service URLs;
 - duration and before/after buffers;
 - integer minor-unit price;
 - ISO-style three-letter currency storage;
@@ -166,6 +167,8 @@ Planned:
 ### 7.7 Public Web & SEO Foundation
 
 Status: **PENDING / CROSS-CUTTING**
+
+Prerequisite completed: the Service entity now has a stable Tenant-local `slug` field. Public Service pages remain pending until SEO/public routing is implemented.
 
 Planned:
 

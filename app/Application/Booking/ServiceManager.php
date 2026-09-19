@@ -5,6 +5,7 @@ namespace App\Application\Booking;
 use App\Domain\Booking\ServiceStatus;
 use App\Models\Service;
 use DomainException;
+use Illuminate\Support\Str;
 
 final class ServiceManager
 {
@@ -23,6 +24,7 @@ final class ServiceManager
     {
         $current = [
             'name' => $service->name,
+            'slug' => $service->slug,
             'description' => $service->description,
             'duration_minutes' => $service->duration_minutes,
             'buffer_before_minutes' => $service->buffer_before_minutes,
@@ -36,7 +38,7 @@ final class ServiceManager
             'metadata' => $service->metadata,
         ];
 
-        $service->update($this->normalize(array_replace($current, $attributes)));
+        $service->update($this->normalize(array_replace($current, $attributes), $service->getKey()));
 
         return $service->refresh();
     }
@@ -56,13 +58,18 @@ final class ServiceManager
      * @param  array<string, mixed>  $attributes
      * @return array<string, mixed>
      */
-    private function normalize(array $attributes): array
+    private function normalize(array $attributes, ?string $ignoreServiceId = null): array
     {
         $name = trim((string) ($attributes['name'] ?? ''));
 
         if ($name === '') {
             throw new DomainException('Service name is required.');
         }
+
+        $slug = $this->resolveUniqueSlug(
+            isset($attributes['slug']) ? (string) $attributes['slug'] : $name,
+            $ignoreServiceId,
+        );
 
         $duration = (int) ($attributes['duration_minutes'] ?? 0);
         $bufferBefore = (int) ($attributes['buffer_before_minutes'] ?? 0);
@@ -107,6 +114,7 @@ final class ServiceManager
 
         return [
             'name' => $name,
+            'slug' => $slug,
             'description' => isset($attributes['description']) ? trim((string) $attributes['description']) : null,
             'duration_minutes' => $duration,
             'buffer_before_minutes' => $bufferBefore,
@@ -119,5 +127,27 @@ final class ServiceManager
             'capacity' => $capacity,
             'metadata' => $attributes['metadata'] ?? null,
         ];
+    }
+
+    private function resolveUniqueSlug(string $value, ?string $ignoreServiceId = null): string
+    {
+        $base = Str::slug(trim($value));
+
+        if ($base === '') {
+            $base = 'service';
+        }
+
+        $slug = $base;
+        $suffix = 2;
+
+        while (Service::withTrashed()
+            ->where('slug', $slug)
+            ->when($ignoreServiceId !== null, fn ($query) => $query->whereKey('!=', $ignoreServiceId))
+            ->exists()) {
+            $slug = $base.'-'.$suffix;
+            $suffix++;
+        }
+
+        return $slug;
     }
 }

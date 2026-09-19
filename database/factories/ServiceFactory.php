@@ -14,6 +14,7 @@ class ServiceFactory extends Factory
     {
         return [
             'name' => fake()->unique()->words(3, true),
+            'slug' => fake()->unique()->slug(3),
             'description' => fake()->sentence(),
             'duration_minutes' => fake()->randomElement([15, 30, 45, 60]),
             'buffer_before_minutes' => 0,
