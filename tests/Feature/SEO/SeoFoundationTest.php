@@ -2,8 +2,6 @@
 
 use App\Application\SEO\SeoManager;
 use App\Http\Middleware\NoIndexRobots;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 
 test('platform home renders centralized SEO metadata', function () {
