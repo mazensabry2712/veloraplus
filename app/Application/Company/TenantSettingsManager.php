@@ -3,8 +3,8 @@
 namespace App\Application\Company;
 
 use App\Models\CompanySetting;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 final class TenantSettingsManager
 {
@@ -36,6 +36,22 @@ final class TenantSettingsManager
      */
     public function updateSeo(array $settings): void
     {
+        foreach (array_keys($settings) as $key) {
+            if (! in_array($key, self::SEO_KEYS, true)) {
+                throw new InvalidArgumentException('Unknown tenant SEO setting: '.$key);
+            }
+        }
+
+        $settings = collect($settings)
+            ->mapWithKeys(function (mixed $value, string $key): array {
+                if ($value !== null && ! is_string($value)) {
+                    throw new InvalidArgumentException('Tenant SEO settings must contain string or null values.');
+                }
+
+                return [$key => $value === null ? null : trim($value)];
+            })
+            ->all();
+
         DB::connection('tenant')->transaction(function () use ($settings): void {
             foreach ($settings as $key => $value) {
                 CompanySetting::query()->updateOrCreate(
