@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Domain\Tenancy\TenantContext;
+use App\Models\PlatformCredit;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformPayment;
 use App\Models\PlatformRefund;
@@ -40,14 +41,34 @@ class PlatformBillingPolicy
         return $this->belongsToCurrentTenant($invoice) && $account->can('billing.view');
     }
 
+    public function manageInvoice(PlatformAccount $account, PlatformInvoice $invoice): bool
+    {
+        return $this->belongsToCurrentTenant($invoice) && $account->can('billing.manage');
+    }
+
     public function viewPayment(PlatformAccount $account, PlatformPayment $payment): bool
     {
         return $this->belongsToCurrentTenant($payment) && $account->can('billing.view');
     }
 
+    public function managePayment(PlatformAccount $account, PlatformPayment $payment): bool
+    {
+        return $this->belongsToCurrentTenant($payment) && $account->can('billing.manage');
+    }
+
     public function manageInvoice(PlatformAccount $account, PlatformInvoice $invoice): bool
     {
         return $this->belongsToCurrentTenant($invoice) && $account->can('billing.manage');
+    }
+
+    public function viewCredit(PlatformAccount $account, PlatformCredit $credit): bool
+    {
+        return $this->belongsToCurrentTenant($credit) && $account->can('billing.view');
+    }
+
+    public function manageCredit(PlatformAccount $account, PlatformCredit $credit): bool
+    {
+        return $this->belongsToCurrentTenant($credit) && $account->can('billing.manage');
     }
 
     public function viewRefund(PlatformAccount $account, PlatformRefund $refund): bool
