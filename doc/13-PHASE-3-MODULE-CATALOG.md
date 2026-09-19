@@ -147,6 +147,21 @@ The catalog feature suite covers:
 - pricing-window overlap protection;
 - lifecycle status changes.
 
+
+## SEO / Public Catalog integration
+
+Phase 3 creates catalog data that may later appear on public Platform pages.
+
+The SEO layer may expose public, indexable catalog information such as Module/Feature descriptions and published pricing only when the corresponding Platform page is intentionally public.
+
+Rules:
+
+- internal catalog administration pages remain non-indexable;
+- draft, coming_soon, deprecated, and retired entries are not automatically public SEO pages;
+- SEO content must use the public catalog representation rather than leaking internal metadata;
+- prices shown publicly must be generated from the approved catalog pricing model and current public commercial state;
+- catalog changes that create a new public URL must update the SEO/public-web policy before release.
+
 ## Important boundary
 
 Phase 3 defines catalog data and catalog pricing only.
