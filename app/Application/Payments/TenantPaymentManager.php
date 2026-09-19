@@ -101,6 +101,13 @@ final class TenantPaymentManager
             return $payment;
         });
 
+        if (
+            $payment->status !== TenantPaymentStatus::Pending
+            || $payment->provider_session_id !== null
+        ) {
+            return $payment;
+        }
+
         $accountId = (string) ($payment->metadata['payment_provider_account_id'] ?? '');
 
         $account = PaymentProviderAccount::query()
