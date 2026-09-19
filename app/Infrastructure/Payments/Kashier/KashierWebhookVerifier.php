@@ -10,9 +10,9 @@ final class KashierWebhookVerifier
     /**
      * @param array<string, mixed> $data
      */
-    public function verify(array $data, ?string $signature): void
+    public function verify(array $data, ?string $signature, ?string $apiKeyOverride = null): void
     {
-        $apiKey = (string) config('velora.payments.kashier.payment_api_key');
+        $apiKey = (string) ($apiKeyOverride ?? config('velora.payments.kashier.payment_api_key'));
 
         if ($apiKey === '' || $signature === null || trim($signature) === '') {
             throw new InvalidWebhookSignature('Kashier webhook signature is missing.');
