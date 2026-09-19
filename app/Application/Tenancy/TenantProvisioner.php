@@ -13,7 +13,7 @@ use Throwable;
 
 final class TenantProvisioner implements TenantProvisionerContract
 {
-    private const BASELINE_SCHEMA_VERSION = '1.1';
+    private const BASELINE_SCHEMA_VERSION = '1.2';
 
     /** @var list<string> */
     private const BASELINE_TABLES = [
@@ -35,6 +35,7 @@ final class TenantProvisioner implements TenantProvisionerContract
                 $this->databaseManager->connect($tenant);
 
                 if ($this->baselineTablesExist()) {
+                    $this->runTenantMigrations();
                     $this->ensureTenantRuntime($tenant);
                     $this->ensureCompanySettings($tenant);
 
@@ -54,15 +55,7 @@ final class TenantProvisioner implements TenantProvisionerContract
             $this->createDatabase($tenant);
             $this->databaseManager->connect($tenant);
 
-            $exitCode = Artisan::call('migrate', [
-                '--database' => TenantDatabaseManager::CONNECTION,
-                '--path' => 'database/migrations/tenant',
-                '--force' => true,
-            ]);
-
-            if ($exitCode !== 0) {
-                throw new RuntimeException(Artisan::output());
-            }
+            $this->runTenantMigrations();
 
             if (! $this->baselineTablesExist()) {
                 throw new RuntimeException('Tenant baseline migrations completed without creating the required tenant core tables.');
@@ -90,6 +83,19 @@ final class TenantProvisioner implements TenantProvisionerContract
             $this->databaseManager->disconnect();
         }
     }
+    private function runTenantMigrations(): void
+    {
+        $exitCode = Artisan::call('migrate', [
+            '--database' => TenantDatabaseManager::CONNECTION,
+            '--path' => 'database/migrations/tenant',
+            '--force' => true,
+        ]);
+
+        if ($exitCode !== 0) {
+            throw new RuntimeException(Artisan::output());
+        }
+    }
+
     private function ensureTenantRuntime(Tenant $tenant): void
     {
         $table = DB::connection(TenantDatabaseManager::CONNECTION)->table('tenant_runtime');

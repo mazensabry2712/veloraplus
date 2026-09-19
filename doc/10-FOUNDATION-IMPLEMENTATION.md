@@ -177,6 +177,10 @@ No Kashier implementation was added to Core Billing. Phase 6 will add provider a
 See doc/16-PHASE-5-BILLING.md for the full contract and verification record.
 
 
+## Phase 7 status — in progress
+
+Phase 7 has started with the Services/database foundation slice. The tenant schema now supports the first Booking entity, service application logic is covered by tests, Booking service permissions are part of tenant RBAC, and ready tenant databases apply pending tenant migrations during provisioning/re-provisioning.
+
 ## Phase 6 status — closed / verified
 
 Phase 6 Payments & Provider Adapters has been implemented with a provider-neutral gateway boundary and the first concrete Kashier adapter.

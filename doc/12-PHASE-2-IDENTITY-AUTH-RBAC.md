@@ -146,7 +146,7 @@ Default assignments:
 | staff | company.view, staff.view, customers.view/manage, locations.view |
 | viewer | all six *.view permissions |
 
-These are bootstrap roles, not the final limit on custom tenant roles. Booking-specific permissions are intentionally deferred until the Booking module.
+These are bootstrap roles, not the final limit on custom tenant roles. Booking service permissions are introduced with Phase 7 and will expand slice-by-slice as additional Booking capabilities become protected.
 
 ## Membership vs Role
 

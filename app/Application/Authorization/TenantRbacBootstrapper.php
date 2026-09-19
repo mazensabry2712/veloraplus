@@ -25,6 +25,8 @@ final class TenantRbacBootstrapper
         'locations.manage',
         'settings.view',
         'settings.manage',
+        'booking.services.view',
+        'booking.services.manage',
     ];
 
     /**
@@ -45,6 +47,8 @@ final class TenantRbacBootstrapper
                 'locations.view',
                 'locations.manage',
                 'settings.view',
+                'booking.services.view',
+                'booking.services.manage',
             ],
             'staff' => [
                 'company.view',
@@ -52,6 +56,7 @@ final class TenantRbacBootstrapper
                 'customers.view',
                 'customers.manage',
                 'locations.view',
+                'booking.services.view',
             ],
             'viewer' => [
                 'company.view',
@@ -60,6 +65,7 @@ final class TenantRbacBootstrapper
                 'customers.view',
                 'locations.view',
                 'settings.view',
+                'booking.services.view',
             ],
         ];
     }
