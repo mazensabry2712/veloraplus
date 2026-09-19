@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — 8.3 BOOKING WORKSPACE**
+**IN PROGRESS — 8.4 PLATFORM BILLING WORKSPACE**
 
 Phase 8 is the next major product delivery after the completed Phase 7 Booking implementation. It converts the verified Core + Booking backend capabilities into the authenticated Company Dashboard used by tenant members.
 
