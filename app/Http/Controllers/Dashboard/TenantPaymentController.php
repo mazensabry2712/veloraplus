@@ -20,12 +20,16 @@ final class TenantPaymentController extends Controller
         Gate::authorize('create', TenantPayment::class);
 
         try {
-            $manager->createCheckout($appointment);
+            $payment = $manager->createCheckout($appointment);
         } catch (DomainException $exception) {
             return back()->withErrors(['payment' => $exception->getMessage()]);
         }
 
-        return to_route('dashboard')->with('status', 'Tenant payment checkout created successfully.');
+        $checkoutUrl = data_get($payment->metadata, 'checkout.checkout_url');
+
+        return to_route('dashboard')
+            ->with('status', 'Tenant payment checkout created successfully.')
+            ->with('tenant_payment_checkout_url', $checkoutUrl);
     }
 
     public function reconcile(
