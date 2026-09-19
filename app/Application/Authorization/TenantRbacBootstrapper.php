@@ -81,7 +81,6 @@ final class TenantRbacBootstrapper
                 'booking.appointments.view',
                 'booking.payments.view',
                 'booking.queues.view',
-                'billing.view',
             ],
             'viewer' => [
                 'company.view',
@@ -95,6 +94,7 @@ final class TenantRbacBootstrapper
                 'booking.appointments.view',
                 'booking.payments.view',
                 'booking.queues.view',
+                'billing.view',
             ],
         ];
     }
