@@ -150,15 +150,19 @@ Completed in 7.4.2:
 
 ### 7.5 Queue
 
-Status: **PENDING**
+Status: **IMPLEMENTED IN THIS SLICE**
 
-Planned:
+Implemented:
 
-- queues;
-- queue entries;
-- business date;
-- waiting/serving/completed/skipped/no-show transitions;
-- safe concurrent position allocation and updates.
+- tenant-local daily queues scoped by Location + Service + business date;
+- monotonic queue position allocation behind a locked Queue row;
+- queue entry idempotency;
+- optional Appointment linkage with Customer/Service/Location/date validation;
+- waiting/serving/completed/skipped/no-show lifecycle;
+- one-serving-entry rule per queue;
+- open/closed queue lifecycle;
+- Queue policy and `booking.queues.*` permissions;
+- tenant-isolation and migration coverage.
 
 ### 7.6 Public Booking
 
@@ -213,6 +217,8 @@ Current permissions:
 - booking.appointments.manage
 - booking.payments.view
 - booking.payments.manage
+- booking.queues.view
+- booking.queues.manage
 
 Owner/admin receive all current Booking permissions.
 
