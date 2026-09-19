@@ -146,9 +146,33 @@ Backend components:
 
 The existing Phase 1–7 regression suite remains green locally.
 
-#### 8.2.2 Locations / Branches
+#### 8.2.2 Locations / Branches — Backend implemented
 
-Planned.
+The Locations backend uses the existing tenant-local `locations` table and current tenant context.
+
+Implemented operations:
+
+- create;
+- update;
+- archive via soft delete with explicit `inactive` state.
+
+Authorization and isolation:
+
+- `LocationPolicy` reuses `locations.view/manage`;
+- location route model binding runs inside the current tenant database;
+- foreign-tenant location IDs are not addressable from another tenant host;
+- inactive locations cannot be assigned through the create/update request contract.
+
+Backend components:
+
+- `LocationManager`;
+- `StoreLocationRequest`;
+- `UpdateLocationRequest`;
+- `LocationPolicy`;
+- `LocationController`;
+- `LocationManagementTest`.
+
+The test suite covers CRUD lifecycle, RBAC denial, input validation, and cross-tenant address isolation.
 
 #### 8.2.3 Tenant Settings — Backend implemented
 
@@ -173,9 +197,42 @@ Backend components:
 
 The application service also enforces the setting allowlist so non-HTTP callers cannot write arbitrary tenant settings.
 
-#### 8.2.4 Staff
+#### 8.2.4 Staff — Backend implemented
 
-Planned.
+The Staff backend manages the tenant's business Staff identity without creating a second account/role system.
+
+Implemented fields:
+
+- `name`;
+- `phone`;
+- `email`;
+- `location_id`;
+- `status`.
+
+Implemented operations:
+
+- create;
+- update;
+- archive via soft delete with explicit `inactive` state.
+
+Rules:
+
+- staff records remain tenant-local;
+- assigned locations must belong to the current tenant and be active;
+- an existing `account_id` association is preserved during profile updates;
+- account linking and membership/role administration remain in the later Users/Memberships slice;
+- existing Staff Availability and Booking logic continue to consume the same Staff entity.
+
+Backend components:
+
+- `StaffManager`;
+- `StoreStaffRequest`;
+- `UpdateStaffRequest`;
+- `StaffPolicy`;
+- `StaffController`;
+- `StaffManagementTest`.
+
+The Staff test suite covers CRUD lifecycle, RBAC denial, inactive-location validation, and cross-tenant location assignment protection.
 
 #### 8.2.5 Customers
 
