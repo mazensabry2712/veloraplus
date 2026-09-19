@@ -1,23 +1,16 @@
 <?php
 
 use App\Application\Booking\AppointmentManager;
-use App\Application\Booking\ServiceManager;
 use App\Application\Booking\StaffAvailabilityManager;
 use App\Application\Payments\PaymentGatewayManager;
 use App\Application\Payments\TenantPaymentManager;
 use App\Domain\Booking\AppointmentPaymentStatus;
-use App\Domain\Booking\AppointmentStatus;
 use App\Domain\Payments\Contracts\CheckoutGateway;
 use App\Domain\Payments\Contracts\TenantPaymentGateway;
 use App\Domain\Payments\TenantPaymentStatus;
 use App\Domain\Tenancy\TenantContext;
 use App\Infrastructure\Tenancy\TenantDatabaseManager;
-use App\Models\Appointment;
-use App\Models\Customer;
-use App\Models\Location;
 use App\Models\PaymentProviderAccount;
-use App\Models\Service;
-use App\Models\Staff;
 use App\Models\Tenant;
 use App\Models\TenantPayment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,13 +19,20 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Tests\Support\FakeTenantPaymentGateway;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    $this->originalTenantTemplate = config('database.connections.tenant_template');
+    FakeTenantPaymentGateway::reset();
+});
 
 afterEach(function (): void {
     DB::purge(TenantDatabaseManager::CONNECTION);
     DB::setDefaultConnection('central');
     app(TenantContext::class)->clear();
+    config(['database.connections.tenant_template' => $this->originalTenantTemplate]);
 
     if (isset($this->tenantPaymentTestDatabases)) {
         foreach ($this->tenantPaymentTestDatabases as $path) {
@@ -130,42 +130,15 @@ function tenantPaymentFixtures(Tenant $tenant): array
     return compact('location', 'staff', 'customer', 'service', 'appointment');
 }
 
-function fakeTenantCheckoutGateway(array &$calls): TenantPaymentGateway&CheckoutGateway
-{
-    $gateway = Mockery::mock(TenantPaymentGateway::class, CheckoutGateway::class);
-
-    $gateway->shouldReceive('provider')->andReturn('fake');
-
-    $gateway->shouldReceive('createCheckout')
-        ->andReturnUsing(function (array $context) use (&$calls): array {
-            $calls[] = $context;
-
-            return [
-                'provider' => 'fake',
-                'session_id' => 'SESSION-'.count($calls),
-                'checkout_url' => 'https://pay.example.test/session/'.count($calls),
-                'merchant_order_id' => $context['merchant_order_id'],
-                'provider_payment_id' => 'PAY-'.count($calls),
-                'provider_order_id' => 'ORDER-'.count($calls),
-                'status' => 'CREATED',
-            ];
-        });
-
-    return $gateway;
-}
-
 function configureFakeTenantGateway(array &$calls): void
 {
-    config(['velora.payments.tenant_provider' => 'fake']);
+    config([
+        'velora.payments.tenant_provider' => 'fake',
+        'velora.payments.drivers.fake' => FakeTenantPaymentGateway::class,
+    ]);
 
-    $gateway = fakeTenantCheckoutGateway($calls);
-
-    $manager = Mockery::mock(PaymentGatewayManager::class);
-    $manager->shouldReceive('tenant')
-        ->with('fake')
-        ->andReturn($gateway);
-
-    app()->instance(PaymentGatewayManager::class, $manager);
+    FakeTenantPaymentGateway::reset();
+    $calls = &FakeTenantPaymentGateway::$calls;
 }
 
 function tenantPaymentContext(Tenant $tenant, string $path): void
@@ -205,10 +178,7 @@ test('tenant payment provider accounts are stored centrally with encrypted crede
         ],
     ]);
 
-    $raw = DB::connection('central')
-        ->table('payment_provider_accounts')
-        ->whereKey($account->getKey())
-        ->value('encrypted_credentials');
+    $raw = $account->getRawOriginal('encrypted_credentials');
 
     expect($raw)->not->toContain('SECRET-CLINIC')
         ->and($account->fresh()->encrypted_credentials['merchant_id'])->toBe('MID-CLINIC');
@@ -355,13 +325,12 @@ test('tenant payment checkout failure marks only the tenant payment as failed', 
 
     config(['velora.payments.tenant_provider' => 'fake']);
 
-    $gateway = Mockery::mock(TenantPaymentGateway::class, CheckoutGateway::class);
-    $gateway->shouldReceive('provider')->andReturn('fake');
-    $gateway->shouldReceive('createCheckout')->once()->andThrow(new RuntimeException('provider down'));
-
-    $gatewayManager = Mockery::mock(PaymentGatewayManager::class);
-    $gatewayManager->shouldReceive('tenant')->with('fake')->andReturn($gateway);
-    app()->instance(PaymentGatewayManager::class, $gatewayManager);
+    config([
+        'velora.payments.tenant_provider' => 'fake',
+        'velora.payments.drivers.fake' => FakeTenantPaymentGateway::class,
+    ]);
+    FakeTenantPaymentGateway::reset();
+    FakeTenantPaymentGateway::$shouldFail = true;
 
     $manager = app(TenantPaymentManager::class);
 
