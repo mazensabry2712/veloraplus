@@ -210,6 +210,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
     ->prefix('dashboard/billing')
     ->name('dashboard.billing.')
     ->group(function (): void {
+        Route::post('/invoices/{invoice}/checkout', [PlatformBillingController::class, 'checkoutInvoice'])
+            ->name('invoices.checkout');
+
         Route::post('/subscription/{subscription}/cancel', [PlatformBillingController::class, 'cancelSubscription'])
             ->name('subscription.cancel');
     });
