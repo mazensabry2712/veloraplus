@@ -491,6 +491,32 @@ updated_at
 deleted_at
 ~~~
 
+### Tenant payments
+
+Tenant payment records are tenant-local.
+
+Fields:
+
+- id
+- appointment_id
+- customer_id
+- provider
+- merchant_order_id
+- provider_payment_id
+- provider_order_id
+- provider_session_id
+- amount_minor
+- currency
+- status
+- paid_at
+- failed_at
+- refunded_at
+- metadata
+- created_at
+- updated_at
+
+Merchant account credentials remain central and encrypted in payment_provider_accounts.
+
 ## 4. Booking tables
 
 Initial conceptual set:
