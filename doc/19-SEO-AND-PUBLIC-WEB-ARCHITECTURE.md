@@ -372,11 +372,12 @@ Status: **COMPLETED IN THIS SLICE**
 
 ### SEO-4 — Public Booking
 
-Status: **PENDING**
+Status: **COMPLETED — SEO BOUNDARY**
 
-- Service landing pages link into Booking;
-- transactional booking state remains non-indexable;
-- public Booking keeps rate limiting and data minimization.
+- Service landing pages link into the Booking entry route;
+- Booking entry/transactional state is non-indexable;
+- Booking routes are rate-limited at the public edge;
+- public booking implementation must preserve rate limiting, final availability checks, concurrency, and data minimization.
 
 ### SEO-5 — Production SEO
 
@@ -397,7 +398,7 @@ Custom-domain canonicalization depends on the later Custom Domain infrastructure
 
 SEO does not depend on Tenant Payments and payment-provider code must not enter the SEO layer.
 
-SEO-1 through SEO-3 are the foundation required before Public Booking is released as an indexable public surface.
+SEO-1 through SEO-4 establish the SEO/public-web foundation required before the full Public Booking transaction is released.
 
 ## 25. Definition of done
 
