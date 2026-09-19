@@ -271,9 +271,49 @@ Backend components:
 
 The test suite covers CRUD lifecycle, RBAC denial, input validation, and cross-tenant record isolation.
 
-#### 8.2.6 Users and memberships
+#### 8.2.6 Users and Memberships — Backend implemented
 
-Planned.
+The tenant users surface reuses the existing identity model:
+
+- `PlatformAccount` remains central and reusable across companies;
+- `TenantMembership` remains the tenant access record;
+- Spatie tenant-scoped roles remain the permission source;
+- no new User model or authentication system is introduced.
+
+Implemented operations:
+
+- add an existing Platform Account to the current Tenant by email;
+- assign an existing tenant role;
+- change a membership role;
+- activate/deactivate a membership;
+- synchronize the Spatie role assignment with membership state.
+
+Security/invariants:
+
+- only active Platform Accounts can receive an active membership;
+- selected roles must belong to the current Tenant;
+- membership mutations require `members.manage`;
+- a membership from another Tenant cannot be mutated through the current Tenant context;
+- the current Tenant must retain at least one active `owner`;
+- deactivation removes the member's tenant-scoped Spatie roles without affecting roles in other Tenants;
+- account creation/invitations and account-to-Staff linking remain separate concerns for later slices.
+
+Backend components:
+
+- `TenantMembershipManager`;
+- `StoreTenantMembershipRequest`;
+- `UpdateTenantMembershipRequest`;
+- `TenantMembershipPolicy`;
+- `TenantMembershipController`;
+- `TenantMembershipManagementTest`.
+
+Routes:
+
+- `POST /dashboard/company/users`;
+- `PATCH /dashboard/company/users/{membership}`;
+- `DELETE /dashboard/company/users/{membership}`.
+
+The test suite covers member addition, role changes, deactivation, permission denial, last-owner protection, and cross-tenant membership isolation.
 
 #### 8.2.7 Roles and permissions administration
 
