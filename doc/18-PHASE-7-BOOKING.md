@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS**
+**CLOSED / VERIFIED — IMPLEMENTATION COMPLETE THROUGH 7.6**
 
 Phase 7 implements the first production business module on the existing VeloraPlus Core. Booking is tenant-owned, reuses the existing Company, Staff, Customer, Location, Entitlement, RBAC, and Tenant Payment boundaries, and must remain isolated from Platform Billing.
 
@@ -280,9 +280,26 @@ Every Booking slice must include:
 - migration/schema coverage;
 - provider/financial boundary tests where payments are involved.
 
-## 8. Current verification target
+## 8. Verification gate
 
-For each slice, run:
+Phase 7 implementation is complete through 7.6 and has been verified on the current `main` branch.
+
+Latest repository verification:
+
+- GitHub Actions Backend Tests: **passed**;
+- full CI suite: **148 tests, 716 assertions**;
+- Booking, Tenant Payments, Queue, Public Booking, and SEO feature coverage are passing;
+- the public booking transaction is covered for free/paid flows, idempotency, merchant configuration, staff selection, and slot conflicts.
+
+Phase 7 is therefore **CLOSED / VERIFIED as an implementation phase**.
+
+Remaining production gates are cross-cutting and documented separately:
+
+- SEO-5 production operations;
+- Custom Domain infrastructure;
+- final production/browser/load/recovery QA under the MVP release gates.
+
+For routine local verification after pulling the latest `main`:
 
     composer install
     php artisan migrate
@@ -290,5 +307,3 @@ For each slice, run:
     php artisan test --compact
     git diff --check
     git status
-
-Phase 7 cannot be marked CLOSED until Services, Availability, Appointments, Tenant Payments, Queue, Public Booking, Public Web/SEO foundation, authorization, isolation, concurrency, documentation, and final verification are complete.
