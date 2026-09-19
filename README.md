@@ -48,6 +48,7 @@ Important references:
 - doc/13-PHASE-3-MODULE-CATALOG.md
 - doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md
 - doc/15-PHASE-4-ENTITLEMENTS.md
+- doc/16-PHASE-5-BILLING.md
 
 ## Current implementation
 
@@ -57,7 +58,9 @@ Phase 2 — Identity, Authentication & RBAC is closed and verified.
 
 Phase 3 — Module Catalog is closed and verified. It provides the central catalog schema, models, bundle/dependency services, and pricing catalog foundation.
 
-Phase 4 — Entitlements is closed and verified. The next implementation stage is Phase 5 — Billing.
+Phase 4 — Entitlements is closed and verified.
+
+Phase 5 — Billing is implemented with provider-neutral payment boundaries; local phase verification remains pending before it is marked closed.
 
 ## Development principle
 

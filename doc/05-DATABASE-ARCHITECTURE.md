@@ -227,6 +227,8 @@ tenant_id
 status
 billing_cycle
 currency
+country_code
+starts_at
 trial_ends_at
 current_period_start
 current_period_end
@@ -235,6 +237,11 @@ cancel_at_period_end
 cancelled_at
 provider
 provider_reference
+subtotal_minor
+discount_minor
+tax_minor
+total_minor
+metadata
 created_at
 updated_at
 ~~~
@@ -247,12 +254,14 @@ subscription_items
 id
 subscription_id
 item_type
+catalog_type
 catalog_key
+catalog_price_id
 quantity
 unit_amount_minor
 discount_amount_minor
 tax_amount_minor
-total_amount_minor
+line_total_minor
 currency
 status
 starts_at
@@ -294,6 +303,7 @@ platform_invoice_items
 ----------------------
 id
 invoice_id
+subscription_item_id
 description
 catalog_type
 catalog_key
@@ -701,3 +711,64 @@ Every application service still operates only in the current Tenant context.
 ## Current identifier implementation
 
 For the current Foundation/Phase 1 implementation, ULIDs are used directly as primary identifiers for Platform Accounts, Tenants, Tenant Domains, and Tenant Memberships. A separate sequential internal ID/public ID pair is not used. This keeps identifiers opaque and stable across central/tenant boundaries. Additional identity fields such as phone may be introduced during the Identity phase without changing this identifier strategy.
+
+
+### Platform refunds
+
+~~~
+platform_refunds
+----------------
+id
+tenant_id
+payment_id
+amount_minor
+currency
+status
+reason
+provider_refund_id
+initiated_by_account_id
+processed_at
+metadata
+created_at
+updated_at
+~~~
+
+Refunds are separate financial records and do not mutate historical invoice totals.
+
+### Platform credits
+
+~~~
+platform_credits
+----------------
+id
+tenant_id
+amount_minor
+remaining_minor
+currency
+status
+source
+expires_at
+metadata
+created_at
+updated_at
+~~~
+
+Credits are separate from refunds and may be consumed by future invoices.
+
+### Billing audit events
+
+~~~
+billing_audit_events
+--------------------
+id
+tenant_id
+actor_account_id
+action
+subject_type
+subject_id
+metadata
+created_at
+updated_at
+~~~
+
+Billing audit records remain in the central database and are tenant-scoped.

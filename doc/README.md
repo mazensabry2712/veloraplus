@@ -27,6 +27,7 @@ Implementation must follow these documents:
 13. 13-PHASE-3-MODULE-CATALOG.md
 14. 14-CUSTOM-DOMAIN-ARCHITECTURE.md
 15. 15-PHASE-4-ENTITLEMENTS.md
+16. 16-PHASE-5-BILLING.md
 
 ## Locked decisions
 
@@ -49,7 +50,8 @@ Implementation must follow these documents:
 - Disabled Features never cause their business data to be silently deleted.
 - Trial: 14 days.
 - Billing cycles: monthly and yearly.
-- Initial VeloraPlus subscription payment provider: Kashier.
+- Payment architecture is provider-neutral; Platform Billing and Tenant Payments are separate payment domains.
+- Kashier is the first provider adapter planned for Phase 6, not a Core Billing dependency.
 - Payment providers are isolated behind an internal gateway abstraction.
 - Company-to-VeloraPlus billing is separate from customer-to-company payments.
 - Company customer payments are designed around a merchant/payment-provider account belonging to the company.
@@ -97,7 +99,7 @@ ERP
 
 Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 Module Catalog is also closed and verified.
 
-Phase 4 — Entitlements is closed and verified. The next implementation stage is Phase 5 — Billing. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
+Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is implemented and awaiting local/CI verification before closure. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
 
 ## Non-negotiable rules
 

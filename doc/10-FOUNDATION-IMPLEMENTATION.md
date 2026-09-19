@@ -141,3 +141,25 @@ Current status:
 - production custom-domain infrastructure: deferred until the Tenancy + Entitlements + Billing dependencies are ready.
 
 This documentation update does not claim that custom-domain provisioning or SSL automation is already implemented.
+
+## Phase 5 status — implementation committed / verification pending
+
+Phase 5 Billing has been implemented on the central platform side.
+
+Implemented:
+
+- subscriptions and subscription items;
+- deterministic pricing with monthly/yearly cycles;
+- 14-day trial;
+- immutable platform invoices and invoice lines;
+- platform payments;
+- upgrades, scheduled downgrades, and cancellation lifecycle;
+- renewal preparation;
+- refunds and credits;
+- billing audit trail;
+- billing-driven entitlement projection;
+- provider-neutral platform/tenant payment contracts.
+
+No Kashier implementation was added to Core Billing. Phase 6 will add provider adapters.
+
+See doc/16-PHASE-5-BILLING.md for the full contract and verification gate.

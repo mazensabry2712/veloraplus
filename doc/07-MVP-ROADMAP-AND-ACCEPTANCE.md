@@ -126,28 +126,35 @@ Exit criteria:
 
 Build:
 
-- subscription;
-- subscription items;
-- pricing engine;
-- bundle discount;
-- monthly billing;
-- yearly billing;
-- trial;
-- upgrade;
+- subscription lifecycle, including pending_payment, trialing, active, cancellation, and renewal boundaries;
+- subscription items and price snapshots;
+- deterministic monthly/yearly pricing;
+- Bundle discount;
+- 14-day trial;
+- upgrade with pending payment;
 - scheduled downgrade;
-- cancellation;
-- invoices;
-- refunds;
-- payment records;
-- audit trail.
+- cancellation at period end;
+- immutable Platform Invoices and Invoice Items;
+- Platform Payment records;
+- refunds and credits;
+- billing audit trail;
+- Billing-driven entitlement projection;
+- provider-neutral payment capability contracts.
+
+Do not implement Kashier in this phase.
 
 Exit criteria:
 
 - deterministic subscription pricing;
-- historical invoice amounts remain unchanged;
+- historical invoice amounts and invoice lines remain unchanged;
 - a Feature can be added independently;
-- verified payment activates a paid Feature;
-- feature removal takes effect at period end.
+- paid access is not activated before verified payment;
+- verified payment activates the intended paid Feature;
+- scheduled feature removal takes effect at period end;
+- Bundle discount is reflected in invoice lines;
+- refund records never rewrite historical invoice totals;
+- subscription-derived entitlements can be rebuilt from Billing state;
+- Platform Billing and Tenant Payments remain separate financial domains.
 
 ## 8. Phase 6 — Payments & Provider Adapters
 

@@ -32,7 +32,20 @@ The customer may also construct a custom subscription.
 
 ## 3. Subscription
 
-A Subscription belongs to exactly one Tenant.
+A Subscription belongs to exactly one Tenant. The MVP permits one open VeloraPlus Subscription per Tenant.
+
+Supported states:
+
+~~~
+pending_payment
+trialing
+active
+past_due
+grace
+suspended
+cancelled
+expired
+~~~
 
 Recommended concepts:
 
@@ -40,6 +53,7 @@ Recommended concepts:
 - status;
 - billing cycle;
 - currency;
+- country code;
 - starts_at;
 - trial_ends_at;
 - current_period_start;
@@ -110,13 +124,23 @@ Yearly pricing may be discounted through explicit configuration.
 
 Default trial: 14 days.
 
-The selected trial configuration must be recorded in the subscription domain.
+During trial:
+
+~~~
+Subscription = trialing
+Items = active
+Entitlement source = trial
+Entitlement ends_at = trial_ends_at
+~~~
+
+At trial end, Billing prepares the first paid invoice. Paid items stay pending until payment is verified.
 
 ## 9. Subscription states
 
-Recommended lifecycle:
+MVP lifecycle:
 
 ~~~
+pending_payment
 trialing
 active
 past_due
@@ -125,6 +149,8 @@ suspended
 cancelled
 expired
 ~~~
+
+pending_payment is the initial paid-subscription state and the renewal state before verified payment.
 
 ## 10. Upgrade
 
@@ -445,3 +471,28 @@ Tenant
 ~~~
 
 Historical bills must remain reproducible.
+
+
+## 30. Phase 5 implementation contract
+
+Phase 5 implements the internal Billing domain without a concrete payment provider.
+
+Implemented core responsibilities:
+
+- Subscription lifecycle and one-open-subscription rule;
+- Subscription Items and price snapshots;
+- deterministic monthly/yearly pricing;
+- Bundle discount calculation;
+- 14-day trial;
+- initial payment pending state;
+- upgrade with pending payment;
+- scheduled downgrade;
+- cancellation at period end;
+- renewal preparation;
+- immutable Platform Invoices and Invoice Items;
+- Platform Payment records;
+- refunds and credits;
+- billing audit records;
+- Billing-driven entitlement projection.
+
+Provider-specific checkout, verification, webhooks, reconciliation, and recurring agreements remain Phase 6. Kashier is an adapter, not Core Billing.

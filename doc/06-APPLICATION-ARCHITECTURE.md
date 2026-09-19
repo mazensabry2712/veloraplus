@@ -287,9 +287,14 @@ PricingEngine
 SubscriptionService
 InvoiceService
 PaymentService
+RefundService
+CreditService
+BillingAuditLogger
+BillingEntitlementProjector
 EntitlementService
-WebhookProcessor
 ~~~
+
+Provider webhook processing remains in Phase 6 and uses the provider-neutral payment contracts.
 
 Do not create one giant billing service.
 
