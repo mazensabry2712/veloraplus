@@ -5,12 +5,14 @@ use App\Application\Booking\StaffAvailabilityManager;
 use App\Application\Payments\PaymentGatewayManager;
 use App\Application\Payments\TenantPaymentManager;
 use App\Domain\Booking\AppointmentPaymentStatus;
-use App\Domain\Payments\Contracts\CheckoutGateway;
-use App\Domain\Payments\Contracts\TenantPaymentGateway;
 use App\Domain\Payments\TenantPaymentStatus;
 use App\Domain\Tenancy\TenantContext;
 use App\Infrastructure\Tenancy\TenantDatabaseManager;
+use App\Models\Customer;
+use App\Models\Location;
 use App\Models\PaymentProviderAccount;
+use App\Models\Service;
+use App\Models\Staff;
 use App\Models\Tenant;
 use App\Models\TenantPayment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,10 +23,13 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\Support\FakeTenantPaymentGateway;
 
-uses(RefreshDatabase::class);
-
 beforeEach(function (): void {
     $this->originalTenantTemplate = config('database.connections.tenant_template');
+    DB::setDefaultConnection('central');
+    expect(Artisan::call('migrate:fresh', [
+        '--database' => 'central',
+        '--force' => true,
+    ]))->toBe(0);
     FakeTenantPaymentGateway::reset();
 });
 
