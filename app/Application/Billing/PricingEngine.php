@@ -60,9 +60,9 @@ final class PricingEngine
         $at ??= CarbonImmutable::now();
         $lines = [];
         $seen = [];
-        $subtotal = BillingMoney::fromMinor(0, $currency);
-        $discount = BillingMoney::fromMinor(0, $currency);
-        $tax = BillingMoney::fromMinor(0, $currency);
+        $subtotal = 0;
+        $discount = 0;
+        $tax = 0;
 
         foreach ($items as $input) {
             $item = $input['item'] ?? null;
@@ -93,17 +93,36 @@ final class PricingEngine
             }
 
             $unit = BillingMoney::fromMinor((int) $price->amount_minor, $currency);
-            $lineSubtotal = BillingMoney::multiply($unit, $quantity);
+            $lineSubtotal = BillingMoney::multiply($unit, $quantity, $currency);
             $lineDiscount = $item instanceof Bundle
-                ? BillingMoney::percentage($lineSubtotal, (int) $item->discount_bps)
-                : BillingMoney::fromMinor(0, $currency);
-            $taxable = $lineSubtotal->minus($lineDiscount);
-            $lineTax = BillingMoney::percentage($taxable, $taxBps);
-            $lineTotal = $taxable->plus($lineTax);
+                ? BillingMoney::percentage($lineSubtotal, (int) $item->discount_bps, $currency)
+                : 0;
+            $taxable = $lineSubtotal - $lineDiscount;
+            $lineTax = BillingMoney::percentage($taxable, $taxBps, $currency);
 
-            $subtotal = $subtotal->plus($lineSubtotal);
-            $discount = $discount->plus($lineDiscount);
-            $tax = $tax->plus($lineTax);
+            if ($lineDiscount > $lineSubtotal) {
+                throw new DomainException('Line discount cannot exceed line subtotal.');
+            }
+
+            if ($taxable > PHP_INT_MAX - $lineTax) {
+                throw new DomainException('Line total exceeds the supported integer range.');
+            }
+
+            $lineTotal = $taxable + $lineTax;
+
+            foreach ([
+                'subtotal' => [$subtotal, $lineSubtotal],
+                'discount' => [$discount, $lineDiscount],
+                'tax' => [$tax, $lineTax],
+            ] as $name => [$current, $increment]) {
+                if ($current > PHP_INT_MAX - $increment) {
+                    throw new DomainException("{$name} total exceeds the supported integer range.");
+                }
+            }
+
+            $subtotal += $lineSubtotal;
+            $discount += $lineDiscount;
+            $tax += $lineTax;
 
             $lines[] = [
                 'description' => $item->name,
@@ -111,10 +130,10 @@ final class PricingEngine
                 'catalog_key' => $item->key,
                 'catalog_price_id' => $price->getKey(),
                 'quantity' => $quantity,
-                'unit_amount_minor' => BillingMoney::minor($unit),
-                'discount_minor' => BillingMoney::minor($lineDiscount),
-                'tax_minor' => BillingMoney::minor($lineTax),
-                'line_total_minor' => BillingMoney::minor($lineTotal),
+                'unit_amount_minor' => $unit,
+                'discount_minor' => $lineDiscount,
+                'tax_minor' => $lineTax,
+                'line_total_minor' => $lineTotal,
                 'metadata' => [
                     'bundle_discount_bps' => $item instanceof Bundle ? (int) $item->discount_bps : 0,
                     'tax_bps' => $taxBps,
@@ -123,18 +142,24 @@ final class PricingEngine
             ];
         }
 
-        $taxableSubtotal = $subtotal->minus($discount);
-        $total = $taxableSubtotal->plus($tax);
+        $taxableSubtotal = $subtotal - $discount;
+        if ($taxableSubtotal < 0) {
+            throw new DomainException('Discount cannot exceed subtotal.');
+        }
+
+        if ($taxableSubtotal > PHP_INT_MAX - $tax) {
+            throw new DomainException('Total exceeds the supported integer range.');
+        }
 
         return [
             'currency' => $currency,
             'country_code' => $countryCode,
             'billing_cycle' => $billingCycle,
-            'subtotal_minor' => BillingMoney::minor($subtotal),
-            'discount_minor' => BillingMoney::minor($discount),
-            'taxable_subtotal_minor' => BillingMoney::minor($taxableSubtotal),
-            'tax_minor' => BillingMoney::minor($tax),
-            'total_minor' => BillingMoney::minor($total),
+            'subtotal_minor' => $subtotal,
+            'discount_minor' => $discount,
+            'taxable_subtotal_minor' => $taxableSubtotal,
+            'tax_minor' => $tax,
+            'total_minor' => $taxableSubtotal + $tax,
             'lines' => $lines,
         ];
     }

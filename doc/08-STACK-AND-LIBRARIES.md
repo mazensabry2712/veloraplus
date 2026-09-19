@@ -16,7 +16,7 @@
 | Auth | Laravel Fortify |
 | Roles/Permissions | Spatie Laravel Permission |
 | Tenancy | Stancl Tenancy |
-| Money | Brick Money |
+| Money | Integer minor units (Brick Money may be introduced when package locking is updated) |
 | Testing | Pest |
 | Static analysis | Larastan |
 | Formatting | Laravel Pint |
@@ -31,7 +31,7 @@ Foundation/runtime packages:
 - laravel/fortify
 - stancl/tenancy (current stable line verified for Laravel 13; integrate via Composer lock)
 - spatie/laravel-permission
-- brick/money
+- integer minor-unit money arithmetic in the Billing domain; Brick Money may be added later when the dependency lock is updated through the normal Composer workflow.
 - Redis integration through Laravel's native cache/queue APIs
 
 Engineering/dev packages:

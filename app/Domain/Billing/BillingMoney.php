@@ -2,43 +2,63 @@
 
 namespace App\Domain\Billing;
 
-use Brick\Money\Money;
-use Brick\Math\RoundingMode;
 use DomainException;
 
 final class BillingMoney
 {
-    public static function fromMinor(int $amountMinor, string $currency): Money
+    public static function fromMinor(int $amountMinor, string $currency): int
     {
+        self::assertCurrency($currency);
+
         if ($amountMinor < 0) {
             throw new DomainException('Money amount cannot be negative.');
         }
 
-        return Money::ofMinor($amountMinor, strtoupper($currency));
+        return $amountMinor;
     }
 
-    public static function multiply(Money $money, int $quantity): Money
+    public static function multiply(int $amountMinor, int $quantity, string $currency): int
     {
-        if ($quantity < 0) {
-            throw new DomainException('Money quantity cannot be negative.');
+        self::assertCurrency($currency);
+
+        if ($amountMinor < 0 || $quantity < 0) {
+            throw new DomainException('Money amount and quantity cannot be negative.');
         }
 
-        return $money->multipliedBy($quantity);
+        if ($quantity !== 0 && $amountMinor > intdiv(PHP_INT_MAX, $quantity)) {
+            throw new DomainException('Money multiplication exceeds the supported integer range.');
+        }
+
+        return $amountMinor * $quantity;
     }
 
-    public static function percentage(Money $money, int $basisPoints): Money
+    public static function percentage(int $amountMinor, int $basisPoints, string $currency): int
     {
+        self::assertCurrency($currency);
+
+        if ($amountMinor < 0) {
+            throw new DomainException('Money amount cannot be negative.');
+        }
+
         if ($basisPoints < 0 || $basisPoints > 10000) {
             throw new DomainException('Percentage basis points must be between 0 and 10000.');
         }
 
-        return $money
-            ->multipliedBy($basisPoints)
-            ->dividedBy(10000, RoundingMode::Down);
+        $whole = intdiv($amountMinor, 10000) * $basisPoints;
+        $remainder = $amountMinor % 10000;
+        $fraction = intdiv($remainder * $basisPoints, 10000);
+
+        if ($whole > PHP_INT_MAX - $fraction) {
+            throw new DomainException('Percentage result exceeds the supported integer range.');
+        }
+
+        return $whole + $fraction;
     }
 
-    public static function minor(Money $money): int
+    private static function assertCurrency(string $currency): void
     {
-        return $money->getMinorAmount()->toInt();
+        if (! preg_match('/^[A-Z]{3}$/', strtoupper($currency))) {
+            throw new DomainException('Invalid money currency.');
+        }
     }
 }

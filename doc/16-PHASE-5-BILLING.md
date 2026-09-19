@@ -19,7 +19,7 @@ Implemented:
 - deterministic pricing;
 - Bundle discount handling;
 - tenant currency/country context;
-- integer minor-unit money with Brick Money calculations;
+- integer minor-unit money calculations with overflow-safe integer arithmetic;
 - immutable invoice and invoice-line snapshots;
 - platform payment records;
 - verified-payment activation boundary;
@@ -188,7 +188,7 @@ amount_minor BIGINT
 currency CHAR(3)
 ~~~
 
-Application calculations use Brick Money and never floating-point arithmetic.
+Application calculations use integer minor units and never floating-point arithmetic. Percentage calculations use basis points with explicit downward rounding.
 
 Percentage calculations use basis points with explicit downward rounding for minor-unit results in this phase.
 
