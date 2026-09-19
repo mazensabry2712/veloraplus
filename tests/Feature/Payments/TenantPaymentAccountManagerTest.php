@@ -3,10 +3,16 @@
 use App\Application\Payments\TenantPaymentAccountManager;
 use App\Models\PaymentProviderAccount;
 use App\Models\Tenant;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
-uses(RefreshDatabase::class);
+beforeEach(function (): void {
+    DB::setDefaultConnection('central');
+    expect(Artisan::call('migrate:fresh', [
+        '--database' => 'central',
+        '--force' => true,
+    ]))->toBe(0);
+});
 
 test('tenant payment account manager stores active credentials encrypted and supports deactivation', function () {
     $tenant = Tenant::factory()->create();
@@ -26,10 +32,7 @@ test('tenant payment account manager stores active credentials encrypted and sup
         ],
     );
 
-    $raw = DB::connection('central')
-        ->table('payment_provider_accounts')
-        ->whereKey($account->getKey())
-        ->value('encrypted_credentials');
+    $raw = $account->getRawOriginal('encrypted_credentials');
 
     expect($account->provider)->toBe('kashier')
         ->and($account->status)->toBe('active')
