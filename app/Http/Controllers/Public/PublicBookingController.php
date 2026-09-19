@@ -9,6 +9,7 @@ use App\Http\Requests\PublicBookingRequest;
 use App\Models\Service;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 final class PublicBookingController
@@ -61,7 +62,19 @@ final class PublicBookingController
             abort(404);
         }
 
-        $result = $bookings->book($service, $request->validated());
+        try {
+            $result = $bookings->book($service, $request->validated());
+        } catch (DomainException $exception) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $exception->getMessage(),
+                ], 422);
+            }
+
+            throw ValidationException::withMessages([
+                'booking' => $exception->getMessage(),
+            ]);
+        }
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -73,6 +86,12 @@ final class PublicBookingController
 
         if ($result['checkout_url'] !== null) {
             return redirect()->away($result['checkout_url']);
+        }
+
+        if ($result['appointment']->payment_status !== \App\Domain\Booking\AppointmentPaymentStatus::Paid) {
+            throw ValidationException::withMessages([
+                'booking' => 'The booking was created, but payment could not be initialized. Please retry.',
+            ]);
         }
 
         return view('public.booking.success', [
