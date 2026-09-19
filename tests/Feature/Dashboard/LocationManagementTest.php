@@ -45,11 +45,15 @@ function locationManagementTestTenantDatabasePath(): string
     return $path;
 }
 
-function createLocationManagementTenant(string $path, string $domain = 'location-tenant.velora.test'): Tenant
+function createLocationManagementTenant(
+    string $path,
+    string $domain = 'location-tenant.velora.test',
+    string $slug = 'location-tenant',
+): Tenant
 {
     $tenant = Tenant::factory()->create([
         'name' => 'Location Tenant',
-        'slug' => 'location-tenant',
+        'slug' => $slug,
         'database_name' => $path,
         'database_host' => null,
         'database_port' => null,
@@ -212,8 +216,8 @@ test('location from another tenant cannot be addressed through the current tenan
     $pathB = locationManagementTestTenantDatabasePath();
     $this->locationManagementTenantDatabasePath = $pathA;
 
-    $tenantA = createLocationManagementTenant($pathA, 'location-a.velora.test');
-    $tenantB = createLocationManagementTenant($pathB, 'location-b.velora.test');
+    $tenantA = createLocationManagementTenant($pathA, 'location-a.velora.test', 'location-a');
+    $tenantB = createLocationManagementTenant($pathB, 'location-b.velora.test', 'location-b');
     $ownerA = addLocationMember($tenantA);
 
     $manager = app(TenantDatabaseManager::class);
