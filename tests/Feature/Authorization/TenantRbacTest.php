@@ -27,10 +27,30 @@ test('tenant rbac bootstrap is idempotent and creates default permissions and ro
 
     expect(config('permission.models.permission'))->toBe(App\Models\Permission::class)
         ->and(config('permission.models.role'))->toBe(App\Models\Role::class)
-        ->and(App\Models\Permission::query()->where('guard_name', 'web')->count())->toBe(14)
+        ->and(App\Models\Permission::query()->where('guard_name', 'web')->count())->toBe(16)
         ->and(App\Models\Role::query()->where('tenant_id', $tenant->getKey())->count())->toBe(5)
         ->and(App\Models\Role::query()->where('tenant_id', $tenant->getKey())->pluck('name')->all())
         ->toEqualCanonicalizing(['owner', 'admin', 'manager', 'staff', 'viewer']);
+});
+
+test('booking availability permissions are assigned by role', function () {
+    $tenant = Tenant::factory()->create();
+    $bootstrapper = app(TenantRbacBootstrapper::class);
+    $bootstrapper->bootstrapForTenant($tenant);
+
+    setPermissionsTeamId($tenant->getKey());
+
+    $roles = App\Models\Role::query()
+        ->where('tenant_id', $tenant->getKey())
+        ->get()
+        ->keyBy('name');
+
+    expect($roles['owner']->hasPermissionTo('booking.availability.manage'))->toBeTrue()
+        ->and($roles['manager']->hasPermissionTo('booking.availability.manage'))->toBeTrue()
+        ->and($roles['staff']->hasPermissionTo('booking.availability.view'))->toBeTrue()
+        ->and($roles['staff']->hasPermissionTo('booking.availability.manage'))->toBeFalse()
+        ->and($roles['viewer']->hasPermissionTo('booking.availability.view'))->toBeTrue()
+        ->and($roles['viewer']->hasPermissionTo('booking.availability.manage'))->toBeFalse();
 });
 
 test('tenant rbac bootstrap synchronizes a changed membership role', function () {
