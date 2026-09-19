@@ -51,6 +51,7 @@ Important references:
 - doc/16-PHASE-5-BILLING.md
 - doc/17-PHASE-6-PAYMENTS.md
 - doc/18-PHASE-7-BOOKING.md
+- doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md
 
 ## Current implementation
 
@@ -66,7 +67,7 @@ Phase 5 — Billing is closed and verified. It provides the internal Billing dom
 
 Phase 6 — Payments & Provider Adapters is closed and verified. Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries.
 
-Phase 7 — Booking is in progress. Services (7.1), Staff Availability (7.2), and Appointments (7.3) are implemented and verified; Tenant Payments, Queue, and Public Booking remain pending.
+Phase 7 — Booking is in progress. Services (7.1), Staff Availability (7.2), and Appointments (7.3) are implemented and verified. Tenant Payments (7.4), Queue (7.5), and Public Booking remain pending. SEO/Public Web is a locked cross-cutting prerequisite for the public-facing Booking surface and is documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
 
 ## Development principle
 
