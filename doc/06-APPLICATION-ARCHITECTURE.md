@@ -667,3 +667,11 @@ Performance requirements are architectural:
 - observability and load testing are part of production readiness.
 
 See `doc/09-SCALABILITY-AND-PERFORMANCE.md` for the detailed scaling rules.
+
+### Tenant Payments
+
+- TenantPaymentManager — creates idempotent Tenant checkout records and synchronizes verified payment state to Booking appointments;
+- TenantPaymentAccountManager — manages Tenant provider account references and encrypted credentials;
+- PaymentGatewayManager — remains the provider-neutral gateway resolver;
+- concrete adapters remain under Infrastructure/Payments.
+
