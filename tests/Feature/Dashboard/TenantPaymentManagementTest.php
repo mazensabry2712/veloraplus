@@ -31,13 +31,6 @@ uses(RefreshDatabase::class);
 beforeEach(function (): void {
     $this->originalTenantTemplate = config('database.connections.tenant_template');
 
-    DB::setDefaultConnection('central');
-
-    expect(Artisan::call('migrate:fresh', [
-        '--database' => 'central',
-        '--force' => true,
-    ]))->toBe(0);
-
     FakeTenantPaymentGateway::reset();
 
     config([
