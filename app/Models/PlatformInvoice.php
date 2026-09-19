@@ -45,13 +45,13 @@ class PlatformInvoice extends Model
             ])) {
                 throw new DomainException('Issued invoice amounts and identity are immutable.');
             }
-        })        static::deleting(function (PlatformInvoice $invoice): void {
+        });
+
+        static::deleting(function (PlatformInvoice $invoice): void {
             if ($invoice->issued_at !== null) {
                 throw new DomainException('Issued invoices cannot be deleted.');
             }
         });
-
-;
     }
 
     protected function casts(): array

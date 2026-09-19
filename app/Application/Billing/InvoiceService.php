@@ -162,5 +162,4 @@ final class InvoiceService
 
         return $current + $increment;
     }
-
 }

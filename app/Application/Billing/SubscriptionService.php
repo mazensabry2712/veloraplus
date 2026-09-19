@@ -267,91 +267,87 @@ final class SubscriptionService
         $at ??= CarbonImmutable::now();
 
         return $subscription->getConnection()->transaction(function () use ($subscription, $at): ?PlatformInvoice {
-                    $at ??= CarbonImmutable::now();
+            $subscription = Subscription::query()
+                ->lockForUpdate()
+                ->with('items')
+                ->findOrFail($subscription->getKey());
 
-                    $subscription = Subscription::query()
-                        ->lockForUpdate()
-                        ->with('items')
-                        ->findOrFail($subscription->getKey());
+            if ($subscription->current_period_end > $at) {
+                throw new DomainException('Subscription period has not ended yet.');
+            }
 
-                    if ($subscription->current_period_end > $at) {
-                        throw new DomainException('Subscription period has not ended yet.');
-                    }
+            if ($subscription->cancel_at_period_end) {
+                $subscription->update([
+                    'status' => SubscriptionStatus::Cancelled,
+                    'cancelled_at' => $at,
+                ]);
 
-                    if ($subscription->cancel_at_period_end) {
-                        $subscription->update([
-                            'status' => SubscriptionStatus::Cancelled,
-                            'cancelled_at' => $at,
-                        ]);
+                $subscription->items->each(fn (SubscriptionItem $item) => $item->update([
+                    'status' => SubscriptionItemStatus::Inactive,
+                    'ends_at' => $at,
+                ]));
 
-                        $subscription->items->each(fn (SubscriptionItem $item) => $item->update([
-                            'status' => SubscriptionItemStatus::Inactive,
-                            'ends_at' => $at,
-                        ]));
+                $this->projector->project($subscription->fresh('items'));
+                $this->audit->record($subscription->tenant, 'subscription.cancelled', $subscription);
 
-                        $this->projector->project($subscription->fresh('items'));
-                        $this->audit->record($subscription->tenant, 'subscription.cancelled', $subscription);
+                return null;
+            }
 
-                        return null;
-                    }
+            $renewalItems = [];
 
-                    $renewalItems = [];
-                    foreach ($subscription->items as $item) {
-                        if ($item->status === SubscriptionItemStatus::Scheduled) {
-                            $item->update([
-                                'status' => SubscriptionItemStatus::Inactive,
-                                'ends_at' => $at,
-                            ]);
-                            continue;
-                        }
-
-                        if ($item->status === SubscriptionItemStatus::Active) {
-                            $item->update([
-                                'status' => SubscriptionItemStatus::Pending,
-                                'starts_at' => null,
-                                'ends_at' => null,
-                            ]);
-                            $renewalItems[] = $item->fresh();
-                        }
-                    }
-
-                    $oldEnd = $subscription->current_period_end;
-                    $newEnd = $this->advancePeriod($oldEnd, $subscription->billing_cycle);
-
-                    $subscription->update([
-                        'status' => SubscriptionStatus::PendingPayment,
-                        'current_period_start' => $oldEnd,
-                        'current_period_end' => $newEnd,
-                        'next_billed_at' => $oldEnd,
+            foreach ($subscription->items as $item) {
+                if ($item->status === SubscriptionItemStatus::Scheduled) {
+                    $item->update([
+                        'status' => SubscriptionItemStatus::Inactive,
+                        'ends_at' => $at,
                     ]);
-
-                    $subscription->refresh();
-                    $this->projector->project($subscription);
-
-                    if ($renewalItems === []) {
-                        $subscription->update([
-                            'status' => SubscriptionStatus::Expired,
-                            'next_billed_at' => null,
-                        ]);
-
-                        $this->projector->project($subscription->fresh('items'));
-                        $this->audit->record($subscription->tenant, 'subscription.expired_no_items', $subscription);
-
-                        return null;
-                    }
-
-                    $invoice = $this->invoices->createForSubscription($subscription, $renewalItems, null, [
-                        'type' => 'renewal',
-                    ]);
-
-                    $this->audit->record($subscription->tenant, 'subscription.renewal_pending_payment', $subscription, [
-                        'invoice_id' => $invoice->getKey(),
-                    ]);
-
-                    return $invoice;
+                    continue;
                 }
 
+                if ($item->status === SubscriptionItemStatus::Active) {
+                    $item->update([
+                        'status' => SubscriptionItemStatus::Pending,
+                        'starts_at' => null,
+                        'ends_at' => null,
+                    ]);
+                    $renewalItems[] = $item->fresh();
+                }
+            }
 
+            $oldEnd = $subscription->current_period_end;
+            $newEnd = $this->advancePeriod($oldEnd, $subscription->billing_cycle);
+
+            $subscription->update([
+                'status' => SubscriptionStatus::PendingPayment,
+                'current_period_start' => $oldEnd,
+                'current_period_end' => $newEnd,
+                'next_billed_at' => $oldEnd,
+            ]);
+
+            $subscription->refresh();
+            $this->projector->project($subscription);
+
+            if ($renewalItems === []) {
+                $subscription->update([
+                    'status' => SubscriptionStatus::Expired,
+                    'next_billed_at' => null,
+                ]);
+
+                $this->projector->project($subscription->fresh('items'));
+                $this->audit->record($subscription->tenant, 'subscription.expired_no_items', $subscription);
+
+                return null;
+            }
+
+            $invoice = $this->invoices->createForSubscription($subscription, $renewalItems, null, [
+                'type' => 'renewal',
+            ]);
+
+            $this->audit->record($subscription->tenant, 'subscription.renewal_pending_payment', $subscription, [
+                'invoice_id' => $invoice->getKey(),
+            ]);
+
+            return $invoice;
         });
     }
 
