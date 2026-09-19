@@ -321,20 +321,55 @@ lines[]
 
 ## 14. Payment adapters
 
-Example:
+Payment integration is provider-neutral and has two business contexts.
+
+Platform Billing:
 
 ~~~
 Contracts/
-  PaymentGatewayInterface
+  PlatformPaymentGateway
 
+Company
+  ↓
+VeloraPlus Billing
+  ↓
+PlatformPaymentGateway
+  ↓
+Provider Adapter
+~~~
+
+Tenant business payments:
+
+~~~
+Contracts/
+  TenantPaymentGateway
+
+Customer
+  ↓
+Tenant Business Transaction
+  ↓
+TenantPaymentGateway
+  ↓
+Provider Adapter
+~~~
+
+Provider adapters live under Infrastructure and may implement capability-specific contracts for checkout, verification, refunds, recurring payments, webhook verification, and transaction lookup.
+
+Conceptual infrastructure:
+
+~~~
 Infrastructure/Payments/
   Kashier/
     KashierGateway
     KashierWebhookVerifier
     KashierClient
+  OtherProvider/
+    ...
 ~~~
 
-Do not leak provider payloads throughout the Billing domain.
+Kashier is the first adapter, not a Core Billing dependency. Additional providers must be addable without changing Billing, Booking, CRM, or ERP business logic.
+
+Do not leak provider payloads throughout the Domain or Application layers.
 
 ## 15. Events
 
