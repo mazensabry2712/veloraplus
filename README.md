@@ -50,6 +50,7 @@ Important references:
 - doc/15-PHASE-4-ENTITLEMENTS.md
 - doc/16-PHASE-5-BILLING.md
 - doc/17-PHASE-6-PAYMENTS.md
+- doc/18-PHASE-7-BOOKING.md
 
 ## Current implementation
 
@@ -63,7 +64,9 @@ Phase 4 — Entitlements is closed and verified.
 
 Phase 5 — Billing is closed and verified. It provides the internal Billing domain with provider-neutral payment boundaries.
 
-Phase 6 — Payments & Provider Adapters is closed and verified. Local verification passed with **72 tests and 238 assertions**; the working tree is clean. Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries.
+Phase 6 — Payments & Provider Adapters is closed and verified. Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries.
+
+Phase 7 — Booking is in progress. Services (7.1), Staff Availability (7.2), and Appointments (7.3) are implemented and verified; Tenant Payments, Queue, and Public Booking remain pending.
 
 ## Development principle
 
