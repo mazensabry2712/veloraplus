@@ -13,7 +13,7 @@ test('platform home renders centralized SEO metadata', function () {
         'velora.seo.platform.locale' => 'en_US',
     ]);
 
-    $response = $this->get('/');
+    $response = $this->get('https://velora.com/');
 
     $response->assertSuccessful()
         ->assertSee('<title>VeloraPlus — SaaS Business Platform</title>', false)
