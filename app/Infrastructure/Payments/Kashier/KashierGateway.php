@@ -138,6 +138,9 @@ final class KashierGateway implements
     {
         $orderId = trim((string) ($context['kashier_order_id'] ?? ''));
         $amountMinor = (int) ($context['amount_minor'] ?? 0);
+        $credentials = is_array($context['payment_account']['credentials'] ?? null)
+            ? $context['payment_account']['credentials']
+            : [];
 
         if ($orderId === '' || $amountMinor < 1) {
             throw new DomainException('Kashier refund requires order id and positive amount.');
@@ -161,7 +164,7 @@ final class KashierGateway implements
             unset($payload['reason']);
         }
 
-        $response = $this->client->refundOrder($orderId, $payload);
+        $response = $this->client->refundOrder($orderId, $payload, $credentials ?: null);
 
         return [
             'provider' => $this->provider(),
