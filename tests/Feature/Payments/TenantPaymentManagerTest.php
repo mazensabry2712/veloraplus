@@ -168,8 +168,10 @@ function configureFakeTenantGateway(array &$calls): void
     app()->instance(PaymentGatewayManager::class, $manager);
 }
 
-function tenantPaymentContext(Tenant $tenant): void
+function tenantPaymentContext(Tenant $tenant, string $path): void
 {
+    $tenant->database_name = $path;
+
     app(TenantContext::class)->set($tenant);
 
     $manager = app(TenantDatabaseManager::class);
@@ -220,7 +222,7 @@ test('tenant payment checkout requires an active merchant account', function ():
     migrateTenantPaymentDatabase($path);
 
     $tenant = Tenant::factory()->create();
-    tenantPaymentContext($tenant);
+    tenantPaymentContext($tenant, $path);
     $fixtures = tenantPaymentFixtures($tenant);
 
     config(['velora.payments.tenant_provider' => 'fake']);
@@ -250,7 +252,7 @@ test('tenant payment rejects cancelled appointments before creating a payment', 
         'status' => 'active',
     ]);
 
-    tenantPaymentContext($tenant);
+    tenantPaymentContext($tenant, $path);
     $fixtures = tenantPaymentFixtures($tenant);
 
     app(\App\Application\Booking\AppointmentManager::class)
@@ -279,7 +281,7 @@ test('tenant payment cannot be marked succeeded from a failed state', function (
         'status' => 'active',
     ]);
 
-    tenantPaymentContext($tenant);
+    tenantPaymentContext($tenant, $path);
     $fixtures = tenantPaymentFixtures($tenant);
 
     $calls = [];
@@ -310,7 +312,7 @@ test('tenant payment checkout is idempotent and updates appointment payment stat
         'encrypted_credentials' => ['merchant_id' => 'MID-FAKE'],
     ]);
 
-    tenantPaymentContext($tenant);
+    tenantPaymentContext($tenant, $path);
     $fixtures = tenantPaymentFixtures($tenant);
 
     $calls = [];
@@ -348,7 +350,7 @@ test('tenant payment checkout failure marks only the tenant payment as failed', 
         'encrypted_credentials' => ['merchant_id' => 'MID-FAKE'],
     ]);
 
-    tenantPaymentContext($tenant);
+    tenantPaymentContext($tenant, $path);
     $fixtures = tenantPaymentFixtures($tenant);
 
     config(['velora.payments.tenant_provider' => 'fake']);
@@ -388,7 +390,7 @@ test('verified tenant payment success is idempotent and marks the appointment pa
         'encrypted_credentials' => ['merchant_id' => 'MID-FAKE'],
     ]);
 
-    tenantPaymentContext($tenant);
+    tenantPaymentContext($tenant, $path);
     $fixtures = tenantPaymentFixtures($tenant);
 
     $calls = [];
