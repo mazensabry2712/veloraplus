@@ -35,6 +35,8 @@ final class TenantRbacBootstrapper
         'booking.payments.manage',
         'booking.queues.view',
         'booking.queues.manage',
+        'billing.view',
+        'billing.manage',
     ];
 
     /**
@@ -65,6 +67,8 @@ final class TenantRbacBootstrapper
                 'booking.payments.manage',
                 'booking.queues.view',
                 'booking.queues.manage',
+                'billing.view',
+                'billing.manage',
             ],
             'staff' => [
                 'company.view',
@@ -77,6 +81,7 @@ final class TenantRbacBootstrapper
                 'booking.appointments.view',
                 'booking.payments.view',
                 'booking.queues.view',
+                'billing.view',
             ],
             'viewer' => [
                 'company.view',
