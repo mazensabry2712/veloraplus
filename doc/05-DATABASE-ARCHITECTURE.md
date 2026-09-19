@@ -185,6 +185,38 @@ metadata
 
 Prices support Module, Feature, and Bundle targets, monthly/yearly cycles, global prices with optional country overrides, integer minor-unit amounts, lifecycle status, and effective windows.
 
+### Tenant entitlements
+
+The Phase 4 entitlement projection is central because capability access is determined after Tenant resolution but before business-module authorization.
+
+~~~
+tenant_entitlements
+------------------
+id
+tenant_id
+catalog_type
+catalog_key
+status
+source
+source_reference
+quantity
+starts_at
+ends_at
+metadata
+created_at
+updated_at
+~~~
+
+The canonical uniqueness rule is:
+
+~~~
+(tenant_id, catalog_type, catalog_key)
+~~~
+
+Supported lifecycle states are active, scheduled_for_removal, and inactive. Supported projection sources are dependency, trial, bundle, subscription, and manual.
+
+This table is a rebuildable authorization projection, not the financial source of truth. Future Subscription/Subscription Item state will remain authoritative for Billing.
+
 ### Subscriptions
 
 ~~~
