@@ -31,6 +31,7 @@ Implementation must follow these documents:
 17. 17-PHASE-6-PAYMENTS.md
 18. 18-PHASE-7-BOOKING.md
 19. 19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md
+20. 20-PHASE-8-COMPANY-DASHBOARD.md
 
 ## Locked decisions
 
@@ -105,6 +106,10 @@ CRM
     ↓
 ERP
 ~~~
+
+## Phase 8 planning note
+
+Phase 8 — Company Dashboard is now defined as the next delivery phase. The dashboard will consume the existing Core/Booking/Billing/Payments/Entitlement/RBAC application boundaries and will be delivered incrementally as documented in `20-PHASE-8-COMPANY-DASHBOARD.md`.
 
 ## Current repository note
 
