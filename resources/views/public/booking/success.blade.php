@@ -12,6 +12,7 @@
             <p>
                 Your booking for {{ $service->name }} with {{ $tenant->name }} has been confirmed.
             </p>
+            <p>Customer: {{ $appointment->customer?->name }}</p>
             <p>Appointment reference: {{ $appointment->getKey() }}</p>
             <a href="{{ $serviceUrl }}">Back to service</a>
         </main>
