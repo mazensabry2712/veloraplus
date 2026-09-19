@@ -16,6 +16,7 @@ use App\Http\Controllers\Dashboard\TenantRoleController;
 use App\Http\Controllers\Dashboard\BookingServiceController;
 use App\Http\Controllers\Dashboard\BookingAvailabilityController;
 use App\Http\Controllers\Dashboard\AppointmentController;
+use App\Http\Controllers\Dashboard\QueueController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
 use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -158,6 +159,35 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.appointm
 
         Route::post('/{appointment}/no-show', [AppointmentController::class, 'noShow'])
             ->name('no-show');
+    });
+
+Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.queues', 'noindex'])
+    ->prefix('dashboard/booking/queues')
+    ->name('dashboard.booking.queues.')
+    ->group(function (): void {
+        Route::post('/', [QueueController::class, 'store'])
+            ->name('store');
+
+        Route::post('/{queue}/open', [QueueController::class, 'open'])
+            ->name('open');
+
+        Route::post('/{queue}/close', [QueueController::class, 'close'])
+            ->name('close');
+
+        Route::post('/{queue}/entries', [QueueController::class, 'enqueue'])
+            ->name('entries.store');
+
+        Route::post('/{queue}/call-next', [QueueController::class, 'callNext'])
+            ->name('call-next');
+
+        Route::post('/{queue}/entries/{entry}/complete', [QueueController::class, 'complete'])
+            ->name('entries.complete');
+
+        Route::post('/{queue}/entries/{entry}/skip', [QueueController::class, 'skip'])
+            ->name('entries.skip');
+
+        Route::post('/{queue}/entries/{entry}/no-show', [QueueController::class, 'noShow'])
+            ->name('entries.no-show');
     });
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
