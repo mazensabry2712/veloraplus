@@ -82,7 +82,9 @@ Modules / Features / Dependencies
     ↓
 Entitlements
     ↓
-Billing / Pricing / Payments
+Billing
+    ↓
+Payments / Provider Adapters
     ↓
 Booking MVP
     ↓
@@ -99,7 +101,7 @@ ERP
 
 Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 Module Catalog is also closed and verified.
 
-Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is implemented and awaiting local/CI verification before closure. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
+Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is closed and verified. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
 
 ## Non-negotiable rules
 
