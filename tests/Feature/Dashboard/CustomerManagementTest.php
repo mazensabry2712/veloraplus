@@ -177,7 +177,7 @@ test('staff role cannot manage customers', function (): void {
     $this->customerManagementTenantDatabasePath = $path;
 
     $tenant = createCustomerManagementTenant($path);
-    $staff = addCustomerMember($tenant, 'staff');
+    $staff = addCustomerMember($tenant, 'viewer');
 
     $this->actingAs($staff)
         ->post('http://customer-tenant.velora.test/dashboard/company/customers', [
