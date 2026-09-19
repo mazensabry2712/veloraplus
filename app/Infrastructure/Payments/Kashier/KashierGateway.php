@@ -39,7 +39,11 @@ final class KashierGateway implements
     {
         $currency = strtoupper((string) ($context['currency'] ?? ''));
         $amountMinor = (int) ($context['amount_minor'] ?? 0);
+        $credentials = is_array($context['payment_account']['credentials'] ?? null)
+            ? $context['payment_account']['credentials']
+            : [];
         $merchantOrderId = trim((string) ($context['merchant_order_id'] ?? ''));
+        $credentials = $this->credentialsForContext($context);
 
         if (! in_array($currency, ['EGP', 'USD', 'EUR', 'GBP'], true)) {
             throw new DomainException('Kashier Phase 6 supports EGP, USD, EUR, and GBP.');
@@ -60,13 +64,13 @@ final class KashierGateway implements
             'amount' => $this->minorToDecimal($amountMinor),
             'currency' => $currency,
             'order' => $merchantOrderId,
-            'merchantRedirect' => (string) config('velora.payments.kashier.merchant_redirect_url'),
+            'merchantRedirect' => (string) ($credentials['merchant_redirect_url'] ?? config('velora.payments.kashier.merchant_redirect_url')),
             'display' => 'en',
             'type' => 'one-time',
             'allowedMethods' => (string) config('velora.payments.kashier.allowed_methods', 'card,wallet'),
-            'merchantId' => (string) config('velora.payments.kashier.merchant_id'),
+            'merchantId' => (string) ($credentials['merchant_id'] ?? config('velora.payments.kashier.merchant_id')),
             'interactionSource' => 'ECOMMERCE',
-            'serverWebhook' => (string) config('velora.payments.kashier.webhook_url'),
+            'serverWebhook' => (string) ($credentials['webhook_url'] ?? config('velora.payments.kashier.webhook_url')),
             'failureRedirect' => false,
             'customer' => array_filter([
                 'email' => $context['customer']['email'] ?? null,
@@ -82,7 +86,7 @@ final class KashierGateway implements
             throw new DomainException('Kashier checkout configuration is incomplete.');
         }
 
-        $response = $this->client->createPaymentSession($payload);
+        $response = $this->client->createPaymentSession($payload, $credentials ?: null);
 
         $sessionId = (string) ($response['_id'] ?? '');
         $checkoutUrl = (string) ($response['sessionUrl'] ?? '');
@@ -96,6 +100,8 @@ final class KashierGateway implements
             'session_id' => $sessionId,
             'checkout_url' => $checkoutUrl,
             'merchant_order_id' => $merchantOrderId,
+            'provider_payment_id' => $response['paymentId'] ?? $response['transactionId'] ?? null,
+            'provider_order_id' => $response['orderId'] ?? null,
             'status' => strtoupper((string) ($response['status'] ?? 'CREATED')),
         ];
     }
@@ -130,6 +136,7 @@ final class KashierGateway implements
     {
         $orderId = trim((string) ($context['kashier_order_id'] ?? ''));
         $amountMinor = (int) ($context['amount_minor'] ?? 0);
+        $credentials = $this->credentialsForContext($context);
 
         if ($orderId === '' || $amountMinor < 1) {
             throw new DomainException('Kashier refund requires order id and positive amount.');
@@ -153,7 +160,7 @@ final class KashierGateway implements
             unset($payload['reason']);
         }
 
-        $response = $this->client->refundOrder($orderId, $payload);
+        $response = $this->client->refundOrder($orderId, $payload, $credentials ?: null);
 
         return [
             'provider' => $this->provider(),
@@ -207,6 +214,37 @@ final class KashierGateway implements
     public function retrieveTransaction(string $reference): array
     {
         return $this->verifyPayment($this->client->getPaymentSessionPayment($reference));
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     * @return array<string, string>
+     */
+    private function credentialsForContext(array $context): array
+    {
+        if (! array_key_exists('payment_account', $context)) {
+            return [];
+        }
+
+        $credentials = $context['payment_account']['credentials'] ?? null;
+
+        if (! is_array($credentials)) {
+            throw new DomainException('Tenant payment account credentials are invalid.');
+        }
+
+        foreach ([
+            'merchant_id',
+            'secret_key',
+            'payment_api_key',
+            'merchant_redirect_url',
+            'webhook_url',
+        ] as $key) {
+            if (trim((string) ($credentials[$key] ?? '')) === '') {
+                throw new DomainException("Tenant Kashier credential [{$key}] is missing.");
+            }
+        }
+
+        return $credentials;
     }
 
     private function minorToDecimal(int $amountMinor): string
