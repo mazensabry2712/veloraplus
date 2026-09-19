@@ -2,7 +2,7 @@
 
 ## Status
 
-**PLANNED / NOT STARTED**
+**IN PROGRESS — 8.1 DASHBOARD SHELL**
 
 Phase 8 is the next major product delivery after the completed Phase 7 Booking implementation. It converts the verified Core + Booking backend capabilities into the authenticated Company Dashboard used by tenant members.
 
@@ -92,6 +92,10 @@ Navigation visibility may improve the UX, but it must never be the authorization
 ## 4. Phase 8 delivery slices
 
 ### 8.1 Dashboard shell
+
+### Current implementation status
+
+8.1 Dashboard Shell has started. The current implementation includes the private `/dashboard` route, authenticated tenant-membership boundary, noindex policy, shared Dashboard layout, initial Overview screen, and access/isolation tests. CI verification is pending for the latest implementation commit.
 
 - authenticated tenant layout;
 - sidebar / primary navigation;
