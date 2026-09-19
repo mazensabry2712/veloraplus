@@ -159,20 +159,20 @@ final class TenantProvisioner implements TenantProvisionerContract
             'company.locale' => [$tenant->locale, 'string'],
         ];
 
-        foreach ($settings as $key => [$value, $type]) {
-            if ($table->where('key', $key)->exists()) {
-                continue;
-            }
+        $rows = [];
 
-            $table->insert([
+        foreach ($settings as $key => [$value, $type]) {
+            $rows[] = [
                 'id' => (string) Str::ulid(),
                 'key' => $key,
                 'value' => $value,
                 'type' => $type,
                 'created_at' => $now,
                 'updated_at' => $now,
-            ]);
+            ];
         }
+
+        $table->insertOrIgnore($rows);
     }
 
     private function createDatabase(Tenant $tenant): void
