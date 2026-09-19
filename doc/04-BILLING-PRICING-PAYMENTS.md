@@ -241,6 +241,73 @@ Possible operations:
 
 Initial adapter: KashierGateway.
 
+## 18A. Payment domains and provider neutrality
+
+Payment providers are external payment rails. Core Billing must remain provider-agnostic.
+
+### Platform Billing — Company → VeloraPlus
+
+This domain handles a Company's payment for its VeloraPlus Subscription.
+
+~~~
+Company
+  ↓
+VeloraPlus Billing
+  ↓
+PlatformPaymentGateway
+  ↓
+Provider Adapter
+  ↓
+External Payment Provider
+~~~
+
+### Tenant Payments — Customer → Company
+
+This domain handles a Company's business payments such as Booking, sales, invoices, and future module transactions.
+
+~~~
+Customer
+  ↓
+Tenant Business Transaction
+  ↓
+TenantPaymentGateway
+  ↓
+Provider Adapter
+  ↓
+Company Merchant Account
+~~~
+
+The two payment domains are separate:
+
+- Platform Billing is owned by the central/control database.
+- Tenant business payments belong to the current Tenant business domain.
+- Platform Invoice = Company → VeloraPlus.
+- Tenant Invoice = Company → Customer.
+- Payment ownership, audit trail, provider references, and settlement context remain domain-specific.
+
+### Provider adapter rule
+
+Billing, Booking, CRM, and ERP code must not depend directly on Kashier or any other concrete provider.
+
+Use provider-neutral contracts plus a gateway manager/factory that selects an adapter by payment context and provider.
+
+Conceptual boundaries:
+
+~~~
+PlatformPaymentGateway
+TenantPaymentGateway
+
+Provider Adapters:
+KashierGateway
+FutureProviderGateway...
+~~~
+
+Capability-specific contracts may cover checkout, verification, refunds, recurring payments, webhook verification, and transaction lookup. A provider is not required to support every capability.
+
+**Kashier is the first provider adapter only. It is not part of Core Billing and is not the permanent payment provider.**
+
+Adding another provider must not require rewriting Subscription, Invoice, Pricing, Entitlement, Booking, CRM, or ERP business logic.
+
 ## 19. VeloraPlus subscription payment flow
 
 ~~~
@@ -250,7 +317,9 @@ Pricing Engine calculates
       ↓
 Billing creates pending invoice/transaction
       ↓
-Kashier checkout
+Platform Payment Gateway
+      ↓
+Provider Adapter
       ↓
 Provider payment
       ↓
