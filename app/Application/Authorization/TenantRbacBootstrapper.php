@@ -33,6 +33,8 @@ final class TenantRbacBootstrapper
         'booking.appointments.manage',
         'booking.payments.view',
         'booking.payments.manage',
+        'booking.queues.view',
+        'booking.queues.manage',
     ];
 
     /**
@@ -61,6 +63,8 @@ final class TenantRbacBootstrapper
                 'booking.appointments.manage',
                 'booking.payments.view',
                 'booking.payments.manage',
+                'booking.queues.view',
+                'booking.queues.manage',
             ],
             'staff' => [
                 'company.view',
@@ -72,6 +76,8 @@ final class TenantRbacBootstrapper
                 'booking.availability.view',
                 'booking.appointments.view',
                 'booking.payments.view',
+                'booking.queues.view',
+                'booking.queues.manage',
             ],
             'viewer' => [
                 'company.view',
@@ -84,6 +90,7 @@ final class TenantRbacBootstrapper
                 'booking.availability.view',
                 'booking.appointments.view',
                 'booking.payments.view',
+                'booking.queues.view',
             ],
         ];
     }
