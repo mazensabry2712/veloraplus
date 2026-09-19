@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Public;
 
 use App\Application\SEO\SeoManager;
 use App\Domain\Tenancy\TenantContext;
-use App\Domain\Tenancy\TenantResolver;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -13,7 +12,6 @@ final class SitemapController
 {
     public function __construct(
         private readonly SeoManager $seo,
-        private readonly TenantResolver $resolver,
     ) {
     }
 
