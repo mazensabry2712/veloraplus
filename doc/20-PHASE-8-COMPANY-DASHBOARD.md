@@ -438,9 +438,61 @@ Routes include Staff/Service assignment plus nested Working Hours, Breaks, and T
 
 Tests cover successful lifecycle operations, permission denial, entitlement denial, validation/ownership boundaries, and required dual entitlement for Service assignment.
 
-#### 8.3.3 Appointments
+#### 8.3.3 Appointments — Backend implemented
 
-Planned.
+The Dashboard Appointment boundary consumes the existing `AppointmentManager`.
+
+Supported operations:
+
+- create appointment;
+- reschedule pending/confirmed appointment;
+- confirm pending appointment;
+- complete confirmed appointment;
+- cancel appointment with reason;
+- mark no-show.
+
+Request boundaries validate tenant-local Customer/Staff/Service identifiers and appointment input before the application service is invoked.
+
+The existing AppointmentManager remains authoritative for:
+
+- Staff availability;
+- service assignment;
+- local-time/date behavior;
+- buffer-aware conflict detection;
+- concurrency locking;
+- idempotency;
+- service/location/customer linkage;
+- appointment status transitions;
+- status history;
+- payment-state foundation.
+
+Security and entitlement:
+
+- active Tenant Membership is required;
+- `booking.appointments` entitlement is required;
+- `booking.appointments.manage` is enforced through the existing Appointment policy;
+- tenant-aware model binding is guaranteed by the centralized tenant-before-bind middleware priority.
+
+Backend components:
+
+- `StoreAppointmentRequest`;
+- `RescheduleAppointmentRequest`;
+- `CancelAppointmentRequest`;
+- `AppointmentController`;
+- existing `AppointmentManager`;
+- existing `AppointmentPolicy`;
+- `AppointmentManagementTest`.
+
+Routes:
+
+- `POST /dashboard/booking/appointments`;
+- `PATCH /dashboard/booking/appointments/{appointment}`;
+- `POST /dashboard/booking/appointments/{appointment}/confirm`;
+- `POST /dashboard/booking/appointments/{appointment}/complete`;
+- `POST /dashboard/booking/appointments/{appointment}/cancel`;
+- `POST /dashboard/booking/appointments/{appointment}/no-show`.
+
+Tests cover create/reschedule/complete, permission denial, entitlement denial, validation, lifecycle transition enforcement, and cross-tenant route binding isolation.
 
 #### 8.3.4 Queue
 
