@@ -112,9 +112,9 @@ Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC
 
 Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is closed and verified. Phase 6 — Payments & Provider Adapters is closed and verified; Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries.
 
-Phase 7 — Booking is in progress. Slices 7.1 Services, 7.2 Staff Availability, and 7.3 Appointments are implemented and verified. 7.4 Tenant Payments, 7.5 Queue, and 7.6 Public Booking remain pending.
+Phase 7 — Booking is in progress. Booking core slices 7.1 Services, 7.2 Staff Availability, 7.3 Appointments, 7.4 Tenant Payments, 7.5 Queue, and 7.6 Public Booking are implemented and verified. Phase 7 remains open only for the production SEO-5 gate and the final Phase 7 closure/verification step.
 
-SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md. SEO-1 through SEO-4 are implemented and tested; SEO-5 production operations remain pending. The full Public Booking transaction remains a separate Phase 7.6 business delivery. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery.
+SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md. SEO-1 through SEO-4 are implemented and tested; SEO-5 production operations remain pending. The transactional Public Booking route is complete and remains non-indexable. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery.
 
 ## Non-negotiable rules
 
