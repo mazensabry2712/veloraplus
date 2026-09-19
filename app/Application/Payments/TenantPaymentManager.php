@@ -27,8 +27,9 @@ final class TenantPaymentManager
         }
 
         $tenant = $this->context->current();
+        $shouldCreateCheckout = false;
 
-        $payment = DB::transaction(function () use ($appointment, $tenant): TenantPayment {
+        $payment = DB::transaction(function () use ($appointment, $tenant, &$shouldCreateCheckout): TenantPayment {
             $locked = Appointment::query()
                 ->lockForUpdate()
                 ->with(['items', 'customer'])
@@ -84,6 +85,8 @@ final class TenantPaymentManager
             $amountMinor = $this->appointmentAmountMinor($locked);
             $currency = strtoupper((string) $item->currency);
 
+            $shouldCreateCheckout = true;
+
             $payment = TenantPayment::query()->create([
                 'appointment_id' => $locked->getKey(),
                 'customer_id' => $locked->customer_id,
@@ -100,6 +103,10 @@ final class TenantPaymentManager
 
             return $payment;
         });
+
+        if (! $shouldCreateCheckout) {
+            return $payment;
+        }
 
         if (
             $payment->status !== TenantPaymentStatus::Pending
