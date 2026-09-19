@@ -13,7 +13,8 @@ The platform is being rebuilt from a clean Laravel 13 foundation. Booking is the
 - Modular monolith architecture.
 - Backend-authoritative authorization and entitlements.
 - Monthly and yearly composable billing.
-- Initial VeloraPlus subscription payment provider: Kashier.
+- Provider-neutral payment architecture with separate Platform Billing and Tenant Payment gateways.
+- Kashier is the initial provider adapter for the payment layer, not a Core Billing dependency.
 - Global-scale performance and horizontal scaling are architecture requirements.
 - Custom domains are architecturally supported and designed as a tenant-aware, sellable catalog Feature.
 
