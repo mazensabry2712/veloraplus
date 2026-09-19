@@ -6,6 +6,7 @@ use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\RobotsController;
 use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
+use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
@@ -33,4 +34,7 @@ Route::get('/sitemap.xml', SitemapController::class)
     ->name('seo.sitemap');
 
 Route::post('/webhooks/kashier/platform', KashierWebhookController::class)
+    ->withoutMiddleware(ValidateCsrfToken::class);
+
+Route::post('/webhooks/kashier/tenant', KashierTenantWebhookController::class)
     ->withoutMiddleware(ValidateCsrfToken::class);
