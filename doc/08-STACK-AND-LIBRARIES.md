@@ -23,6 +23,21 @@
 | Initial payment provider adapter | Kashier (provider-neutral gateway architecture) |
 | Custom domain/edge | Provider-neutral internal abstraction; production provider selected later |
 
+## 1A. SEO/Public Web implementation policy
+
+SEO must start with Laravel-native server-rendered behavior rather than adding a dedicated SEO package.
+
+Required baseline capabilities are implemented through application code and Blade:
+
+- metadata model/view model;
+- Blade SEO component;
+- canonical URL generation;
+- robots.txt response;
+- sitemap.xml response;
+- JSON-LD structured data;
+- public-page tests.
+
+A third-party package may be introduced only after compatibility, maintenance, licensing, security posture, and actual capability gaps are reviewed and documented.
 ## 2. Backend packages
 
 Foundation/runtime packages:
