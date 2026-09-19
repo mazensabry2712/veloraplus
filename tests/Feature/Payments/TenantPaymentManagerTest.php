@@ -2,7 +2,6 @@
 
 use App\Application\Booking\AppointmentManager;
 use App\Application\Booking\StaffAvailabilityManager;
-use App\Application\Payments\PaymentGatewayManager;
 use App\Application\Payments\TenantPaymentManager;
 use App\Domain\Booking\AppointmentPaymentStatus;
 use App\Domain\Payments\TenantPaymentStatus;
@@ -15,7 +14,6 @@ use App\Models\Service;
 use App\Models\Staff;
 use App\Models\Tenant;
 use App\Models\TenantPayment;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -96,7 +94,7 @@ function migrateTenantPaymentDatabase(string $path): void
     }
 }
 
-function tenantPaymentFixtures(Tenant $tenant): array
+function tenantPaymentFixtures(): array
 {
     $location = Location::factory()->create([
         'timezone' => 'Africa/Cairo',
@@ -135,7 +133,7 @@ function tenantPaymentFixtures(Tenant $tenant): array
     return compact('location', 'staff', 'customer', 'service', 'appointment');
 }
 
-function configureFakeTenantGateway(array &$calls): void
+function configureFakeTenantGateway(): void
 {
     config([
         'velora.payments.tenant_provider' => 'fake',
@@ -143,7 +141,6 @@ function configureFakeTenantGateway(array &$calls): void
     ]);
 
     FakeTenantPaymentGateway::reset();
-    $calls = &FakeTenantPaymentGateway::$calls;
 }
 
 function tenantPaymentContext(Tenant $tenant, string $path): void
@@ -198,12 +195,11 @@ test('tenant payment checkout requires an active merchant account', function ():
 
     $tenant = Tenant::factory()->create();
     tenantPaymentContext($tenant, $path);
-    $fixtures = tenantPaymentFixtures($tenant);
+    $fixtures = tenantPaymentFixtures();
 
     config(['velora.payments.tenant_provider' => 'fake']);
 
-    $calls = [];
-    configureFakeTenantGateway($calls);
+    configureFakeTenantGateway();
 
     expect(fn () => app(TenantPaymentManager::class)->createCheckout($fixtures['appointment']))
         ->toThrow(DomainException::class);
@@ -304,8 +300,8 @@ test('tenant payment checkout is idempotent and updates appointment payment stat
         ->and($first->currency)->toBe('EGP')
         ->and($first->provider_session_id)->toBe('SESSION-1')
         ->and($first->metadata['payment_provider_account_reference'])->toBe('FAKE-CLINIC')
-        ->and($calls)->toHaveCount(1)
-        ->and($calls[0]['payment_account']['credentials']['merchant_id'])->toBe('MID-FAKE')
+        ->and(FakeTenantPaymentGateway::$calls)->toHaveCount(1)
+        ->and(FakeTenantPaymentGateway::$calls[0]['payment_account']['credentials']['merchant_id'])->toBe('MID-FAKE')
         ->and($fixtures['appointment']->fresh()->payment_status)->toBe(AppointmentPaymentStatus::Pending)
         ->and(TenantPayment::query()->count())->toBe(1);
 });
@@ -412,8 +408,8 @@ test('tenant payments cannot cross tenant database boundaries', function (): voi
         'status' => 'active',
     ]);
 
-    tenantPaymentContext($tenantA);
-    $fixtures = tenantPaymentFixtures($tenantA);
+    tenantPaymentContext($tenantA, $pathA);
+    $fixtures = tenantPaymentFixtures();
 
     $calls = [];
     configureFakeTenantGateway($calls);
@@ -422,7 +418,7 @@ test('tenant payments cannot cross tenant database boundaries', function (): voi
     DB::purge(TenantDatabaseManager::CONNECTION);
     app(TenantContext::class)->clear();
 
-    tenantPaymentContext($tenantB);
+    tenantPaymentContext($tenantB, $pathB);
 
     expect(fn () => app(TenantPaymentManager::class)->markSucceeded($payment))
         ->toThrow(DomainException::class);
