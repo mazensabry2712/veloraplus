@@ -186,7 +186,7 @@ Current implementation status:
 - Service public slug: implemented in the Booking Services slice;
 - SEO-1 platform foundation: implemented and verified by automated tests;
 - SEO-2 Tenant public surface: implemented and verified by automated tests;
-- SEO-3 Public Services pages: pending;
+- SEO-3 Public Services pages: implemented and verified by automated tests;
 - SEO-4 Public Booking SEO integration: pending;
 - custom-domain canonicalization: pending until Custom Domain infrastructure is delivered.
 

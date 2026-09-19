@@ -4,7 +4,9 @@ namespace App\Application\Booking;
 
 use App\Domain\Booking\ServiceStatus;
 use App\Models\Service;
+use App\Models\ServiceSlugRedirect;
 use DomainException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class ServiceManager
@@ -36,11 +38,38 @@ final class ServiceManager
             'online_bookable' => $service->online_bookable,
             'capacity' => $service->capacity,
             'metadata' => $service->metadata,
+            'seo_title' => $service->seo_title,
+            'seo_description' => $service->seo_description,
+            'social_image_url' => $service->social_image_url,
         ];
 
-        $service->update($this->normalize(array_replace($current, $attributes), $service->getKey()));
+        return DB::transaction(function () use ($service, $current, $attributes): Service {
+            $normalized = $this->normalize(
+                array_replace($current, $attributes),
+                $service->getKey(),
+            );
 
-        return $service->refresh();
+            $oldSlug = $service->slug;
+            $newSlug = $normalized['slug'];
+
+            if ($oldSlug !== $newSlug) {
+                ServiceSlugRedirect::query()
+                    ->where('service_id', $service->getKey())
+                    ->update(['new_slug' => $newSlug]);
+
+                ServiceSlugRedirect::query()->updateOrCreate(
+                    ['old_slug' => $oldSlug],
+                    [
+                        'service_id' => $service->getKey(),
+                        'new_slug' => $newSlug,
+                    ],
+                );
+            }
+
+            $service->update($normalized);
+
+            return $service->refresh();
+        });
     }
 
     public function archive(Service $service): Service
@@ -116,6 +145,9 @@ final class ServiceManager
             'name' => $name,
             'slug' => $slug,
             'description' => isset($attributes['description']) ? trim((string) $attributes['description']) : null,
+            'seo_title' => $this->optionalString($attributes['seo_title'] ?? null, 180),
+            'seo_description' => $this->optionalString($attributes['seo_description'] ?? null, 320),
+            'social_image_url' => $this->optionalString($attributes['social_image_url'] ?? null, 2048),
             'duration_minutes' => $duration,
             'buffer_before_minutes' => $bufferBefore,
             'buffer_after_minutes' => $bufferAfter,
@@ -129,6 +161,25 @@ final class ServiceManager
         ];
     }
 
+    private function optionalString(mixed $value, int $maxLength): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (mb_strlen($value) > $maxLength) {
+            throw new DomainException('Service SEO metadata exceeds the allowed length.');
+        }
+
+        return $value;
+    }
+
     private function resolveUniqueSlug(string $value, ?string $ignoreServiceId = null): string
     {
         $base = Str::slug(trim($value));
@@ -140,10 +191,13 @@ final class ServiceManager
         $slug = $base;
         $suffix = 2;
 
-        while (Service::withTrashed()
-            ->where('slug', $slug)
-            ->when($ignoreServiceId !== null, fn ($query) => $query->whereKey('!=', $ignoreServiceId))
-            ->exists()) {
+        while (
+            Service::withTrashed()
+                ->where('slug', $slug)
+                ->when($ignoreServiceId !== null, fn ($query) => $query->whereKey('!=', $ignoreServiceId))
+                ->exists()
+            || ServiceSlugRedirect::query()->where('old_slug', $slug)->exists()
+        ) {
             $slug = $base.'-'.$suffix;
             $suffix++;
         }

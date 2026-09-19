@@ -254,6 +254,95 @@ test('service manager accepts and normalizes an explicit public slug', function 
     $manager->disconnect();
 });
 
+
+test('service manager stores SEO overrides and creates slug redirect history', function () {
+    $path = bookingTestDatabase();
+    $this->bookingTestDatabase = $path;
+
+    migrateBookingTestDatabase($path);
+
+    $tenant = new Tenant;
+    $tenant->database_name = $path;
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    $services = app(ServiceManager::class);
+
+    $service = $services->create([
+        'name' => 'Dental Cleaning',
+        'slug' => 'dental-cleaning',
+        'seo_title' => 'Professional Dental Cleaning',
+        'seo_description' => 'Dental cleaning service for routine oral care.',
+        'social_image_url' => 'https://cdn.example.com/dental-cleaning.jpg',
+        'duration_minutes' => 45,
+        'price_minor' => 25000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'capacity' => 1,
+    ]);
+
+    expect($service->seo_title)->toBe('Professional Dental Cleaning')
+        ->and($service->seo_description)->toBe('Dental cleaning service for routine oral care.')
+        ->and($service->social_image_url)->toBe('https://cdn.example.com/dental-cleaning.jpg');
+
+    $updated = $services->update($service, [
+        'slug' => 'professional-dental-cleaning',
+    ]);
+
+    $redirect = \App\Models\ServiceSlugRedirect::query()
+        ->where('old_slug', 'dental-cleaning')
+        ->first();
+
+    expect($updated->slug)->toBe('professional-dental-cleaning')
+        ->and($redirect)->not->toBeNull()
+        ->and($redirect?->service_id)->toBe($updated->getKey())
+        ->and($redirect?->new_slug)->toBe('professional-dental-cleaning');
+
+    $manager->disconnect();
+});
+
+test('service manager rejects reuse of a previous public service slug', function () {
+    $path = bookingTestDatabase();
+    $this->bookingTestDatabase = $path;
+
+    migrateBookingTestDatabase($path);
+
+    $tenant = new Tenant;
+    $tenant->database_name = $path;
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    $services = app(ServiceManager::class);
+
+    $first = $services->create([
+        'name' => 'Dental Cleaning',
+        'slug' => 'dental-cleaning',
+        'duration_minutes' => 30,
+        'price_minor' => 10000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'capacity' => 1,
+    ]);
+
+    $services->update($first, ['slug' => 'professional-dental-cleaning']);
+
+    $second = $services->create([
+        'name' => 'Another Service',
+        'slug' => 'dental-cleaning',
+        'duration_minutes' => 30,
+        'price_minor' => 15000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'capacity' => 1,
+    ]);
+
+    expect($second->slug)->toBe('dental-cleaning-2');
+
+    $manager->disconnect();
+});
+
 test('service manager rejects invalid money timing capacity status and currency', function () {
     $path = bookingTestDatabase();
     $this->bookingTestDatabase = $path;

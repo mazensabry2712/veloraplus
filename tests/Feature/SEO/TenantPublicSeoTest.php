@@ -1,5 +1,6 @@
 <?php
 
+use App\Application\Booking\ServiceManager;
 use App\Application\SEO\SeoManager;
 use App\Domain\Tenancy\TenantContext;
 use App\Infrastructure\Tenancy\TenantDatabaseManager;
@@ -196,6 +197,173 @@ test('tenant robots and sitemap use the tenant canonical domain', function () {
     $sitemap->assertSuccessful()
         ->assertSee('<loc>https://clinic.velora.test/</loc>', false)
         ->assertDontSee('alternate.velora.test');
+});
+
+
+test('tenant public services expose only active online-bookable services with SEO metadata', function () {
+    $path = seoTenantDatabase();
+    $this->seoTenantDatabases = [$path];
+
+    $tenant = createSeoTenant(
+        slug: 'clinic',
+        name: 'Velora Clinic',
+        primaryDomain: 'clinic.velora.test',
+        path: $path,
+    );
+
+    config(['velora.tenancy.base_domain' => 'velora.test']);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    $services = app(ServiceManager::class);
+
+    $public = $services->create([
+        'name' => 'Dental Cleaning',
+        'slug' => 'dental-cleaning',
+        'description' => 'Routine dental cleaning service.',
+        'seo_title' => 'Dental Cleaning | Velora Clinic',
+        'seo_description' => 'Routine dental cleaning at Velora Clinic.',
+        'social_image_url' => 'https://cdn.example.com/dental-cleaning.jpg',
+        'duration_minutes' => 45,
+        'price_minor' => 25000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'online_bookable' => true,
+        'capacity' => 1,
+    ]);
+
+    $hidden = $services->create([
+        'name' => 'Internal Service',
+        'duration_minutes' => 30,
+        'price_minor' => 15000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'online_bookable' => false,
+        'capacity' => 1,
+    ]);
+
+    $manager->disconnect();
+
+    $index = $this->get('https://clinic.velora.test/services');
+
+    $index->assertSuccessful()
+        ->assertSee('Dental Cleaning', false)
+        ->assertDontSee('Internal Service')
+        ->assertSee('<link rel="canonical" href="https://clinic.velora.test/services">', false);
+
+    $show = $this->get('https://clinic.velora.test/services/dental-cleaning');
+
+    $show->assertSuccessful()
+        ->assertSee('<h1>Dental Cleaning</h1>', false)
+        ->assertSee('<meta name="description" content="Routine dental cleaning at Velora Clinic.">', false)
+        ->assertSee('<meta property="og:image" content="https://cdn.example.com/dental-cleaning.jpg">', false)
+        ->assertSee('<link rel="canonical" href="https://clinic.velora.test/services/dental-cleaning">', false)
+        ->assertSee('"@type":"Service"', false)
+        ->assertSee('Dental Cleaning', false);
+
+    expect($public->slug)->toBe('dental-cleaning')
+        ->and($hidden->online_bookable)->toBeFalse();
+});
+
+test('tenant sitemap includes only public service URLs', function () {
+    $path = seoTenantDatabase();
+    $this->seoTenantDatabases = [$path];
+
+    $tenant = createSeoTenant(
+        slug: 'clinic',
+        name: 'Velora Clinic',
+        primaryDomain: 'clinic.velora.test',
+        path: $path,
+    );
+
+    config(['velora.tenancy.base_domain' => 'velora.test']);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    app(ServiceManager::class)->create([
+        'name' => 'Dental Cleaning',
+        'duration_minutes' => 45,
+        'price_minor' => 25000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'online_bookable' => true,
+        'capacity' => 1,
+    ]);
+
+    app(ServiceManager::class)->create([
+        'name' => 'Internal Service',
+        'duration_minutes' => 30,
+        'price_minor' => 15000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'online_bookable' => false,
+        'capacity' => 1,
+    ]);
+
+    $manager->disconnect();
+
+    $sitemap = $this->get('https://clinic.velora.test/sitemap.xml');
+
+    $sitemap->assertSuccessful()
+        ->assertSee('<loc>https://clinic.velora.test/</loc>', false)
+        ->assertSee('<loc>https://clinic.velora.test/services</loc>', false)
+        ->assertSee('/services/dental-cleaning', false)
+        ->assertDontSee('/services/internal-service', false);
+});
+
+test('published service slug changes redirect permanently to the current canonical slug', function () {
+    $path = seoTenantDatabase();
+    $this->seoTenantDatabases = [$path];
+
+    $tenant = createSeoTenant(
+        slug: 'clinic',
+        name: 'Velora Clinic',
+        primaryDomain: 'clinic.velora.test',
+        path: $path,
+    );
+
+    config(['velora.tenancy.base_domain' => 'velora.test']);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    $service = app(ServiceManager::class)->create([
+        'name' => 'Dental Cleaning',
+        'duration_minutes' => 45,
+        'price_minor' => 25000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'online_bookable' => true,
+        'capacity' => 1,
+    ]);
+
+    $oldSlug = $service->slug;
+
+    app(ServiceManager::class)->update($service, [
+        'slug' => 'professional-dental-cleaning',
+    ]);
+
+    $manager->disconnect();
+
+    $response = $this->get('https://clinic.velora.test/services/'.$oldSlug);
+
+    $response->assertRedirect('https://clinic.velora.test/services/professional-dental-cleaning')
+        ->assertStatus(301);
+
+    TenantDomain::query()->create([
+        'tenant_id' => $tenant->getKey(),
+        'domain' => 'alternate.velora.test',
+        'type' => 'subdomain',
+        'is_primary' => false,
+        'status' => 'active',
+    ]);
+
+    $alternate = $this->get('https://alternate.velora.test/services/'.$oldSlug);
+
+    $alternate->assertRedirect('https://clinic.velora.test/services/professional-dental-cleaning')
+        ->assertStatus(301);
 });
 
 test('unknown tenant host cannot reach the public home', function () {
