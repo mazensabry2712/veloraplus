@@ -63,7 +63,7 @@ Phase 4 — Entitlements is closed and verified.
 
 Phase 5 — Billing is closed and verified. It provides the internal Billing domain with provider-neutral payment boundaries.
 
-Phase 6 — Payments & Provider Adapters is closed and verified. Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries.
+Phase 6 — Payments & Provider Adapters is CI verified; local verification is pending on the latest `main`. Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries.
 
 ## Development principle
 
