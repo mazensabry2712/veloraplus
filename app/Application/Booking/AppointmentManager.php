@@ -157,6 +157,10 @@ final class AppointmentManager
                 throw new DomainException('Appointment staff member was not found.');
             }
 
+            if (! in_array($locked->status, [AppointmentStatus::Pending, AppointmentStatus::Confirmed], true)) {
+                throw new DomainException('Only pending or confirmed appointments can be rescheduled.');
+            }
+
             $service = $locked->items->first()?->service;
 
             if ($service === null) {
