@@ -87,7 +87,7 @@ final class TenantRbacBootstrapper
 
                     $account = $membership->account;
                     $account->unsetRelation('roles')->unsetRelation('permissions');
-                    $account->assignRole($roles[$roleName]);
+                    $account->syncRoles([$roles[$roleName]]);
                 });
         } finally {
             setPermissionsTeamId($previousTeamId);
