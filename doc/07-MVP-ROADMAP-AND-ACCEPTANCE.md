@@ -149,17 +149,19 @@ Exit criteria:
 - verified payment activates a paid Feature;
 - feature removal takes effect at period end.
 
-## 8. Phase 6 — Kashier integration
+## 8. Phase 6 — Payments & Provider Adapters
 
 Build:
 
+- provider-neutral payment contracts for Platform Billing and Tenant Payments;
 - provider client/adapter;
 - checkout;
 - payment verification;
 - webhook signature verification;
 - idempotency;
 - payment reconciliation;
-- subscription activation.
+- subscription activation;
+- Kashier as the first provider adapter while preserving the same contracts for future providers.
 
 Exit criteria:
 
