@@ -242,6 +242,42 @@ permission/policy
 controller
 ~~~
 
+## 11A. Domain resolution boundary
+
+Tenant resolution must be domain-driven before tenant business data is accessed.
+
+Concept:
+
+~~~
+Incoming Request
+    ↓
+Trusted Host Normalization
+    ↓
+Tenant Domain Resolver
+    ↓
+Verified Active Domain Record
+    ↓
+Tenant Context
+    ↓
+Tenant Database Selection
+    ↓
+Membership / Entitlement / Permission
+    ↓
+Controller / Business Service
+~~~
+
+Custom-domain infrastructure must not be spread through Controllers or business modules.
+
+Recommended application boundaries:
+
+- TenantDomainResolver — maps a trusted request hostname to the central Tenant registry.
+- DomainVerificationService — validates customer control of a hostname.
+- DomainLifecycleService — manages pending/active/failed/disabled state transitions.
+- CustomDomainProviderInterface — provider-neutral boundary for edge/SSL/domain operations.
+- DomainHealthCheck or equivalent queued process — periodically reconciles DNS/SSL/provider state.
+
+The provider adapter may live under Infrastructure/ and must not leak provider-specific payloads into the Domain, Tenancy, Billing, or Booking services.
+
 ## 12. Billing services
 
 Keep billing responsibilities explicit:
@@ -447,6 +483,19 @@ Tenant
 → Provider Event
 → Entitlement
 ~~~
+
+Tenant routing trace should also be observable:
+
+~~~
+Request Host
+→ Normalized Domain
+→ Tenant
+→ Tenant Database
+→ Entitlement / Permission
+→ Business Request
+~~~
+
+Custom Domain provisioning should record verification, provisioning, failure, and deactivation events without exposing secrets.
 
 ## 26. Testing philosophy
 
