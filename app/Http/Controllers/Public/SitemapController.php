@@ -2,36 +2,53 @@
 
 namespace App\Http\Controllers\Public;
 
-use Illuminate\Http\Response;
+use App\Application\SEO\SeoManager;
+use App\Domain\Tenancy\TenantResolver;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 final class SitemapController
 {
+    public function __construct(
+        private readonly SeoManager $seo,
+        private readonly TenantResolver $resolver,
+    ) {
+    }
+
     public function __invoke(Request $request): Response
     {
-        if (! $this->isPlatformHost($request)) {
-            abort(404);
+        $urls = [];
+
+        if ($this->seo->isPlatformHost($request->getHost())) {
+            $urls[] = $this->seo->platformUrl('/');
+        } else {
+            $tenant = $this->resolver->resolve($request->getHost());
+
+            if ($tenant === null || $tenant->database_status !== 'ready') {
+                abort(404);
+            }
+
+            $urls[] = $this->seo->tenantUrl($tenant);
         }
 
-        $url = rtrim((string) config('velora.platform.url'), '/').'/';
-
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
-            .'\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-            .'\n  <url>'
-            .'\n    <loc>'.e($url).'</loc>'
-            .'\n  </url>'
-            .'\n</urlset>'
-            ."\n";
-
-        return response($xml, 200)
+        return response($this->xml($urls), 200)
             ->header('Content-Type', 'application/xml; charset=UTF-8');
     }
 
-    private function isPlatformHost(Request $request): bool
+    /**
+     * @param  list<string>  $urls
+     */
+    private function xml(array $urls): string
     {
-        $platformHost = parse_url((string) config('velora.platform.url'), PHP_URL_HOST)
-            ?: config('velora.platform.domain');
+        $items = [];
 
-        return strtolower((string) $request->getHost()) === strtolower((string) $platformHost);
+        foreach ($urls as $url) {
+            $items[] = '  <url>\n    <loc>'.e($url).'</loc>\n  </url>';
+        }
+
+        return '<?xml version="1.0" encoding="UTF-8"?>\n'
+            .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            .implode("\n", $items)."\n"
+            .'</urlset>\n';
     }
 }
