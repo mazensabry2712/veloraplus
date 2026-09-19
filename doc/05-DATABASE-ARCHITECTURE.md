@@ -364,6 +364,23 @@ metadata
 created_at
 updated_at
 ~~~
+Provider account records are configuration/credential records and do not make a concrete provider part of Core Billing.
+
+Payment ownership is separated by financial domain:
+
+~~~
+Central platform:
+  Company → VeloraPlus
+  Subscription
+  Platform Invoice
+  Platform Payment
+
+Tenant business:
+  Customer → Company
+  Booking / Sales / Tenant Invoice / Tenant Payment
+~~~
+
+Tenant business payment records belong to the current Tenant business domain. Their exact tables may be module-specific, but they must not be confused with central Platform Billing records.
 
 ## 3. Tenant database
 
