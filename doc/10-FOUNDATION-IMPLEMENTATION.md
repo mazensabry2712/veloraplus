@@ -92,9 +92,33 @@ Verification completed:
 
 See doc/13-PHASE-3-MODULE-CATALOG.md for the detailed Phase 3 record.
 
-## Next phase — Phase 4 Entitlements
+## Phase 4 status — implementation complete, local verification pending
 
-The next implementation stage is Entitlements: translating subscription/billing state into tenant-level module/feature availability without conflating entitlement with user permissions.
+Phase 4 Entitlements is implemented as the tenant-level authorization projection between the central Catalog and future Billing.
+
+Implemented:
+
+- central tenant_entitlements schema;
+- entitlement lifecycle/source enums;
+- TenantEntitlement model and factory;
+- CatalogDependencyResolver for transitive dependency traversal;
+- EntitlementService for grant, revoke, scheduled removal, capability checks, limits, status, and projection rebuild;
+- Module-to-Feature entitlement inheritance;
+- dependency-aware access checks;
+- deterministic entitlement source precedence;
+- centralized entitled middleware;
+- @entitled, @featureEntitled, and @moduleEntitled Blade helpers;
+- Phase 4 feature test coverage.
+
+Verification gate still pending on the developer workstation:
+
+- central migration;
+- Pint;
+- full test suite;
+- diff/status checks;
+- GitHub Actions for the implementation commit.
+
+See doc/15-PHASE-4-ENTITLEMENTS.md for the detailed Phase 4 contract and acceptance criteria.
 
 ## Cross-cutting Custom Domain architecture status
 
