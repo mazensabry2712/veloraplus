@@ -41,10 +41,14 @@ updated_at
 
 ### Tenant domains
 
+`tenant_domains` is a central registry because a hostname identifies a Tenant before the application can select the Tenant database.
+
+Current Phase 1 foundation:
+
 ~~~
 tenant_domains
 --------------
-id
+id (ULID)
 tenant_id
 domain
 type
@@ -54,6 +58,32 @@ verified_at
 created_at
 updated_at
 ~~~
+
+Future Custom Domain delivery may extend the central record with operational verification/edge state without moving the registry into a tenant database. The extension should be additive and should preserve the central uniqueness rule.
+
+Conceptual future fields include:
+
+~~~
+verification_method
+verification_token_hash
+verification_expires_at
+last_verified_at
+ssl_status
+edge_status
+last_checked_at
+failure_code / metadata
+~~~
+
+Sensitive verification material must be stored as hashes or protected secrets where possible; raw credentials or provider secrets do not belong in `tenant_domains`.
+
+The platform must keep:
+
+- unique normalized hostname globally;
+- one hostname mapped to one Tenant;
+- explicit domain type;
+- explicit lifecycle status;
+- server-side verification timestamps;
+- provider references/operational state separate from business Tenant data.
 
 ### Memberships
 
@@ -524,8 +554,10 @@ Catalog-specific rules include:
 Examples:
 
 - tenant slug unique centrally;
-- domain unique centrally;
+- normalized domain unique centrally;
 - account/tenant membership unique;
+- a verified/active custom hostname resolves to exactly one Tenant;
+- custom-domain operational state remains central and is not stored in tenant databases;
 - module key unique;
 - feature key unique;
 - provider event unique per provider;
