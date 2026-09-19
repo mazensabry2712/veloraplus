@@ -315,11 +315,98 @@ Routes:
 
 The test suite covers member addition, role changes, deactivation, permission denial, last-owner protection, and cross-tenant membership isolation.
 
-#### 8.2.7 Roles and permissions administration
+#### 8.2.7 Roles and Permissions Administration — Backend implemented
 
-Planned.
+The tenant role administration surface reuses the existing Spatie Teams RBAC model.
 
-Only capabilities supported by the existing Core contracts should be exposed. New business capabilities require their own application services, policies, migrations, tests, and documentation.
+Implemented operations:
+
+- create custom tenant roles;
+- assign existing platform permissions to a custom role;
+- update a custom role's permissions;
+- delete an unused custom role.
+
+Rules:
+
+- permissions remain platform-defined and central; the Dashboard cannot invent new permission names;
+- role records remain tenant-scoped through `tenant_id`;
+- the five bootstrap/system roles (`owner`, `admin`, `manager`, `staff`, `viewer`) are reserved and cannot be modified/deleted from the Dashboard;
+- a role referenced by any Tenant Membership cannot be deleted;
+- role changes are synchronized through the existing Spatie permission team context;
+- a role from another Tenant cannot be mutated through the current Tenant context.
+
+Backend components:
+
+- `TenantRoleManager`;
+- `StoreTenantRoleRequest`;
+- `UpdateTenantRoleRequest`;
+- `TenantRolePolicy`;
+- `TenantRoleController`;
+- `TenantRoleManagementTest`.
+
+Routes:
+
+- `POST /dashboard/company/roles`;
+- `PATCH /dashboard/company/roles/{role}`;
+- `DELETE /dashboard/company/roles/{role}`.
+
+The test suite covers custom role creation/update, system-role protection, deletion protection for referenced roles, RBAC denial, and cross-tenant isolation.
+
+### 8.3 Booking workspace
+
+Use the existing Booking application services and policies for:
+
+- Services;
+- Staff Availability;
+- Appointments;
+- Queue;
+- Tenant Payments.
+
+The Dashboard must consume the existing Tenant Payment boundary for customer payments. It must not route customer Booking payments through Platform Billing.
+
+### 8.4 Billing workspace
+
+Expose the existing Platform Billing domain to authorized tenant members:
+
+- current subscription;
+- subscription items;
+- pricing context;
+- invoices;
+- payment state;
+- refunds / credits where appropriate.
+
+Billing UI must never rewrite financial state directly. State changes go through the existing Billing application services.
+
+### 8.5 Module Marketplace
+
+Build the tenant-facing catalog surface on top of the existing:
+
+- Modules;
+- Features;
+- Bundles;
+- Prices;
+- Entitlements;
+- subscription flow.
+
+The UI must distinguish:
+
+- available but not owned;
+- active;
+- scheduled for removal;
+- unavailable because of dependencies or commercial state.
+
+Purchasing/activation must require the established Billing + Payment + Entitlement flow.
+
+### 8.6 Usage and settings
+
+Provide authorized views for:
+
+- entitlement limits;
+- tenant configuration;
+- localization/timezone/currency presentation;
+- integration settings that already have a backend contract.
+
+Future settings that need new business logic remain out of this slice.
 
 ### 8.3 Booking workspace
 
