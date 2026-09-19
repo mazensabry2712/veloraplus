@@ -2,6 +2,7 @@
 
 use App\Application\Authorization\TenantRbacBootstrapper;
 use App\Application\Billing\PlatformBillingDashboardService;
+use App\Application\Billing\PaymentService;
 use App\Application\Billing\SubscriptionService;
 use App\Domain\Billing\RefundStatus;
 use App\Models\PlatformCredit;
@@ -181,6 +182,7 @@ test('owner can read billing overview and schedule subscription cancellation', f
     $context = app(\App\Domain\Tenancy\TenantContext::class);
     $context->set($tenant);
 
+    $context->set($tenant);
     $overview = app(PlatformBillingDashboardService::class)->overview($tenant);
 
     expect($overview['subscription']->getKey())->toBe($subscription->getKey())
