@@ -1,6 +1,6 @@
 <?php
 
-namespace AppInfrastructurePaymentsKashierExceptions;
+namespace App\Infrastructure\Payments\Kashier\Exceptions;
 
 use DomainException;
 
