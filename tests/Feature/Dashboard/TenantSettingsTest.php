@@ -202,8 +202,9 @@ test('tenant settings remain isolated between tenant databases', function (): vo
     $pathB = tenantSettingsTestDatabasePath();
     $this->tenantSettingsTestDatabasePath = $pathA;
 
-    $tenantA = createTenantSettingsTenant($pathA);
-    $tenantB = createTenantSettingsTenant($pathB);
+    $tenantA = createTenantSettingsTenant($pathA, 'settings-a.velora.test', 'settings-a');
+    $tenantB = createTenantSettingsTenant($pathB, 'settings-b.velora.test', 'settings-b');
+
     $ownerA = addTenantSettingsMember($tenantA);
 
     $manager = app(TenantDatabaseManager::class);
