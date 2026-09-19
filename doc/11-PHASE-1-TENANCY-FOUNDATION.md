@@ -82,6 +82,21 @@ Implemented:
 - factories for tenant-owned core entities;
 - integration coverage for tenant core schema, request context lifecycle, and cross-database isolation.
 
+
+## SEO / Public Web integration
+
+Phase 1 does not implement SEO rendering, but it establishes the identity boundary that SEO will consume later.
+
+SEO depends on the Phase 1 guarantees:
+
+- Tenant public hosts are resolved from the central `tenant_domains` registry;
+- the request host, not a user-supplied tenant_id, identifies the Tenant;
+- default Tenant hostnames remain available as the fallback public entry point;
+- future canonical URL generation must use the trusted domain registry;
+- Tenant SEO settings/content must be loaded only after Tenant context and tenant database selection are established.
+
+The detailed SEO contract is defined in `doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md`.
+
 ## Phase 1 exit criteria
 
 All Phase 1 exit checks are complete:
