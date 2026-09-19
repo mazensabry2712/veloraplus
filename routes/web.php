@@ -14,6 +14,7 @@ use App\Http\Controllers\Dashboard\CustomerController;
 use App\Http\Controllers\Dashboard\TenantMembershipController;
 use App\Http\Controllers\Dashboard\TenantRoleController;
 use App\Http\Controllers\Dashboard\BookingServiceController;
+use App\Http\Controllers\Dashboard\BookingAvailabilityController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
 use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -94,6 +95,46 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.services
         Route::delete('/{service}', [BookingServiceController::class, 'destroy'])
             ->name('destroy');
 });
+
+Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.availability', 'noindex'])
+    ->prefix('dashboard/booking/availability')
+    ->name('dashboard.booking.availability.')
+    ->group(function (): void {
+        Route::post('/staff/{staff}/services/{service}', [BookingAvailabilityController::class, 'assignService'])
+            ->middleware('entitled:booking.services')
+            ->name('assign-service');
+
+        Route::delete('/staff/{staff}/services/{service}', [BookingAvailabilityController::class, 'unassignService'])
+            ->middleware('entitled:booking.services')
+            ->name('unassign-service');
+
+        Route::post('/staff/{staff}/working-hours', [BookingAvailabilityController::class, 'storeWorkingHour'])
+            ->name('working-hours.store');
+
+        Route::patch('/staff/{staff}/working-hours/{workingHour}', [BookingAvailabilityController::class, 'updateWorkingHour'])
+            ->name('working-hours.update');
+
+        Route::delete('/staff/{staff}/working-hours/{workingHour}', [BookingAvailabilityController::class, 'destroyWorkingHour'])
+            ->name('working-hours.destroy');
+
+        Route::post('/staff/{staff}/working-hours/{workingHour}/breaks', [BookingAvailabilityController::class, 'storeBreak'])
+            ->name('breaks.store');
+
+        Route::patch('/staff/{staff}/working-hours/{workingHour}/breaks/{break}', [BookingAvailabilityController::class, 'updateBreak'])
+            ->name('breaks.update');
+
+        Route::delete('/staff/{staff}/working-hours/{workingHour}/breaks/{break}', [BookingAvailabilityController::class, 'destroyBreak'])
+            ->name('breaks.destroy');
+
+        Route::post('/staff/{staff}/time-off', [BookingAvailabilityController::class, 'storeTimeOff'])
+            ->name('time-off.store');
+
+        Route::patch('/staff/{staff}/time-off/{timeOff}', [BookingAvailabilityController::class, 'updateTimeOff'])
+            ->name('time-off.update');
+
+        Route::delete('/staff/{staff}/time-off/{timeOff}', [BookingAvailabilityController::class, 'destroyTimeOff'])
+            ->name('time-off.destroy');
+    });
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
     Route::get('/', [PublicServiceController::class, 'index'])->name('index');
