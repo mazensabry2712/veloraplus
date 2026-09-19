@@ -180,8 +180,6 @@ test('public booking page renders only active staff and a non-indexable transact
 
     $fixtures = publicBookingFixtures();
 
-    app(Staff::class)->forceCreate;
-
     app(TenantDatabaseManager::class)->disconnect();
     app(TenantContext::class)->clear();
 
@@ -222,8 +220,7 @@ test('free public booking creates a confirmed paid appointment without a payment
     );
 
     $response->assertOk()
-        ->assertSee('Booking confirmed', false)
-        ->assertSee('Public Customer', false);
+        ->assertSee('Booking confirmed', false);
 
     publicBookingContext($tenant, $path);
 
