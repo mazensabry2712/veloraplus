@@ -179,35 +179,66 @@ See doc/16-PHASE-5-BILLING.md for the full contract and verification record.
 
 ## Phase 7 status — in progress
 
-Phase 7 has started with the Services/database foundation slice. The tenant schema now supports the first Booking entity, service application logic is covered by tests, Booking service permissions are part of tenant RBAC, and ready tenant databases apply pending tenant migrations during provisioning/re-provisioning.
+Phase 7 Booking is underway on the existing Core.
 
-## Phase 6 status — closed / verified
+### Implemented and verified
 
-Phase 6 Payments & Provider Adapters has been implemented with a provider-neutral gateway boundary and the first concrete Kashier adapter.
+#### 7.1 Services
 
-Implemented:
+- tenant Services schema;
+- service lifecycle/status;
+- duration, buffers, price, currency, deposit, capacity, online booking visibility;
+- ServiceManager, policy, factory;
+- Booking service RBAC;
+- ready-tenant provisioning applies pending tenant migrations.
 
-- Platform Payment Gateway and Tenant Payment Gateway boundaries;
-- PaymentGatewayManager provider registry;
-- capability-specific checkout, verification, refund, webhook, and transaction lookup contracts;
-- Kashier hosted Payment Session adapter;
-- Kashier payment lookup and refund adapter;
-- Kashier webhook signature verification;
-- central webhook idempotency storage;
-- verified Platform Payment activation through the existing Billing services;
-- provider-neutral tenant payment boundary.
+#### 7.2 Staff Availability
 
-No live credentials were committed. Tenant business payment flows remain unimplemented until their Booking/CRM/ERP domains consume the shared payment layer.
+- working hours;
+- breaks;
+- time off;
+- staff/service assignment;
+- timezone-aware availability calculation;
+- overlap validation;
+- availability RBAC;
+- tenant isolation tests.
 
-GitHub Actions for implementation commit `b36fc620a859a20d7bacc6839a3f97cbe190732a` passed.
+#### 7.3 Appointments
 
-Verification completed after pulling the latest `main`:
+- appointments, appointment items, and status histories;
+- customer/staff/location linkage;
+- service snapshots;
+- payment-state foundation;
+- availability-aware creation/rescheduling;
+- Staff-row locking before final conflict validation;
+- cancellation/no-show slot release;
+- lifecycle transitions;
+- idempotency-key handling;
+- appointment RBAC;
+- tenant isolation and negative-path coverage.
 
-- `composer install` completed without dependency changes.
-- payment/webhook migration succeeded.
-- Pint passed.
-- full local suite: **72 tests passed with 238 assertions**.
-- `git diff --check` passed.
-- working tree is clean and synchronized with `origin/main`.
+CI verification for the merged 7.3 implementation:
 
-See doc/17-PHASE-6-PAYMENTS.md for the detailed Phase 6 record.
+- GitHub Actions Backend Tests: passed;
+- full CI suite: 91 tests, 377 assertions;
+- merge commit: de02ef56b1ab90d2a5290546db19bb6a6a443ebc.
+
+### Pending
+
+- 7.4 Tenant Payments;
+- 7.5 Queue;
+- 7.6 Public Booking.
+
+### Cross-cutting Public Web & SEO
+
+SEO/Public Web is now explicitly documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
+
+Current status:
+
+- architecture/contract: locked and documented;
+- implementation: pending;
+- Service public slug: pending;
+- Platform/Tenant public route separation: pending;
+- robots/sitemap/canonical/structured-data implementation: pending.
+
+SEO-1 through SEO-3 are required before Public Booking is released as an indexable public surface.
