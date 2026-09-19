@@ -101,6 +101,7 @@ final class PublicBookingController
             'service' => $service,
             'appointment' => $result['appointment'],
             'serviceUrl' => $seo->tenantUrl($context->current(), '/services/'.$service->slug),
+            'seo' => $seo->tenantBooking($context->current(), $service),
         ]);
     }
 }
