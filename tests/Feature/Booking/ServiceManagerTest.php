@@ -85,6 +85,7 @@ test('booking service migration creates the tenant service schema', function () 
 
         expect(Schema::connection(TenantDatabaseManager::CONNECTION)->hasTable('services'))->toBeTrue()
             ->and((new Service)->getConnectionName())->toBe(TenantDatabaseManager::CONNECTION)
+            ->and(Schema::connection(TenantDatabaseManager::CONNECTION)->hasColumn('services', 'slug'))->toBeTrue()
             ->and(Schema::connection(TenantDatabaseManager::CONNECTION)->hasColumn('services', 'duration_minutes'))->toBeTrue()
             ->and(Schema::connection(TenantDatabaseManager::CONNECTION)->hasColumn('services', 'price_minor'))->toBeTrue()
             ->and(Schema::connection(TenantDatabaseManager::CONNECTION)->hasColumn('services', 'online_bookable'))->toBeTrue();
@@ -115,6 +116,7 @@ test('service factory creates valid tenant services', function () {
 
     expect($service->exists)->toBeTrue()
         ->and($service->status)->toBe(ServiceStatus::Active)
+        ->and($service->slug)->not->toBeEmpty()
         ->and($service->currency)->toBe('EGP')
         ->and($service->duration_minutes)->toBeGreaterThan(0);
 
@@ -150,6 +152,7 @@ test('service manager creates updates and archives a service', function () {
     ]);
 
     expect($service->status)->toBe(ServiceStatus::Active)
+        ->and($service->slug)->toBe('consultation')
         ->and($service->currency)->toBe('EGP')
         ->and($service->duration_minutes)->toBe(60)
         ->and($service->price_minor)->toBe(50000);
@@ -174,6 +177,79 @@ test('service manager creates updates and archives a service', function () {
         ->and($archived->trashed())->toBeTrue()
         ->and(Service::query()->find($service->getKey()))->toBeNull()
         ->and(Service::withTrashed()->find($service->getKey()))->not->toBeNull();
+
+    $manager->disconnect();
+});
+
+
+test('service manager generates unique stable slugs and preserves them on rename', function () {
+    $path = bookingTestDatabase();
+    $this->bookingTestDatabase = $path;
+
+    migrateBookingTestDatabase($path);
+
+    $tenant = new Tenant;
+    $tenant->database_name = $path;
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    $services = app(ServiceManager::class);
+
+    $first = $services->create([
+        'name' => 'Dental Consultation',
+        'duration_minutes' => 30,
+        'price_minor' => 10000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'capacity' => 1,
+    ]);
+
+    $second = $services->create([
+        'name' => 'Dental Consultation',
+        'duration_minutes' => 45,
+        'price_minor' => 15000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'capacity' => 1,
+    ]);
+
+    expect($first->slug)->toBe('dental-consultation')
+        ->and($second->slug)->toBe('dental-consultation-2');
+
+    $updated = $services->update($first, [
+        'name' => 'Premium Dental Consultation',
+    ]);
+
+    expect($updated->name)->toBe('Premium Dental Consultation')
+        ->and($updated->slug)->toBe('dental-consultation');
+
+    $manager->disconnect();
+});
+
+test('service manager accepts and normalizes an explicit public slug', function () {
+    $path = bookingTestDatabase();
+    $this->bookingTestDatabase = $path;
+
+    migrateBookingTestDatabase($path);
+
+    $tenant = new Tenant;
+    $tenant->database_name = $path;
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    $service = app(ServiceManager::class)->create([
+        'name' => 'Skin Care',
+        'slug' => ' Skin Care & Consultation ',
+        'duration_minutes' => 60,
+        'price_minor' => 25000,
+        'currency' => 'EGP',
+        'deposit_amount_minor' => 0,
+        'capacity' => 1,
+    ]);
+
+    expect($service->slug)->toBe('skin-care-consultation');
 
     $manager->disconnect();
 });
