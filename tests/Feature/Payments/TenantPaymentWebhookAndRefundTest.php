@@ -481,6 +481,79 @@ test('tenant refunds support idempotent partial and full refunds without platfor
     expect(DB::connection('central')->table('platform_payments')->count())->toBe(0);
 });
 
+
+test('full tenant refund synchronizes an appointment to refunded', function (): void {
+    $path = tenantFinancialDatabase();
+    $this->tenantFinancialDatabases = [$path];
+    migrateTenantFinancialDatabase($path);
+
+    $tenant = Tenant::factory()->create([
+        'database_name' => $path,
+        'database_status' => 'ready',
+        'status' => 'active',
+    ]);
+
+    $account = createKashierAccount($tenant);
+
+    tenantFinancialContext($tenant, $path);
+
+    $appointmentId = (string) Str::ulid();
+
+    $payment = TenantPayment::query()->create([
+        'appointment_id' => $appointmentId,
+        'provider' => 'kashier',
+        'merchant_order_id' => $tenant->getKey().'.'.Str::ulid(),
+        'provider_payment_id' => 'TX-FULL-REFUND',
+        'provider_order_id' => 'KASHIER-FULL-REFUND',
+        'amount_minor' => 10000,
+        'currency' => 'EGP',
+        'status' => TenantPaymentStatus::Succeeded,
+        'metadata' => [
+            'payment_provider_account_id' => $account->getKey(),
+        ],
+    ]);
+
+    // Use a real appointment row so the synchronization path is exercised.
+    $appointmentId = DB::table('appointments')->insertGetId([
+        'id' => $appointmentId,
+        'customer_id' => null,
+        'staff_id' => null,
+        'location_id' => null,
+        'starts_at' => now()->addDay(),
+        'ends_at' => now()->addDay()->addHour(),
+        'blocked_starts_at' => now()->addDay(),
+        'blocked_ends_at' => now()->addDay()->addHour(),
+        'status' => 'confirmed',
+        'payment_status' => 'paid',
+        'idempotency_key' => 'refund-appt-'.Str::ulid(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $payment->update(['appointment_id' => $appointmentId]);
+
+    Http::fake([
+        'https://test-fep.kashier.io/v3/orders/KASHIER-FULL-REFUND' => Http::response([
+            'response' => [
+                'status' => 'SUCCESS',
+                'transactionId' => 'REF-FULL-1',
+            ],
+        ], 200),
+    ]);
+
+    $refund = app(TenantPaymentManager::class)->refund(
+        $payment,
+        10000,
+        'Full refund',
+        'refund-full',
+    );
+
+    expect($refund->status)->toBe(TenantPaymentRefundStatus::Succeeded)
+        ->and($payment->fresh()->status)->toBe(TenantPaymentStatus::Refunded)
+        ->and(DB::table('appointments')->where('id', $appointmentId)->value('payment_status'))
+        ->toBe('refunded');
+});
+
 test('tenant refunds reject amounts above the reserved refundable balance', function (): void {
     $path = tenantFinancialDatabase();
     $this->tenantFinancialDatabases = [$path];
