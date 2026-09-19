@@ -29,7 +29,8 @@ A Company is a commercial customer of VeloraPlus and is represented as a Tenant.
 Each Tenant has:
 
 - its own company profile;
-- its own domain/subdomain;
+- its own default domain/subdomain;
+- optional verified custom domains when the capability is entitled;
 - its own tenant database;
 - its own users/memberships;
 - its own staff;
@@ -390,21 +391,142 @@ A company may configure:
 - invoice branding;
 - email branding.
 
-## 25. URL strategy
+## 25. URL and Custom Domain strategy
 
-Default:
+### Default tenant domain
+
+Every Tenant receives a platform-controlled default hostname:
 
 ~~~
 {tenant-slug}.velora.com
 ~~~
 
-Future:
+The default hostname remains available even when a custom domain is not active.
+
+### Custom domains
+
+A Tenant may attach one or more customer-owned hostnames, for example:
 
 ~~~
 app.customer-domain.com
+booking.customer-domain.com
 ~~~
 
-Custom domains are a future feature but the routing/domain model must not make them impossible.
+A custom domain is a tenant-owned routing alias, not a second Tenant and not a separate application.
+
+Commercial classification:
+
+~~~
+Catalog Feature: Custom Domain
+        ↓
+Entitlement
+        ↓
+Tenant Domain Capability
+~~~
+
+The feature may be sold independently or included through a Bundle/plan. The actual amount, currency, billing cycle, country override, and bundle treatment are catalog data and must never be hard-coded.
+
+### Customer responsibility
+
+The customer buys and owns the domain through its registrar. VeloraPlus does not become the registrar.
+
+VeloraPlus is responsible for:
+
+- generating the DNS instructions;
+- generating/rotating verification material;
+- validating ownership;
+- registering the hostname against the Tenant;
+- coordinating SSL/TLS provisioning through the selected edge/domain provider;
+- exposing the domain lifecycle/status to the Company Admin;
+- resolving verified active hosts to exactly one Tenant.
+
+### Domain onboarding
+
+The expected flow is:
+
+~~~
+Company Dashboard
+    ↓
+Settings → Domains
+    ↓
+Enter hostname
+    ↓
+VeloraPlus creates pending domain record
+    ↓
+DNS verification instructions
+    ↓
+Customer configures DNS at registrar
+    ↓
+Ownership verification
+    ↓
+Traffic/routing verification
+    ↓
+SSL/TLS provisioning
+    ↓
+Domain ACTIVE
+~~~
+
+Redirect/return from a provider UI is never proof of ownership or payment. Domain activation is based on server-side verification.
+
+### Domain lifecycle
+
+A custom domain should move through explicit states:
+
+~~~
+pending
+    ↓
+verifying
+    ↓
+provisioning
+    ↓
+active
+    ↓
+disabled / failed
+~~~
+
+A failed or disabled custom domain must not delete the Tenant or its business data.
+
+### Resolution/security rules
+
+Routing must:
+
+- normalize and canonicalize hostnames;
+- use the actual trusted request host;
+- ignore arbitrary tenant IDs submitted by the client;
+- accept only verified/active domain records;
+- prevent one hostname from being attached to multiple Tenants;
+- perform exact hostname matching;
+- reject reserved VeloraPlus platform hostnames;
+- use HTTPS in production;
+- trust forwarded host information only from configured reverse proxies/edge infrastructure.
+
+### Default-domain fallback
+
+If a Tenant custom domain becomes unavailable, the Tenant VeloraPlus subdomain remains the canonical fallback entry point.
+
+The platform must not make a Tenant unreachable solely because a custom domain DNS, SSL, or edge configuration failed.
+
+### Boundary
+
+Custom Domain capability does not change Tenant isolation, Tenant database selection, Membership, RBAC, or business ownership.
+
+The request path remains:
+
+~~~
+Host
+  ↓
+Tenant Domain Resolver
+  ↓
+Tenant Context
+  ↓
+Tenant Database
+  ↓
+Membership / Entitlement / Permission as applicable
+  ↓
+Business request
+~~~
+
+The detailed technical contract is defined in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md.
 
 ## 26. Deletion and retention
 
