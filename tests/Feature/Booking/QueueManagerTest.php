@@ -358,7 +358,7 @@ test('queue appointment must match customer service location and business date',
     expect($entry->appointment_id)->toBe($appointment->getKey());
 
     $otherService = Service::factory()->create(['status' => 'active']);
-    $otherQueue = app(QueueManager::class)->createQueue($location, $otherService, $queue->business_date->format('Y-m-d'));
+    $otherQueue = app(QueueManager::class)->createQueue($location, $otherService, $queue->business_date);
 
     expect(fn () => app(QueueManager::class)->enqueue(
         $otherQueue,
