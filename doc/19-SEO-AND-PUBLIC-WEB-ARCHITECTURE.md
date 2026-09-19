@@ -353,6 +353,8 @@ Status: **COMPLETED IN THIS SLICE — PLATFORM FOUNDATION**
 - private-route noindex policy.
 
 ### SEO-2 — Tenant Public Surface
+
+Status: **COMPLETED IN THIS SLICE**
 - Tenant public home;
 - company public branding/content;
 - Tenant SEO settings;
@@ -360,6 +362,8 @@ Status: **COMPLETED IN THIS SLICE — PLATFORM FOUNDATION**
 - Tenant robots/sitemap.
 
 ### SEO-3 — Public Services
+
+Status: **PENDING**
 - stable Service slugs;
 - Service public detail page;
 - page-level SEO overrides;
