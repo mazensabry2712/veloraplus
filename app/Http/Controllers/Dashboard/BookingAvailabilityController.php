@@ -57,7 +57,14 @@ final class BookingAvailabilityController extends Controller
         Gate::authorize('manageAvailability', $staff);
 
         try {
-            $manager->saveWorkingHour($staff, ...$request->validated());
+            $data = $request->validated();
+
+            $manager->saveWorkingHour(
+                $staff,
+                (int) $data['day_of_week'],
+                (string) $data['starts_at'],
+                (string) $data['ends_at'],
+            );
         } catch (InvalidArgumentException $exception) {
             return back()->withErrors(['working_hours' => $exception->getMessage()]);
         }
@@ -74,15 +81,15 @@ final class BookingAvailabilityController extends Controller
         Gate::authorize('manageAvailability', $staff);
 
         try {
+            $data = $request->validated();
+
             $manager->saveWorkingHour(
                 $staff,
-                $workingHour->day_of_week,
-                $workingHour->starts_at,
-                $workingHour->ends_at,
+                (int) $data['day_of_week'],
+                (string) $data['starts_at'],
+                (string) $data['ends_at'],
                 $workingHour,
             );
-
-            $manager->saveWorkingHour($staff, ...$request->validated(), $workingHour);
         } catch (InvalidArgumentException $exception) {
             return back()->withErrors(['working_hours' => $exception->getMessage()]);
         }
@@ -117,7 +124,14 @@ final class BookingAvailabilityController extends Controller
         $this->assertWorkingHourBelongsToStaff($workingHour, $staff);
 
         try {
-            $manager->saveBreak($workingHour, ...array_values($request->validated()));
+            $data = $request->validated();
+
+            $manager->saveBreak(
+                $workingHour,
+                (string) $data['starts_at'],
+                (string) $data['ends_at'],
+                $data['label'] ?? null,
+            );
         } catch (InvalidArgumentException $exception) {
             return back()->withErrors(['breaks' => $exception->getMessage()]);
         }
@@ -141,7 +155,15 @@ final class BookingAvailabilityController extends Controller
         }
 
         try {
-            $manager->saveBreak($workingHour, ...array_values($request->validated()), $break);
+            $data = $request->validated();
+
+            $manager->saveBreak(
+                $workingHour,
+                (string) $data['starts_at'],
+                (string) $data['ends_at'],
+                $data['label'] ?? null,
+                $break,
+            );
         } catch (InvalidArgumentException $exception) {
             return back()->withErrors(['breaks' => $exception->getMessage()]);
         }
@@ -176,7 +198,14 @@ final class BookingAvailabilityController extends Controller
         Gate::authorize('manageAvailability', $staff);
 
         try {
-            $manager->saveTimeOff($staff, ...array_values($request->validated()));
+            $data = $request->validated();
+
+            $manager->saveTimeOff(
+                $staff,
+                (string) $data['starts_at'],
+                (string) $data['ends_at'],
+                $data['reason'] ?? null,
+            );
         } catch (InvalidArgumentException $exception) {
             return back()->withErrors(['time_off' => $exception->getMessage()]);
         }
@@ -197,7 +226,15 @@ final class BookingAvailabilityController extends Controller
         }
 
         try {
-            $manager->saveTimeOff($staff, ...array_values($request->validated()), $timeOff);
+            $data = $request->validated();
+
+            $manager->saveTimeOff(
+                $staff,
+                (string) $data['starts_at'],
+                (string) $data['ends_at'],
+                $data['reason'] ?? null,
+                $timeOff,
+            );
         } catch (InvalidArgumentException $exception) {
             return back()->withErrors(['time_off' => $exception->getMessage()]);
         }
