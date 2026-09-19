@@ -278,6 +278,34 @@ Recommended application boundaries:
 
 The provider adapter may live under Infrastructure/ and must not leak provider-specific payloads into the Domain, Tenancy, Billing, or Booking services.
 
+## 11B. Tenant-aware route model binding
+
+Tenant Dashboard resources such as Location, Staff, Customer, Service, Working Hour, Break, Time Off, Membership, and Role may use Laravel route model binding.
+
+Because those models can resolve from the active tenant connection, `InitializeTenantContext` must execute before Laravel's `SubstituteBindings` middleware.
+
+The application enforces this centrally in `bootstrap/app.php` using middleware priority rather than duplicating manual binding logic in every Controller.
+
+Required flow:
+
+~~~
+Request
+  ↓
+InitializeTenantContext
+  ↓
+SubstituteBindings
+  ↓
+EnsureTenantMembership
+  ↓
+Entitlement
+  ↓
+Policy
+  ↓
+Controller
+~~~
+
+This keeps route model resolution inside the current Tenant database and prevents a resource ID from being resolved against a stale or default Tenant connection.
+
 ## 12. Billing services
 
 Keep billing responsibilities explicit:
