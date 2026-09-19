@@ -150,9 +150,28 @@ The existing Phase 1–7 regression suite remains green locally.
 
 Planned.
 
-#### 8.2.3 Tenant settings
+#### 8.2.3 Tenant Settings — Backend implemented
 
-Planned.
+The tenant settings backend uses the existing tenant-local `company_settings` key/value foundation. Arbitrary keys are not accepted.
+
+The first supported settings namespace is `seo.*`, matching the existing public-web SEO contract:
+
+- `seo.site_title`;
+- `seo.site_description`;
+- `seo.default_og_image`;
+- `seo.robots`;
+- `seo.locale`.
+
+Backend components:
+
+- `TenantSettingsManager` reads and updates the supported settings;
+- `UpdateTenantSettingsRequest` validates and normalizes the supported SEO settings;
+- `CompanySettingPolicy` enforces tenant-context + `settings.view/manage` permissions;
+- `TenantSettingsController` is the HTTP boundary;
+- `PUT /dashboard/company/settings` is the update route;
+- `TenantSettingsTest` covers authorized updates, RBAC denial, malformed/unknown settings, and tenant isolation.
+
+The application service also enforces the setting allowlist so non-HTTP callers cannot write arbitrary tenant settings.
 
 #### 8.2.4 Staff
 
