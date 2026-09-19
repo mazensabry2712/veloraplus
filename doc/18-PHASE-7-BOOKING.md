@@ -60,15 +60,30 @@ Validation rules:
 
 ### 7.2 Staff availability
 
-Status: **PENDING**
+Status: **COMPLETED IN THIS SLICE**
 
-Planned:
+Implemented:
 
-- working hours;
-- breaks;
-- time off;
-- staff/service assignment;
-- timezone-aware slot calculation.
+- tenant working-hours schema with ULID identifiers;
+- multiple non-overlapping working intervals per staff member and weekday;
+- recurring breaks attached to a working interval;
+- date/time-specific staff time off stored as UTC-aware timestamps;
+- staff/service assignment with tenant-local uniqueness;
+- StaffAvailabilityManager application service;
+- timezone-aware availability-window calculation using the staff location timezone;
+- availability subtraction for recurring breaks and date-specific time off;
+- booking availability RBAC permissions.
+
+Validation rules:
+
+- weekday must be between 0 (Sunday) and 6 (Saturday);
+- start/end times must use HH:MM or HH:MM:SS;
+- end time must be after start time; overnight working intervals are not supported in this slice;
+- working intervals for the same staff/day cannot overlap;
+- breaks must be fully contained in their working interval and cannot overlap;
+- time-off intervals must have a positive duration and cannot overlap for the same staff member;
+- archived staff cannot receive availability configuration;
+- archived services cannot be assigned to staff.
 
 ### 7.3 Appointments
 
