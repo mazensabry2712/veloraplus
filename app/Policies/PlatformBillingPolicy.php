@@ -56,11 +56,6 @@ class PlatformBillingPolicy
         return $this->belongsToCurrentTenant($payment) && $account->can('billing.manage');
     }
 
-    public function manageInvoice(PlatformAccount $account, PlatformInvoice $invoice): bool
-    {
-        return $this->belongsToCurrentTenant($invoice) && $account->can('billing.manage');
-    }
-
     public function viewCredit(PlatformAccount $account, PlatformCredit $credit): bool
     {
         return $this->belongsToCurrentTenant($credit) && $account->can('billing.view');
