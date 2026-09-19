@@ -34,6 +34,7 @@ final class SeoManager
             canonical: $this->platformUrl($path),
             robots: $robots,
             ogType: $ogType,
+            siteName: config('velora.seo.platform.site_name', 'VeloraPlus'),
             ogImage: $ogImage,
             locale: $locale ?? config('velora.seo.platform.locale'),
             schema: $schema,
@@ -78,6 +79,7 @@ final class SeoManager
             canonical: $this->tenantUrl($tenant),
             robots: $robots,
             ogType: 'website',
+            siteName: $tenant->name,
             ogImage: $this->absolutePublicUrl((string) ($settings['seo.default_og_image'] ?? '')),
             locale: $locale !== '' ? $locale : null,
             schema: [[
