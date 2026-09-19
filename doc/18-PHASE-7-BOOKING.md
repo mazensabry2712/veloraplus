@@ -205,12 +205,18 @@ Current permissions:
 
 - booking.services.view
 - booking.services.manage
+- booking.availability.view
+- booking.availability.manage
+- booking.appointments.view
+- booking.appointments.manage
+- booking.payments.view
+- booking.payments.manage
 
-Owner/admin receive both permissions.
+Owner/admin receive all current Booking permissions.
 
-Manager receives both permissions.
+Manager receives all current Booking permissions except future permissions that have not yet been introduced.
 
-Staff and viewer receive view permission only.
+Staff and viewer receive view-only Booking permissions, including booking.payments.view.
 
 Additional Booking permissions will be introduced with the relevant slice instead of creating the entire future permission matrix prematurely.
 
