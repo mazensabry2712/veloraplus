@@ -49,6 +49,7 @@ Important references:
 - doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md
 - doc/15-PHASE-4-ENTITLEMENTS.md
 - doc/16-PHASE-5-BILLING.md
+- doc/17-PHASE-6-PAYMENTS.md
 
 ## Current implementation
 
@@ -61,6 +62,8 @@ Phase 3 — Module Catalog is closed and verified. It provides the central catal
 Phase 4 — Entitlements is closed and verified.
 
 Phase 5 — Billing is closed and verified. It provides the internal Billing domain with provider-neutral payment boundaries.
+
+Phase 6 — Payments & Provider Adapters is implemented and awaiting verification.
 
 ## Development principle
 
