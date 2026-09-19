@@ -1,6 +1,5 @@
 <?php
 
-use App\Application\SEO\SeoManager;
 use App\Http\Controllers\Public\PublicHomeController;
 use App\Http\Controllers\Public\RobotsController;
 use App\Http\Controllers\Public\SitemapController;
@@ -19,7 +18,8 @@ Route::middleware('public.tenant')->prefix('services')->name('public.services.')
     Route::get('/{slug}', [\App\Http\Controllers\Public\PublicServiceController::class, 'show'])
         ->where('slug', '[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*')
         ->name('show');
-}
+});
+
 Route::get('/sitemap.xml', SitemapController::class)
     ->middleware('public.tenant')
     ->name('seo.sitemap');
