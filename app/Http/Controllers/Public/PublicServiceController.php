@@ -64,7 +64,7 @@ final class PublicServiceController
                     ->first();
 
                 if ($current !== null && $current->slug === $redirect->new_slug) {
-                    return redirect()->route('public.services.show', ['slug' => $current->slug], 301);
+                    return redirect()->to($seo->tenantUrl($tenant, '/services/'.$current->slug), 301);
                 }
             }
 
