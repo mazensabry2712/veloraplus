@@ -92,7 +92,7 @@ Verification completed:
 
 See doc/13-PHASE-3-MODULE-CATALOG.md for the detailed Phase 3 record.
 
-## Phase 4 status — implementation complete, local verification pending
+## Phase 4 status — closed / verified
 
 Phase 4 Entitlements is implemented as the tenant-level authorization projection between the central Catalog and future Billing.
 
@@ -110,13 +110,16 @@ Implemented:
 - @entitled, @featureEntitled, and @moduleEntitled Blade helpers;
 - Phase 4 feature test coverage.
 
-Verification gate still pending on the developer workstation:
+Verification completed:
 
-- central migration;
-- Pint;
-- full test suite;
-- diff/status checks;
-- GitHub Actions for the implementation commit.
+- central entitlement migration succeeded;
+- Pint passed;
+- full local suite: **50 tests passed with 166 assertions**;
+- `git diff --check` passed;
+- local `main` is synchronized with `origin/main`;
+- GitHub Actions for final commit `b67009f5b0082a0a9c978cfee5a87af8d8c81703`: success.
+
+The local working tree still reports an untracked `public/logo.png`; it was not modified or added by this phase.
 
 See doc/15-PHASE-4-ENTITLEMENTS.md for the detailed Phase 4 contract and acceptance criteria.
 

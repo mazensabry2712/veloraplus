@@ -56,7 +56,7 @@ Phase 2 — Identity, Authentication & RBAC is closed and verified.
 
 Phase 3 — Module Catalog is closed and verified. It provides the central catalog schema, models, bundle/dependency services, and pricing catalog foundation.
 
-Phase 4 — Entitlements is implemented; local verification is the remaining closing gate.
+Phase 4 — Entitlements is closed and verified. The next implementation stage is Phase 5 — Billing.
 
 ## Development principle
 
