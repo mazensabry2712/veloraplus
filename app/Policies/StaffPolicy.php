@@ -33,6 +33,11 @@ class StaffPolicy
         return $this->inCurrentTenantModel($staff) && $account->can('staff.manage');
     }
 
+    public function manageAvailability(PlatformAccount $account, Staff $staff): bool
+    {
+        return $this->inCurrentTenantModel($staff) && $account->can('booking.availability.manage');
+    }
+
     private function inTenantContext(): bool
     {
         return app(TenantContext::class)->check();
