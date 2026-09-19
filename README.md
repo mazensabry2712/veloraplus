@@ -60,7 +60,7 @@ Phase 3 — Module Catalog is closed and verified. It provides the central catal
 
 Phase 4 — Entitlements is closed and verified.
 
-Phase 5 — Billing is implemented with provider-neutral payment boundaries; local phase verification remains pending before it is marked closed.
+Phase 5 — Billing is closed and verified. It provides the internal Billing domain with provider-neutral payment boundaries.
 
 ## Development principle
 
