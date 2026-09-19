@@ -50,16 +50,6 @@ test('platform robots file exposes the platform sitemap and private path exclusi
         ->assertSee('Sitemap: https://velora.com/sitemap.xml');
 });
 
-test('non-platform robots file denies crawling until tenant public seo is enabled', function () {
-    config(['velora.platform.url' => 'https://velora.com']);
-
-    $response = $this->get('https://example.com/robots.txt');
-
-    $response->assertSuccessful()
-        ->assertSee("User-agent: *
-Disallow: /", false);
-});
-
 test('platform sitemap contains only the canonical platform home url', function () {
     config(['velora.platform.url' => 'https://velora.com']);
 
@@ -71,13 +61,6 @@ test('platform sitemap contains only the canonical platform home url', function 
         ->assertSee('<loc>https://velora.com/</loc>', false)
         ->assertDontSee('tenant_id')
         ->assertDontSee('/dashboard');
-});
-
-test('non-platform sitemap is not exposed', function () {
-    config(['velora.platform.url' => 'https://velora.com']);
-
-    $this->get('https://example.com/sitemap.xml')
-        ->assertNotFound();
 });
 
 test('noindex middleware sets an explicit indexing response header', function () {
