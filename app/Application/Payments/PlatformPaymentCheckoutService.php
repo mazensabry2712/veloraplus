@@ -53,7 +53,10 @@ final class PlatformPaymentCheckoutService
                 'checkout' => [
                     'provider' => $provider,
                     'session_id' => $result['session_id'] ?? null,
+                    'checkout_url' => $result['checkout_url'] ?? null,
                     'merchant_order_id' => $result['merchant_order_id'] ?? $payment->getKey(),
+                    'provider_payment_id' => $result['provider_payment_id'] ?? null,
+                    'provider_order_id' => $result['provider_order_id'] ?? null,
                 ],
             ]),
         ]);
