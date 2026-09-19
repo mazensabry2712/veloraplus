@@ -128,8 +128,9 @@ test('kashier webhook signature verification follows the sorted signatureKeys ru
         ],
     ];
 
-    expect(fn () => app(KashierWebhookVerifier::class)->verify($data, kashierSignature($data)))
-        ->not->toThrow();
+    app(KashierWebhookVerifier::class)->verify($data, kashierSignature($data));
+
+    expect(true)->toBeTrue();
 });
 
 test('verified successful webhook marks platform payment paid exactly once', function () {
