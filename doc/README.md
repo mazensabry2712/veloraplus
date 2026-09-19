@@ -30,6 +30,7 @@ Implementation must follow these documents:
 16. 16-PHASE-5-BILLING.md
 17. 17-PHASE-6-PAYMENTS.md
 18. 18-PHASE-7-BOOKING.md
+19. 19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md
 
 ## Locked decisions
 
@@ -62,9 +63,11 @@ Implementation must follow these documents:
 - Frontend: Blade + Tailwind CSS + Alpine.js + Vanilla JavaScript + Vite.
 - Global performance: stateless application nodes, horizontal scaling, Redis-backed shared state/queues, tenant-aware caching, async processing, CDN/edge readiness, observability, and load testing.
 - Backend: Laravel 13 + PHP 8.4 target + MySQL 8.4 + Redis.
+- Public Web: server-rendered Blade with a centralized, tenant-aware SEO architecture.
 - Architecture style: modular monolith, not microservices.
 - Booking is the first business module.
 - CRM and ERP are future modules built on the same Core.
+- Public URLs, crawlability, canonicalization, sitemap, robots, and structured data are governed centrally and remain tenant-isolated.
 - Core entities must be reusable across modules; duplicate Staff/Customer records are not created just because another module is activated.
 
 ## Engineering principle
@@ -88,7 +91,11 @@ Billing
     ↓
 Payments / Provider Adapters
     ↓
-Booking MVP
+Booking MVP Core
+    ↓
+Public Web + SEO Foundation
+    ↓
+Public Booking
     ↓
 Admin + Customer Portal
     ↓
@@ -101,9 +108,13 @@ ERP
 
 ## Current repository note
 
-Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 Module Catalog is also closed and verified.
+Foundation and Tenancy are implemented. Phase 2 Identity / Authentication / RBAC is closed and verified. Phase 3 Module Catalog is closed and verified.
 
-Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is closed and verified. Phase 6 — Payments & Provider Adapters is closed and verified; Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries. Phase 7 — Booking is now in progress; the first 7.1 slice establishes tenant Services, Booking service permissions/policy, and pending tenant migration application for ready databases. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery after Tenancy, Entitlements, and Billing boundaries are ready.
+Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is closed and verified. Phase 6 — Payments & Provider Adapters is closed and verified; Kashier is implemented as the first provider adapter behind provider-neutral payment boundaries.
+
+Phase 7 — Booking is in progress. Slices 7.1 Services, 7.2 Staff Availability, and 7.3 Appointments are implemented and verified. 7.4 Tenant Payments, 7.5 Queue, and 7.6 Public Booking remain pending.
+
+SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md. Its first foundation slices are required before the public Booking surface is production-ready. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery.
 
 ## Non-negotiable rules
 
