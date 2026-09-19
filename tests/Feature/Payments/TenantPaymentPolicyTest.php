@@ -3,10 +3,17 @@
 use App\Application\Authorization\TenantRbacBootstrapper;
 use App\Models\PlatformAccount;
 use App\Models\Tenant;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
-uses(RefreshDatabase::class);
+beforeEach(function (): void {
+    DB::setDefaultConnection('central');
+    expect(Artisan::call('migrate:fresh', [
+        '--database' => 'central',
+        '--force' => true,
+    ]))->toBe(0);
+});
 
 afterEach(function (): void {
     setPermissionsTeamId(null);
