@@ -232,6 +232,15 @@ Subscription + Subscription Items
 
 The projection must be rebuildable.
 
+### Phase 4 implementation semantics
+
+- Tenant entitlements are stored centrally as a tenant-specific projection.
+- A Module entitlement makes its active Features available; a Feature entitlement does not grant unrelated Features.
+- Required catalog dependencies are projected automatically and are re-checked during access evaluation.
+- Core Modules are implicitly available and do not receive tenant entitlement rows.
+- `scheduled_for_removal` continues to grant access until `ends_at`; `inactive` does not.
+- Projection sources use deterministic precedence: dependency < trial < bundle < subscription < manual.
+- `EntitlementService::rebuildProjection()` is the future Billing integration boundary and is not a financial source of truth.
 ## 13. Immediate activation
 
 Feature purchase flow:
