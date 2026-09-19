@@ -272,7 +272,7 @@ final class TenantPaymentManager
                 'transaction_id' => $event['transaction_id'] ?? null,
                 'received_at' => now(),
                 'payload_hash' => $payloadHash,
-                'payload' => $payload,
+                'payload' => json_encode($payload, JSON_THROW_ON_ERROR),
             ]);
 
             $stored = TenantPaymentWebhookEvent::query()
