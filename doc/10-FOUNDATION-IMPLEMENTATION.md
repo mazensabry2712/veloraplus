@@ -95,3 +95,22 @@ See doc/13-PHASE-3-MODULE-CATALOG.md for the detailed Phase 3 record.
 ## Next phase — Phase 4 Entitlements
 
 The next implementation stage is Entitlements: translating subscription/billing state into tenant-level module/feature availability without conflating entitlement with user permissions.
+
+## Cross-cutting Custom Domain architecture status
+
+The Phase 1 tenancy implementation already contains the central `tenant_domains` registry and request-host-based tenant resolution foundation.
+
+The Custom Domain business/technical contract is now explicitly documented in `doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md`.
+
+Current status:
+
+- domain registry foundation: implemented;
+- default tenant hostname: implemented;
+- verified-domain requirement: architectural rule;
+- customer DNS onboarding flow: documented;
+- SSL/TLS lifecycle: documented;
+- monetization as a Catalog Feature: documented;
+- provider-neutral edge/domain boundary: documented;
+- production custom-domain infrastructure: deferred until the Tenancy + Entitlements + Billing dependencies are ready.
+
+This documentation update does not claim that custom-domain provisioning or SSL automation is already implemented.
