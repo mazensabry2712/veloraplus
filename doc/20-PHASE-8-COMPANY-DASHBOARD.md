@@ -584,16 +584,37 @@ The test suite covers checkout creation, checkout URL propagation, permission/en
 
 ### 8.4 Billing workspace
 
-Expose the existing Platform Billing domain to authorized tenant members:
+The Dashboard Billing workspace is strictly for Company → VeloraPlus Platform Billing. Customer → Company Booking payments remain under the Tenant Payments boundary in 8.3.5.
 
-- current subscription;
-- subscription items;
-- pricing context;
-- invoices;
-- payment state;
-- refunds / credits where appropriate.
+#### 8.4.1 Subscription & Billing access — Backend implemented
 
-Billing UI must never rewrite financial state directly. State changes go through the existing Billing application services.
+Implemented backend boundary:
+
+- `billing.view` and `billing.manage` tenant-scoped permissions;
+- `PlatformBillingPolicy` for Subscription, Invoice, Payment, and Refund tenant ownership checks;
+- `PlatformBillingDashboardService::overview()` for current subscription, recent invoices, and recent platform payments;
+- `PlatformBillingDashboardService::cancelAtPeriodEnd()` delegating to the existing `SubscriptionService`;
+- `CancelSubscriptionRequest`;
+- `PlatformBillingController`;
+- subscription cancellation route:
+  `POST /dashboard/billing/subscription/{subscription}/cancel`;
+- RBAC coverage for Owner/Admin/Manager/Viewer/Staff billing access.
+
+Existing Billing services remain the financial source of truth. Dashboard code does not write invoices, payments, refunds, credits, or subscription totals directly.
+
+The first 8.4 backend slice is implemented; final verification is pending on the current CI/test run.
+
+#### 8.4.2 Platform Billing Checkout
+
+Planned.
+
+#### 8.4.3 Invoices, payments, refunds, and credits
+
+Planned.
+
+#### 8.4.4 Subscription changes
+
+Planned.
 
 ### 8.5 Module Marketplace
 
