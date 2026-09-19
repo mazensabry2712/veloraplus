@@ -5,6 +5,7 @@ namespace App\Application\Booking;
 use App\Domain\Booking\ServiceStatus;
 use App\Models\Service;
 use DomainException;
+use Illuminate\Support\Str;
 
 final class ServiceManager
 {
@@ -37,7 +38,7 @@ final class ServiceManager
             'metadata' => $service->metadata,
         ];
 
-        $service->update($this->normalize(array_replace($current, $attributes)));
+        $service->update($this->normalize(array_replace($current, $attributes), $service->getKey()));
 
         return $service->refresh();
     }
@@ -57,7 +58,7 @@ final class ServiceManager
      * @param  array<string, mixed>  $attributes
      * @return array<string, mixed>
      */
-    private function normalize(array $attributes): array
+    private function normalize(array $attributes, ?string $ignoreServiceId = null): array
     {
         $name = trim((string) ($attributes['name'] ?? ''));
 
@@ -67,6 +68,7 @@ final class ServiceManager
 
         $slug = $this->resolveUniqueSlug(
             isset($attributes['slug']) ? (string) $attributes['slug'] : $name,
+            $ignoreServiceId,
         );
 
         $duration = (int) ($attributes['duration_minutes'] ?? 0);
@@ -127,9 +129,9 @@ final class ServiceManager
         ];
     }
 
-    private function resolveUniqueSlug(string $value): string
+    private function resolveUniqueSlug(string $value, ?string $ignoreServiceId = null): string
     {
-        $base = \Illuminate\Support\Str::slug(trim($value));
+        $base = Str::slug(trim($value));
 
         if ($base === '') {
             $base = 'service';
@@ -138,7 +140,10 @@ final class ServiceManager
         $slug = $base;
         $suffix = 2;
 
-        while (Service::withTrashed()->where('slug', $slug)->exists()) {
+        while (Service::withTrashed()
+            ->where('slug', $slug)
+            ->when($ignoreServiceId !== null, fn ($query) => $query->whereKey('!=', $ignoreServiceId))
+            ->exists()) {
             $slug = $base.'-'.$suffix;
             $suffix++;
         }
