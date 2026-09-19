@@ -200,6 +200,8 @@ test('role with an active or inactive membership cannot be deleted', function ()
     $tenant = createTenantRoleManagementTenant($path);
     $owner = addTenantRoleManagementMember($tenant);
 
+    app(TenantContext::class)->set($tenant);
+
     $role = app(TenantRoleManager::class)->create([
         'name' => 'Reception',
         'permissions' => ['customers.view'],
