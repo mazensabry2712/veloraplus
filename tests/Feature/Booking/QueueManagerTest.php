@@ -323,6 +323,7 @@ test('queue appointment must match customer service location and business date',
     extract(queueFixtures());
 
     $appointment = Appointment::factory()->create([
+        'location_id' => $location->getKey(),
         'payment_status' => 'unpaid',
         'status' => 'confirmed',
     ]);
