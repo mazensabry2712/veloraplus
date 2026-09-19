@@ -133,6 +133,8 @@ final class KashierTenantWebhookHandler
             throw new DomainException('Tenant payment webhook merchant order id is invalid.');
         }
 
-        return strtolower($tenantId);
+        return (string) Tenant::query()
+            ->whereRaw('LOWER(id) = LOWER(?)', [$tenantId])
+            ->value('id') ?? throw new DomainException('Tenant payment webhook target was not found.');
     }
 }
