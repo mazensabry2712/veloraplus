@@ -5,7 +5,6 @@ namespace App\Application\Booking;
 use App\Application\Payments\TenantPaymentManager;
 use App\Domain\Booking\AppointmentPaymentStatus;
 use App\Domain\Tenancy\TenantContext;
-use App\Infrastructure\Tenancy\TenantDatabaseManager;
 use App\Models\Appointment;
 use App\Models\Customer;
 use App\Models\PaymentProviderAccount;
@@ -135,15 +134,7 @@ final class PublicBookingManager
             ];
         }
 
-        try {
-            $payment = $this->payments->createCheckout($appointment);
-        } catch (\Throwable $exception) {
-            return [
-                'appointment' => $appointment->refresh(),
-                'payment' => null,
-                'checkout_url' => null,
-            ];
-        }
+        $payment = $this->payments->createCheckout($appointment);
 
         $checkout = $payment->metadata['checkout'] ?? [];
 
