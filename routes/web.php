@@ -230,7 +230,8 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
             ->name('subscription.downgrade');
 
         Route::post('/subscription/{subscription}/cancel', [PlatformBillingController::class, 'cancelSubscription'])
-            ->name('subscription.cancel');\n    });
+            ->name('subscription.cancel');
+    });
 
 Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
     ->prefix('dashboard/marketplace')
@@ -238,7 +239,6 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
     ->group(function (): void {
         Route::post('/purchase', [ModuleMarketplaceController::class, 'purchase'])
             ->name('purchase');
-    });
     });
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
