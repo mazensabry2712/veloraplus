@@ -957,3 +957,54 @@ The following are not part of the initial Dashboard delivery unless separately a
 Phase 8 is a delivery phase, not a redesign of the Core.
 
 If a required Dashboard feature exposes a missing backend capability, the correct response is to add that capability through the existing domain/application architecture and tests before wiring the UI. Do not add business logic directly inside Blade templates or controllers merely to make a screen work.
+
+
+---
+
+## 8.7 Dashboard UI Direction — Locked
+
+The authenticated Dashboard UI direction is now documented in:
+
+- `doc/22-VISUAL-IDENTITY.md` — locked brand/design-system source of truth;
+- `doc/23-DASHBOARD-UI-DIRECTION.md` — Dashboard composition, interaction patterns, density, responsive behavior, QA gate, decisions, and reference products.
+
+The agreed reference model is:
+
+- **Linear** — navigation, hierarchy, and calm workspace presentation;
+- **Stripe Dashboard** — operational data, tables, search, filtering, and scanning;
+- **Vercel** — dashboard structure, workspace context, and responsive navigation.
+
+These products are references only. VeloraPlus must not copy their branding, proprietary screens, logos, or frontend implementations.
+
+### Current visual implementation
+
+The current shared frontend refinement includes:
+
+- stronger Primary Blue active navigation;
+- branded page headers;
+- improved card hierarchy;
+- stronger secondary-control hover states;
+- branded table headers and row hover states;
+- refined neutral badges.
+
+The visual goal is to remove the previous flat white/black feel through controlled brand hierarchy rather than random colors.
+
+### Locked implementation rules
+
+- Shared components first, page-specific styling second.
+- Blade + Tailwind + Alpine/Vanilla JavaScript + Vite remain the frontend stack.
+- Backend authorization, entitlements, validation, booking, queue, billing, and payment rules remain backend-authoritative.
+- Operational screens prioritize scanning and fast actions over decoration.
+- Pagination and bounded data loading remain mandatory for growing datasets.
+- Desktop, tablet, mobile, and RTL/LTR behavior are part of the visual QA gate.
+
+### Current verification baseline
+
+Latest user-verified branch state:
+
+- Vite production build: passed;
+- full automated tests: 261 passed / 1422 assertions;
+- `git diff --check`: clean;
+- working tree: clean.
+
+The next frontend increment should continue from this documented UI direction rather than introducing a separate page-by-page design language.
