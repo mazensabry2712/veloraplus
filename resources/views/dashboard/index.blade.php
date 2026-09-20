@@ -25,7 +25,7 @@
                         {{ ucfirst($membership->role_key) }} access
                     </span>
                     <span class="inline-flex items-center rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-secondary">
-                        {{ $tenant->slug }}.velora.test
+                        {{ request()->getHost() }}
                     </span>
                 </div>
 
