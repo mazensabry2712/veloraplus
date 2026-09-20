@@ -13,7 +13,7 @@
         <x-dashboard.card title="Company Members" description="Memberships are read from the central identity store and filtered to the active tenant.">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border text-sm">
-                    <thead class="bg-surface">
+                    <thead class="bg-primary/5">
                     <tr class="text-start text-xs font-semibold uppercase tracking-wide text-muted">
                         <th class="px-4 py-3">Account</th>
                         <th class="px-4 py-3">Role</th>
@@ -26,7 +26,7 @@
                     </thead>
                     <tbody class="divide-y divide-border">
                     @forelse ($memberships as $membership)
-                        <tr class="align-top">
+                        <tr class="align-top transition-colors hover:bg-primary/5">
                             <td class="px-4 py-4">
                                 <div class="font-medium text-secondary">{{ $membership->account?->name ?: 'Unknown account' }}</div>
                                 <div class="mt-1 text-xs text-muted">{{ $membership->account?->email ?: '—' }}</div>
