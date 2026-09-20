@@ -1,12 +1,13 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Settings')
-@section('heading', 'Settings')
+@section('title', __('dashboard.settings'))
+@section('heading', __('dashboard.settings'))
 
 @section('content')
     <x-dashboard.page-header
-        title="Settings"
-        description="Company presentation, localization, and payment integration settings. Sensitive provider credentials are write-only in the Dashboard."
+        :title="__('dashboard.settings')"
+        :description="__('dashboard.page_descriptions.settings')"
+        Company presentation, localization, and payment integration settings. Sensitive provider credentials are write-only in the Dashboard."
     />
 
     <div class="mt-6 space-y-6">
