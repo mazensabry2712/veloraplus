@@ -28,6 +28,8 @@ final class PublicHomeController extends Controller
             ]);
         }
 
-        abort(404);
+        return view('welcome', [
+            'seo' => $seo->platformHome(),
+        ]);
     }
 }
