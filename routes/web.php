@@ -1,26 +1,26 @@
 <?php
 
-use App\Http\Controllers\Public\PublicHomeController;
-use App\Http\Controllers\Public\PublicServiceController;
-use App\Http\Controllers\Public\PublicBookingController;
-use App\Http\Controllers\Public\RobotsController;
-use App\Http\Controllers\Public\SitemapController;
+use App\Http\Controllers\Dashboard\AppointmentController;
+use App\Http\Controllers\Dashboard\BookingAvailabilityController;
+use App\Http\Controllers\Dashboard\BookingServiceController;
 use App\Http\Controllers\Dashboard\CompanyDashboardController;
 use App\Http\Controllers\Dashboard\CompanyProfileController;
-use App\Http\Controllers\Dashboard\LocationController;
-use App\Http\Controllers\Dashboard\TenantSettingsController;
-use App\Http\Controllers\Dashboard\StaffController;
 use App\Http\Controllers\Dashboard\CustomerController;
-use App\Http\Controllers\Dashboard\TenantMembershipController;
-use App\Http\Controllers\Dashboard\TenantRoleController;
-use App\Http\Controllers\Dashboard\BookingServiceController;
-use App\Http\Controllers\Dashboard\BookingAvailabilityController;
-use App\Http\Controllers\Dashboard\AppointmentController;
-use App\Http\Controllers\Dashboard\QueueController;
-use App\Http\Controllers\Dashboard\TenantPaymentController;
+use App\Http\Controllers\Dashboard\LocationController;
 use App\Http\Controllers\Dashboard\PlatformBillingController;
-use App\Http\Controllers\Webhooks\KashierWebhookController;
+use App\Http\Controllers\Dashboard\QueueController;
+use App\Http\Controllers\Dashboard\StaffController;
+use App\Http\Controllers\Dashboard\TenantMembershipController;
+use App\Http\Controllers\Dashboard\TenantPaymentController;
+use App\Http\Controllers\Dashboard\TenantRoleController;
+use App\Http\Controllers\Dashboard\TenantSettingsController;
+use App\Http\Controllers\Public\PublicBookingController;
+use App\Http\Controllers\Public\PublicHomeController;
+use App\Http\Controllers\Public\PublicServiceController;
+use App\Http\Controllers\Public\RobotsController;
+use App\Http\Controllers\Public\SitemapController;
 use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
+use App\Http\Controllers\Webhooks\KashierWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
@@ -98,7 +98,7 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.services
 
         Route::delete('/{service}', [BookingServiceController::class, 'destroy'])
             ->name('destroy');
-});
+    });
 
 Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.availability', 'noindex'])
     ->prefix('dashboard/booking/availability')
