@@ -1,4 +1,7 @@
 @php
+    $entitlementService = app('App\\Application\\Entitlements\\EntitlementService');
+    $tenantContext = app('App\\Domain\\Tenancy\\TenantContext');
+
     $sections = [
         'Company' => [
             ['label' => 'Profile', 'route' => 'company.profile', 'icon' => 'building'],
@@ -58,7 +61,7 @@
                             :icon="$item['icon']"
                             disabled
                         />
-                    @elseif (($permission === null || auth()->user()->can($permission)) && ($entitlement === null || app(AppApplicationEntitlementsEntitlementService::class)->canUse(app(AppDomainTenancyTenantContext::class)->current(), $entitlement)))
+                    @elseif (($permission === null || auth()->user()->can($permission)) && ($entitlement === null || $entitlementService->canUse($tenantContext->current(), $entitlement)))
                         <x-dashboard.nav-item
                             :label="$item['label']"
                             :href="route($item['route'])"
