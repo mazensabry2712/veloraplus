@@ -17,6 +17,7 @@ use App\Http\Controllers\Dashboard\TenantRoleController;
 use App\Http\Controllers\Dashboard\TenantSettingsController;
 use App\Http\Controllers\Dashboard\UsageController;
 use App\Http\Controllers\Dashboard\TenantIntegrationSettingsController;
+use App\Http\Controllers\Dashboard\CompanyPreferencesController;
 use App\Http\Controllers\Public\PublicBookingController;
 use App\Http\Controllers\Public\PublicHomeController;
 use App\Http\Controllers\Public\PublicServiceController;
@@ -61,6 +62,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])->group(functio
 
     Route::put('/dashboard/settings/payment', [TenantIntegrationSettingsController::class, 'updatePayment'])
         ->name('dashboard.settings.payment.update');
+
+    Route::put('/dashboard/settings/preferences', [CompanyPreferencesController::class, 'update'])
+        ->name('dashboard.settings.preferences.update');
 
     Route::get('/dashboard/usage', UsageController::class)
         ->name('dashboard.usage');
