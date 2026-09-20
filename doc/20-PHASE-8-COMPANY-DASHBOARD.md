@@ -744,10 +744,9 @@ Verification:
 - `git diff --check` clean;
 - GitHub Actions is green for the verified main commit.
 
-Still remaining within 8.6 backend scope:
+The Company Preferences backend boundary is now implemented for `default_currency`, `timezone`, and `locale`, using the existing central Company Profile source of truth and synchronized `company.*` tenant-local projections. The Dashboard settings surface exposes the read/write contract through `PUT /dashboard/settings/preferences`.
 
-- localization, timezone, and currency presentation/read-write behavior where the existing Company Profile contract needs an explicit Dashboard presentation surface;
-- additional integration settings only where an existing backend contract exists or is first added and tested.
+Verification of this latest preferences increment is pending the local dedicated/full test run and corresponding GitHub Actions result. Additional integration settings remain limited to capabilities with an existing backend contract or a separately designed/tested capability.
 
 The settings surface must consume the completed Company Profile, Branding, Social, Tax, and SEO contracts rather than creating duplicate configuration stores.
 
