@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — BACKEND COMPLETION GATE BEFORE 8.6**
+**IN PROGRESS — 8.6 USAGE AND SETTINGS**
 
 Phase 8 is the next major product delivery after the completed Phase 7 Booking implementation. It converts the verified Core + Booking backend capabilities into the authenticated Company Dashboard used by tenant members.
 
@@ -352,7 +352,7 @@ Routes:
 
 The test suite covers custom role creation/update, system-role protection, deletion protection for referenced roles, RBAC denial, and cross-tenant isolation.
 
-#### 8.2.8 Company Branding, Social & Commercial Settings — Backend implemented; CI verified
+#### 8.2.8 Company Branding, Social & Commercial Settings — Backend implemented and verified
 
 Company-specific branding and public profile presentation are tenant-scoped.
 
@@ -715,7 +715,7 @@ Route:
 
 - POST /dashboard/marketplace/purchase
 
-The frontend Marketplace listing and purchase UI remain a later Dashboard UI pass. GitHub Actions verifies the current backend implementation at 236 tests / 1244 assertions. Final local verification is still required before the backend completion audit can close.
+The frontend Marketplace listing and purchase UI remain a later Dashboard UI pass. GitHub Actions verifies the current backend implementation at 236 tests / 1244 assertions. The final local gate is now closed: the user pulled the verified main commit, ran the migration, targeted completion suite, full suite, and diff checks successfully.
 ### 8.6 Usage and settings
 
 This slice is intentionally blocked until the backend completion audit closes.
