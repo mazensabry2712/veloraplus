@@ -607,3 +607,20 @@ Frontend work should proceed in this order:
     Responsive + RTL/LTR QA
         ↓
     Browser QA
+
+
+---
+
+## 27. Dashboard UI direction reference
+
+The locked Visual Identity is complemented by `doc/23-DASHBOARD-UI-DIRECTION.md`.
+
+The Dashboard uses external products as **pattern references only**:
+
+- Linear — navigation, hierarchy, and calm workspace presentation;
+- Stripe Dashboard — operational tables, search, filtering, and data scanning;
+- Vercel — sidebar-first dashboard structure, context, and responsive behavior.
+
+VeloraPlus does not copy their branding, screens, logos, or frontend code. These references only inform information architecture and interaction patterns.
+
+The resulting UI must remain recognizably VeloraPlus and must continue using the palette, typography, semantic tokens, accessibility rules, and tenant-branding boundaries already defined in this document.
