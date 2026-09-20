@@ -1,12 +1,13 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Locations')
-@section('heading', 'Locations')
+@section('title', __('dashboard.locations'))
+@section('heading', __('dashboard.locations'))
 
 @section('content')
     <x-dashboard.page-header
-        title="Locations"
-        description="Manage the physical locations used by your company and its booking staff."
+        :title="__('dashboard.locations')"
+        :description="__('dashboard.page_descriptions.locations')"
+
     />
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
