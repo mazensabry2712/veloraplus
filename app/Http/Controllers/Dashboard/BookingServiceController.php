@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Application\Booking\ServiceManager;
+use App\Domain\Tenancy\TenantContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\StoreBookingServiceRequest;
 use App\Http\Requests\Dashboard\UpdateBookingServiceRequest;
@@ -14,11 +15,12 @@ use Illuminate\View\View;
 
 final class BookingServiceController extends Controller
 {
-    public function index(): View
+    public function index(TenantContext $tenantContext): View
     {
         Gate::authorize('viewAny', Service::class);
 
         return view('dashboard.booking.services', [
+            'tenant' => $tenantContext->current(),
             'services' => Service::query()
                 ->select([
                     'id',
