@@ -58,7 +58,7 @@
                             <td class="px-4 py-4 text-muted">{{ $service->capacity }}</td>
                             <td class="px-4 py-4">
                                 <x-dashboard.badge :variant="$service->online_bookable ? 'success' : 'neutral'">
-                                    {{ $service->online_bookable ? {{ __('dashboard.booking_pages.online_bookable') }} : {{ __('dashboard.booking_pages.offline_only') }} }}
+                                    {{ $service->online_bookable ? __('dashboard.booking_pages.online_bookable') : __('dashboard.booking_pages.offline_only') }}
                                 </x-dashboard.badge>
                             </td>
                             <td class="px-4 py-4">
