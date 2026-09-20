@@ -644,7 +644,7 @@ Dashboard Billing remains strictly Company → VeloraPlus. Tenant customer Booki
 
 The 8.4.3 backend slice is implemented and locally verified. The dedicated Platform Billing/Billing tests pass at 26 tests / 110 assertions, and the full local regression suite is green at 218 tests / 1129 assertions.
 
-#### 8.4.4 Subscription changes — Dashboard backend implemented
+#### 8.4.4 Subscription changes — Dashboard backend implemented and verified
 
 Implemented:
 
@@ -664,7 +664,7 @@ Routes:
 
 Tests cover successful upgrade/downgrade, RBAC denial, malformed upgrade input, pending upgrade state, invoice creation, and end-of-period entitlement behavior.
 
-Local verification is pending for the current 8.4.4 implementation batch.
+Local verification is green at 222 tests / 1154 assertions, including the dedicated Platform Billing/Billing dashboard coverage. The corresponding finalized GitHub Actions test run is also green.
 
 ### 8.5 Module Marketplace
 
