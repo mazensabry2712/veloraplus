@@ -42,16 +42,32 @@
                     </div>
 
                     @if ($canManage && $servicesEntitled && $services->isNotEmpty())
-                        <form method="POST" action="{{ route('dashboard.booking.availability.assign-service', [$staff]) }}" class="flex flex-wrap items-center gap-2">
-                            @csrf
-                            <label class="sr-only" for="service-{{ $staff->getKey() }}">Assign service</label>
-                            <select id="service-{{ $staff->getKey() }}" name="service_id" class="min-h-10 rounded-lg border border-border bg-white px-3 text-sm">
-                                @foreach ($services as $service)
-                                    <option value="{{ $service->getKey() }}">{{ $service->name }}</option>
-                                @endforeach
-                            </select>
-                            <x-dashboard.button type="submit" size="sm">Assign Service</x-dashboard.button>
-                        </form>
+                        @php
+                            $assignedServiceIds = $staff->services
+                                ->pluck('id')
+                                ->map(static fn ($id): string => (string) $id)
+                                ->all();
+                        @endphp
+
+                        @php
+                            $unassignedServices = $services->reject(
+                                static fn ($service): bool => in_array((string) $service->getKey(), $assignedServiceIds, true)
+                            );
+                        @endphp
+
+                        @if ($unassignedServices->isNotEmpty())
+                            <details>
+                                <summary class="inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg border border-border px-3 text-xs font-medium text-secondary [&::-webkit-details-marker]:hidden">Assign Service</summary>
+                                <div class="mt-3 flex flex-wrap gap-2 rounded-xl border border-border bg-surface p-3">
+                                    @foreach ($unassignedServices as $service)
+                                        <form method="POST" action="{{ route('dashboard.booking.availability.assign-service', [$staff, $service]) }}">
+                                            @csrf
+                                            <x-dashboard.button type="submit" size="sm">{{ $service->name }}</x-dashboard.button>
+                                        </form>
+                                    @endforeach
+                                </div>
+                            </details>
+                        @endif
                     @endif
                 </div>
 
