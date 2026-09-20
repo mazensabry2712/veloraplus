@@ -459,11 +459,10 @@ There are two visual layers.
 
 Used for:
 
-- Dashboard chrome;
 - authentication shell;
-- platform-level navigation;
+- platform-level navigation and administration;
 - system messaging;
-- default SaaS UI;
+- default public/platform interfaces;
 - VeloraPlus operational interfaces.
 
 Uses this locked visual system.
@@ -477,9 +476,12 @@ Used for:
 - future tenant-facing transactional presentation;
 - company logo and favicon;
 - tenant colors;
-- tenant social presentation.
+- tenant social presentation;
+- subscriber/company Dashboard shell branding.
 
 Tenant branding is configurable through the existing branding.* company settings contract.
+
+For a subscribed tenant's operational Dashboard, the tenant identity is the visible product identity by default. VeloraPlus must not appear in the sidebar, page header, browser title, or workspace controls. The VeloraPlus brand is reserved for a small "Powered by VeloraPlus" attribution in the Dashboard footer.
 
 Tenant branding must not leak into platform controls in a way that hides the VeloraPlus system boundary.
 
