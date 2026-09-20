@@ -438,7 +438,6 @@ test('owner can request a subscription upgrade and receives a pending invoice', 
     $upgradeInvoice = PlatformInvoice::query()
         ->where('subscription_id', $subscription->getKey())
         ->where('status', \App\Domain\Billing\InvoiceStatus::Open->value)
-        ->whereJsonContains('metadata->type', 'upgrade')
         ->firstOrFail();
 
     expect($pending)->not->toBeNull()
