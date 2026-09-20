@@ -812,7 +812,7 @@ No new frontend framework is introduced for Phase 8.
 
 The Dashboard should use shared Blade components/layouts instead of duplicating page markup.
 
-The visual system, typography, spacing, component states, and color tokens should be documented before broad page implementation and then reused consistently across the Dashboard.
+The visual system, typography, spacing, component states, and color tokens are locked in doc/22-VISUAL-IDENTITY.md and must be treated as the frontend visual source of truth before broad page implementation.
 
 ## 8. Data and performance rules
 
