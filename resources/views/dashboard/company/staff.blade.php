@@ -13,7 +13,7 @@
         <x-dashboard.card title="Staff List" description="The list is paginated to keep the dashboard lightweight as your team grows.">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border text-sm">
-                    <thead class="bg-surface">
+                    <thead class="bg-primary/5">
                     <tr class="text-start text-xs font-semibold uppercase tracking-wide text-muted">
                         <th class="px-4 py-3">Staff Member</th>
                         <th class="px-4 py-3">Location</th>
@@ -26,7 +26,7 @@
                     </thead>
                     <tbody class="divide-y divide-border">
                     @forelse ($staff as $member)
-                        <tr class="align-top">
+                        <tr class="align-top transition-colors hover:bg-primary/5">
                             <td class="px-4 py-4">
                                 <div class="font-medium text-secondary">{{ $member->name }}</div>
                                 <div class="mt-1 text-xs text-muted">{{ $member->email ?: 'No email' }}</div>
