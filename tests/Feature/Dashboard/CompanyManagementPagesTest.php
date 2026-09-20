@@ -227,9 +227,13 @@ test('customer listing is paginated instead of loading the full tenant collectio
     companyPagesConnect($tenant);
 
     try {
-        Customer::factory()->count(21)->sequence(
-            fn ($sequence) => ['name' => 'Customer '.($sequence->index + 1)]
-        )->create();
+        for ($i = 1; $i <= 21; $i++) {
+            Customer::factory()->create([
+                'name' => 'Customer '.$i,
+                'created_at' => now()->addSeconds($i),
+                'updated_at' => now()->addSeconds($i),
+            ]);
+        }
     } finally {
         app(TenantDatabaseManager::class)->disconnect();
     }
@@ -238,5 +242,11 @@ test('customer listing is paginated instead of loading the full tenant collectio
         ->get('http://company-pages.velora.test/dashboard/company/customers')
         ->assertOk()
         ->assertSee('Customer 21', false)
-        ->assertSee('Customer 1', false);
+        ->assertSee('Page 1 of 2', false);
+
+    $this->actingAs($owner)
+        ->get('http://company-pages.velora.test/dashboard/company/customers?page=2')
+        ->assertOk()
+        ->assertSee('Customer 1', false)
+        ->assertSee('Page 2 of 2', false);
 });
