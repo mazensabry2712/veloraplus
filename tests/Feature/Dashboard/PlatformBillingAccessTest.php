@@ -539,7 +539,7 @@ test('subscription upgrade rejects malformed catalog items', function (): void {
             'items' => [
                 [
                     'catalog_type' => 'unknown',
-                    'catalog_key' => 'not-valid',
+                    'catalog_key' => '',
                     'quantity' => 0,
                 ],
             ],
