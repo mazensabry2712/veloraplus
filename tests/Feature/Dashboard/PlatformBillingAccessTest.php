@@ -437,7 +437,8 @@ test('owner can request a subscription upgrade and receives a pending invoice', 
     $pending = $subscription->fresh('items')->items->firstWhere('catalog_key', $extra->key);
     $upgradeInvoice = PlatformInvoice::query()
         ->where('subscription_id', $subscription->getKey())
-        ->latest('issued_at')
+        ->where('status', \App\Domain\Billing\InvoiceStatus::Open->value)
+        ->whereJsonContains('metadata->type', 'upgrade')
         ->firstOrFail();
 
     expect($pending)->not->toBeNull()
