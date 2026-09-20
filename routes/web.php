@@ -19,8 +19,9 @@ use App\Http\Controllers\Public\PublicHomeController;
 use App\Http\Controllers\Public\PublicServiceController;
 use App\Http\Controllers\Public\RobotsController;
 use App\Http\Controllers\Public\SitemapController;
-use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
+use App\Http\Controllers\Dashboard\ModuleMarketplaceController;
 use App\Http\Controllers\Webhooks\KashierWebhookController;
+use App\Http\Controllers\Webhooks\KashierTenantWebhookController;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
@@ -230,6 +231,14 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
 
         Route::post('/subscription/{subscription}/cancel', [PlatformBillingController::class, 'cancelSubscription'])
             ->name('subscription.cancel');
+    });
+
+Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
+    ->prefix('dashboard/marketplace')
+    ->name('dashboard.marketplace.')
+    ->group(function (): void {
+        Route::post('/purchase', [ModuleMarketplaceController::class, 'purchase'])
+            ->name('purchase');
     });
 
 Route::middleware('public.tenant')->prefix('services')->name('public.services.')->group(function (): void {
