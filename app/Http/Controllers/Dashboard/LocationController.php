@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Application\Company\LocationManager;
+use App\Domain\Tenancy\TenantContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\StoreLocationRequest;
 use App\Http\Requests\Dashboard\UpdateLocationRequest;
@@ -13,11 +14,12 @@ use Illuminate\View\View;
 
 final class LocationController extends Controller
 {
-    public function index(): View
+    public function index(TenantContext $tenantContext): View
     {
         Gate::authorize('locations.view');
 
         return view('dashboard.company.locations', [
+            'tenant' => $tenantContext->current(),
             'locations' => Location::query()->orderBy('name')->paginate(15),
         ]);
     }
