@@ -5,8 +5,8 @@
 
 @section('content')
     <x-dashboard.page-header
-        title="Overview"
-        description="A live operational view of your company workspace, with today's booking signals and the work areas that are available to you."
+        :title="__('dashboard.overview')"
+        :description="__('dashboard.overview_description')"
     >
         <x-slot:actions>
             <div class="flex flex-wrap items-center justify-end gap-2">
@@ -16,7 +16,7 @@
 
                 @if (auth()->user()->can('company.view'))
                     <a href="{{ route('company.profile') }}" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
-                        Company Profile
+                        {{ __('dashboard.company_profile') }}
                     </a>
                 @endif
             </div>
@@ -30,7 +30,7 @@
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/15">
                             <span class="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
-                            {{ ucfirst($membership->role_key) }} access
+                            {{ __('dashboard.roles.'.$membership->role_key) }} {{ __('dashboard.access') }}
                         </span>
                         <span class="inline-flex items-center rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-slate-200 ring-1 ring-inset ring-white/10">
                             {{ request()->getHost() }}
@@ -42,21 +42,21 @@
                     </h2>
 
                     <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-200 sm:text-base">
-                        Your operational command center for bookings, customers, staff, locations, and the capabilities enabled for this tenant.
+                        {{ __('dashboard.command_center_description') }}
                     </p>
                 </div>
 
                 <div class="mt-8 grid gap-3 sm:grid-cols-3">
                     <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                        <p class="text-xs font-medium text-slate-300">Appointments today</p>
+                        <p class="text-xs font-medium text-slate-300">{{ __('dashboard.appointments_today') }}</p>
                         <p class="mt-1 text-xl font-semibold text-white">{{ $summary['metrics']['appointments_today'] }}</p>
                     </div>
                     <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                        <p class="text-xs font-medium text-slate-300">Open queues</p>
+                        <p class="text-xs font-medium text-slate-300">{{ __('dashboard.open_queues') }}</p>
                         <p class="mt-1 text-xl font-semibold text-white">{{ $summary['metrics']['open_queues'] }}</p>
                     </div>
                     <div class="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                        <p class="text-xs font-medium text-slate-300">Waiting now</p>
+                        <p class="text-xs font-medium text-slate-300">{{ __('dashboard.waiting_now') }}</p>
                         <p class="mt-1 text-xl font-semibold text-white">{{ $summary['metrics']['waiting_queue_entries'] }}</p>
                     </div>
                 </div>
@@ -65,24 +65,24 @@
             <div class="rounded-2xl border border-white/10 bg-white/5 p-5">
                 <div class="flex items-center justify-between gap-3">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-300">Workspace health</p>
-                        <p class="mt-1 text-sm text-white">Core controls are connected.</p>
+                        <p class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-300">{{ __('dashboard.workspace_health') }}</p>
+                        <p class="mt-1 text-sm text-white">{{ __('dashboard.core_controls_connected') }}</p>
                     </div>
                     <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-accent" aria-hidden="true">✓</span>
                 </div>
 
                 <div class="mt-5 divide-y divide-white/10">
                     @foreach ([
-                        ['label' => 'Tenant isolation', 'detail' => 'Tenant-scoped data access'],
-                        ['label' => 'RBAC & policies', 'detail' => 'Backend authorization'],
-                        ['label' => 'Entitlements', 'detail' => 'Module capability state'],
+                        ['label' => __('dashboard.tenant_isolation'), 'detail' => __('dashboard.tenant_scoped_data')],
+                        ['label' => __('dashboard.rbac_policies'), 'detail' => __('dashboard.backend_authorization')],
+                        ['label' => __('dashboard.entitlements'), 'detail' => __('dashboard.module_capability_state')],
                     ] as $health)
                         <div class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
                             <div>
                                 <p class="text-sm font-medium text-white">{{ $health['label'] }}</p>
                                 <p class="mt-0.5 text-xs text-slate-400">{{ $health['detail'] }}</p>
                             </div>
-                            <x-dashboard.badge variant="success">Active</x-dashboard.badge>
+                            <x-dashboard.badge variant="success">{{ __('dashboard.active') }}</x-dashboard.badge>
                         </div>
                     @endforeach
                 </div>
@@ -93,41 +93,41 @@
     <section class="mt-6">
         <div class="flex items-end justify-between gap-4">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Today</p>
-                <h2 class="mt-1 text-lg font-semibold text-secondary">Operational summary</h2>
+                <p class="text-xs font-semibold uppercase tracking-[0.12em] text-primary">{{ __('dashboard.today') }}</p>
+                <h2 class="mt-1 text-lg font-semibold text-secondary">{{ __('dashboard.operational_summary') }}</h2>
             </div>
             <p class="hidden text-sm text-muted sm:block">{{ $summary['timezone'] }}</p>
         </div>
 
         <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <x-dashboard.stat
-                label="Appointments"
+                :label="__('dashboard.appointments')"
                 :value="$summary['metrics']['appointments_today']"
-                :detail="$summary['metrics']['confirmed_today'].' confirmed · '.$summary['metrics']['pending_today'].' pending'"
+                :detail="$summary['metrics']['confirmed_today'].' '.__('dashboard.confirmed_short').' · '.$summary['metrics']['pending_today'].' '.__('dashboard.pending_short')"
                 icon="calendar"
                 :href="route('dashboard.booking.appointments.index')"
             />
 
             <x-dashboard.stat
-                label="Active customers"
+                :label="__('dashboard.active_customers')
                 :value="$summary['metrics']['active_customers']"
-                detail="Customer records ready for operations"
+                :detail="__('dashboard.customer_records_ready')"
                 icon="users"
                 :href="route('company.customers')"
             />
 
             <x-dashboard.stat
-                label="Active staff"
+                :label="__('dashboard.active_staff')"
                 :value="$summary['metrics']['active_staff']"
-                :detail="$summary['metrics']['active_locations'].' active locations'"
+                :detail="$summary['metrics']['active_locations'].' '.__('dashboard.active_locations_detail')"
                 icon="user"
                 :href="route('company.staff')"
             />
 
             <x-dashboard.stat
-                label="Collected today"
+                :label="__('dashboard.collected_today')"
                 :value="number_format($summary['metrics']['collected_today_minor'] / 100, 2).' '.$summary['currency']"
-                detail="Successful tenant payments"
+                :detail="__('dashboard.successful_tenant_payments')"
                 icon="card"
             />
         </div>
@@ -135,18 +135,18 @@
 
     <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(20rem,1fr)]">
         <x-dashboard.card
-            title="Upcoming appointments"
-            description="The next confirmed and pending bookings in this tenant."
+            :title="__('dashboard.upcoming_appointments')"
+            :description="__('dashboard.upcoming_description')"
         >
             <x-slot:header>
-                <a href="{{ route('dashboard.booking.appointments.index') }}" class="text-sm font-semibold text-primary hover:text-primary-dark">View all</a>
+                <a href="{{ route('dashboard.booking.appointments.index') }}" class="text-sm font-semibold text-primary hover:text-primary-dark">{{ __('dashboard.view_all') }}</a>
             </x-slot:header>
 
             @if ($summary['upcoming_appointments']->isEmpty())
                 <div class="rounded-xl border border-dashed border-border bg-surface px-5 py-8 text-center">
-                    <p class="text-sm font-semibold text-secondary">No upcoming appointments</p>
-                    <p class="mt-1 text-sm text-muted">New bookings will appear here automatically.</p>
-                    <a href="{{ route('dashboard.booking.appointments.index') }}" class="mt-4 inline-flex text-sm font-semibold text-primary hover:text-primary-dark">Open appointments →</a>
+                    <p class="text-sm font-semibold text-secondary">{{ __('dashboard.no_upcoming') }}</p>
+                    <p class="mt-1 text-sm text-muted">{{ __('dashboard.new_bookings_here') }}</p>
+                    <a href="{{ route('dashboard.booking.appointments.index') }}" class="mt-4 inline-flex text-sm font-semibold text-primary hover:text-primary-dark">{{ __('dashboard.open_appointments') }} →</a>
                 </div>
             @else
                 <div class="overflow-x-auto">
@@ -181,18 +181,18 @@
             @endif
         </x-dashboard.card>
 
-        <x-dashboard.card title="Today's queue" description="Live signals from queues operating on the current business date.">
+        <x-dashboard.card  :title="__('dashboard.todays_queue')" :description="__('dashboard.live_queue_signals')">
             <div class="grid grid-cols-3 divide-x divide-border rounded-xl border border-border bg-surface" dir="ltr">
                 <div class="px-3 py-4 text-center">
-                    <p class="text-xs font-medium text-muted">Open</p>
+                    <p class="text-xs font-medium text-muted">{{ __('dashboard.open') }}</p>
                     <p class="mt-1 text-xl font-semibold text-secondary">{{ $summary['metrics']['open_queues'] }}</p>
                 </div>
                 <div class="px-3 py-4 text-center">
-                    <p class="text-xs font-medium text-muted">Waiting</p>
+                    <p class="text-xs font-medium text-muted">{{ __('dashboard.waiting') }}</p>
                     <p class="mt-1 text-xl font-semibold text-secondary">{{ $summary['metrics']['waiting_queue_entries'] }}</p>
                 </div>
                 <div class="px-3 py-4 text-center">
-                    <p class="text-xs font-medium text-muted">Serving</p>
+                    <p class="text-xs font-medium text-muted">{{ __('dashboard.serving') }}</p>
                     <p class="mt-1 text-xl font-semibold text-secondary">{{ $summary['metrics']['serving_queue_entries'] }}</p>
                 </div>
             </div>
@@ -208,30 +208,30 @@
                             <p class="mt-0.5 truncate text-xs text-muted">{{ $queue->location?->name ?? 'Location' }}</p>
                         </div>
                         <div class="text-end">
-                            <p class="text-sm font-semibold text-secondary">{{ $queue->waiting_count }} waiting</p>
-                            <p class="mt-0.5 text-xs text-muted">{{ ucfirst($queue->status?->value ?? 'closed') }}</p>
+                            <p class="text-sm font-semibold text-secondary">{{ $queue->waiting_count }} {{ __('dashboard.waiting') }}</p>
+                            <p class="mt-0.5 text-xs text-muted">{{ __('dashboard.'.($queue->status?->value ?? 'closed')) }}</p>
                         </div>
                     </div>
                 @empty
                     <div class="rounded-xl border border-dashed border-border bg-surface px-4 py-7 text-center">
-                        <p class="text-sm font-semibold text-secondary">No queues today</p>
-                        <p class="mt-1 text-sm text-muted">Create a queue when you are ready for walk-in operations.</p>
+                        <p class="text-sm font-semibold text-secondary">{{ __('dashboard.no_queues_today') }}</p>
+                        <p class="mt-1 text-sm text-muted">{{ __('dashboard.no_queues_detail') }}</p>
                     </div>
                 @endforelse
             </div>
 
             <a href="{{ route('dashboard.booking.queues.index') }}" class="mt-4 inline-flex text-sm font-semibold text-primary hover:text-primary-dark">
-                Open queue workspace →
+                {{ __('dashboard.open_queue_workspace') }} →
             </a>
         </x-dashboard.card>
     </section>
 
     <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(20rem,1fr)]">
-        <x-dashboard.card title="Recent activity" description="The latest appointment lifecycle events recorded by the backend.">
+        <x-dashboard.card  :title="__('dashboard.recent_activity')" :description="__('dashboard.recent_description')">
             @if ($summary['recent_activity']->isEmpty())
                 <div class="rounded-xl border border-dashed border-border bg-surface px-5 py-8 text-center">
-                    <p class="text-sm font-semibold text-secondary">No activity yet</p>
-                    <p class="mt-1 text-sm text-muted">Appointment lifecycle changes will appear here.</p>
+                    <p class="text-sm font-semibold text-secondary">{{ __('dashboard.no_activity') }}</p>
+                    <p class="mt-1 text-sm text-muted">{{ __('dashboard.activity_hint') }}</p>
                 </div>
             @else
                 <div class="space-y-5">
@@ -248,13 +248,18 @@
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <p class="text-sm font-semibold text-secondary">
-                                        {{ ucfirst(str_replace('_', ' ', $activity->to_status)) }}
+                                        {{ match ($activity->to_status) {
+                                            'confirmed' => __('dashboard.confirmed'),
+                                            'pending' => __('dashboard.pending'),
+                                            'completed' => __('dashboard.completed', []),
+                                            default => str($activity->to_status)->replace('_', ' ')->title(),
+                                        } }}
                                         <span class="font-normal text-muted">· {{ $activity->appointment?->customer?->name ?? 'Customer' }}</span>
                                     </p>
                                     <span class="text-xs text-muted">{{ $activity->changed_at?->timezone($summary['timezone'])->diffForHumans() }}</span>
                                 </div>
                                 <p class="mt-1 text-sm leading-6 text-muted">
-                                    {{ $activity->reason ?: 'Appointment status updated.' }}
+                                    {{ $activity->reason ?: __('dashboard.status_updated') }}
                                 </p>
                             </div>
                         </div>
@@ -263,7 +268,7 @@
             @endif
         </x-dashboard.card>
 
-        <x-dashboard.card title="Workspace capacity" description="The active operational footprint of this tenant.">
+        <x-dashboard.card  :title="__('dashboard.workspace_capacity')" :description="__('dashboard.capacity_description')">
             <div class="space-y-3">
                 @foreach ([
                     ['label' => 'Services', 'value' => $summary['metrics']['active_services'], 'href' => route('dashboard.booking.services.index')],
@@ -278,7 +283,7 @@
             </div>
 
             <div class="mt-5 rounded-xl border border-primary/10 bg-primary/5 p-4">
-                <p class="text-xs font-semibold uppercase tracking-[0.11em] text-primary">Available workspaces</p>
+                <p class="text-xs font-semibold uppercase tracking-[0.11em] text-primary">{{ __('dashboard.available_workspaces') }}</p>
                 <div class="mt-3 grid gap-2 sm:grid-cols-2">
                     @foreach ($quickLinks as $link)
                         <a href="{{ route($link['route']) }}" class="flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-secondary transition-colors hover:bg-white hover:text-primary">
