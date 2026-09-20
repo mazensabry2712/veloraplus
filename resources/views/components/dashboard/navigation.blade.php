@@ -35,7 +35,7 @@
 
     @foreach ($sections as $section => $items)
         <section>
-            <h2 class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{{ $section }}</h2>
+            <h2 class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">{{ $section }}</h2>
 
             <div class="space-y-1">
                 @foreach ($items as $item)
@@ -63,7 +63,7 @@
     @endforeach
 
     <section>
-        <h2 class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Administration</h2>
+        <h2 class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Administration</h2>
 
         <div class="space-y-1">
             <x-dashboard.nav-item
