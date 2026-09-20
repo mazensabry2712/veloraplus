@@ -72,6 +72,7 @@ return [
     'access' => 'access',
     'system_ready' => 'System ready',
     'theme' => 'Theme',
+    'roles' => ['owner' => 'Owner', 'manager' => 'Manager', 'staff' => 'Staff', 'admin' => 'Admin'],
     'overview_description' => "A live operational view of your company workspace, with today's booking signals and the work areas that are available to you.",
     'company_profile' => 'Company Profile',
     'command_center_description' => 'Your operational command center for bookings, customers, staff, locations, and the capabilities enabled for this tenant.',
