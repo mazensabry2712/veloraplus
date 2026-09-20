@@ -9,8 +9,12 @@ use App\Domain\Tenancy\TenantContext;
 use App\Models\PlatformCredit;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformPayment;
+use App\Models\Bundle;
+use App\Models\Feature;
+use App\Models\Module;
 use App\Models\PlatformRefund;
 use App\Models\Subscription;
+use App\Models\SubscriptionItem;
 use App\Models\Tenant;
 use Carbon\CarbonImmutable;
 use DomainException;
@@ -110,6 +114,58 @@ final class PlatformBillingDashboardService
             'payment' => $payment->fresh(),
             'checkout' => $checkout,
         ];
+    }
+
+    public function requestUpgrade(Subscription $subscription, array $items): PlatformInvoice
+    {
+        $tenant = $this->tenantContext->current();
+
+        $this->assertCurrentTenant($tenant);
+        $this->assertSubscriptionBelongsToTenant($subscription, $tenant);
+
+        $subscription->loadMissing('items');
+
+        $resolvedItems = collect($items)
+            ->map(function (array $item): array {
+                $type = strtolower(trim((string) ($item['catalog_type'] ?? '')));
+                $key = strtolower(trim((string) ($item['catalog_key'] ?? '')));
+                $quantity = (int) ($item['quantity'] ?? 1);
+
+                $class = match ($type) {
+                    'module' => Module::class,
+                    'feature' => Feature::class,
+                    'bundle' => Bundle::class,
+                    default => throw new DomainException('Unsupported subscription catalog item type.'),
+                };
+
+                $catalogItem = $class::query()->where('key', $key)->first();
+
+                if ($catalogItem === null) {
+                    throw new DomainException("Catalog item {$key} was not found.");
+                }
+
+                return [
+                    'item' => $catalogItem,
+                    'quantity' => $quantity,
+                ];
+            })
+            ->all();
+
+        return $this->subscriptions->requestUpgrade(
+            $subscription,
+            $resolvedItems,
+            (int) ($subscription->metadata['tax_bps'] ?? 0),
+        );
+    }
+
+    public function scheduleDowngrade(Subscription $subscription, SubscriptionItem $item): SubscriptionItem
+    {
+        $tenant = $this->tenantContext->current();
+
+        $this->assertCurrentTenant($tenant);
+        $this->assertSubscriptionBelongsToTenant($subscription, $tenant);
+
+        return $this->subscriptions->scheduleDowngrade($subscription, $item);
     }
 
     public function cancelAtPeriodEnd(Subscription $subscription): Subscription
