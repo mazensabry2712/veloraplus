@@ -718,14 +718,36 @@ Route:
 The frontend Marketplace listing and purchase UI remain a later Dashboard UI pass. GitHub Actions verifies the current backend implementation at 236 tests / 1244 assertions. The final local gate is now closed: the user pulled the verified main commit, ran the migration, targeted completion suite, full suite, and diff checks successfully.
 ### 8.6 Usage and settings
 
-This slice is intentionally blocked until the backend completion audit closes.
+The first 8.6 backend slice is implemented and locally verified. It covers tenant entitlement limits and the existing tenant payment integration boundary while keeping secrets encrypted and tenant-scoped.
 
-The planned backend contract covers:
+Implemented backend contracts:
 
-- entitlement limits and quantities;
-- tenant configuration read/write surfaces that already have an established application contract;
-- localization, timezone, and currency presentation;
-- integration settings that already have a defined backend boundary.
+- Usage & Limits reads effective tenant entitlement records without inventing runtime consumption counters where no usage-metering contract exists;
+- Usage access requires `settings.view`;
+- tenant payment integration read/write uses the existing provider-neutral `TenantPaymentAccountManager` boundary;
+- payment credentials are encrypted at rest and are never rendered back into Dashboard views;
+- payment integration mutations require `settings.manage`;
+- tenant integration settings remain isolated by Tenant context;
+- a shared Dashboard layout context supplies the active Tenant Membership to all Dashboard Blade pages.
+
+Routes:
+
+- `GET /dashboard/usage`;
+- `GET /dashboard/settings`;
+- `PUT /dashboard/settings/payment`.
+
+Verification:
+
+- dedicated `UsageAndSettingsTest`: 6 tests / 38 assertions passed locally;
+- full local suite: 242 tests / 1282 assertions passed;
+- `git status` clean;
+- `git diff --check` clean;
+- GitHub Actions is green for the verified main commit.
+
+Still remaining within 8.6 backend scope:
+
+- localization, timezone, and currency presentation/read-write behavior where the existing Company Profile contract needs an explicit Dashboard presentation surface;
+- additional integration settings only where an existing backend contract exists or is first added and tested.
 
 The settings surface must consume the completed Company Profile, Branding, Social, Tax, and SEO contracts rather than creating duplicate configuration stores.
 
