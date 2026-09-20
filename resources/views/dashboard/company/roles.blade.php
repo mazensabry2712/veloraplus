@@ -1,12 +1,13 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Roles & Permissions')
-@section('heading', 'Roles & Permissions')
+@section('title', __('dashboard.roles_permissions'))
+@section('heading', __('dashboard.roles_permissions'))
 
 @section('content')
     <x-dashboard.page-header
-        title="Roles & Permissions"
-        description="Review tenant roles and manage custom permission sets without changing system roles."
+        :title="__('dashboard.roles_permissions')"
+        :description="__('dashboard.page_descriptions.roles')"
+
     />
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
