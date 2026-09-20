@@ -168,7 +168,7 @@
 
                                         <div>
                                             <label class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.idempotency_key') }} <span class="font-normal">({{ __('dashboard.booking_pages.optional') }})</span></label>
-                                            <input name="idempotency_key" maxlength="190" placeholder="{{ __('dashboard.queue_key_placeholder') }}" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                            <input name="idempotency_key" maxlength="190" placeholder="{{ __('dashboard.booking_pages.queue_key_placeholder') }}" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
                                         </div>
 
                                         <div>
