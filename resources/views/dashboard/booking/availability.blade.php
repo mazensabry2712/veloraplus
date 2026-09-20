@@ -31,7 +31,7 @@
                             <x-dashboard.badge variant="success">{{ __('dashboard.booking_pages.availability_staff_active') }}</x-dashboard.badge>
                         </div>
                         <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
-                            <span>{{ $staff->location?->name ?? {{ __('dashboard.booking_pages.no_location') }} }}</span>
+                            <span>{{ $staff->location?->name ?? __('dashboard.booking_pages.no_location') }}</span>
                             @if ($staff->email)
                                 <span>{{ $staff->email }}</span>
                             @endif
