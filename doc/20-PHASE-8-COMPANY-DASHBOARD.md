@@ -716,6 +716,21 @@ Route:
 - POST /dashboard/marketplace/purchase
 
 The frontend Marketplace listing and purchase UI remain a later Dashboard UI pass. Verification of the current backend implementation is pending.
+### 8.6 Usage and settings
+
+This slice is intentionally blocked until the backend completion audit closes.
+
+The planned backend contract covers:
+
+- entitlement limits and quantities;
+- tenant configuration read/write surfaces that already have an established application contract;
+- localization, timezone, and currency presentation;
+- integration settings that already have a defined backend boundary.
+
+The settings surface must consume the completed Company Profile, Branding, Social, Tax, and SEO contracts rather than creating duplicate configuration stores.
+
+Any new integration or configuration that requires new business rules must be designed, tested, and documented as its own backend capability before UI wiring.
+
 ## 5. Authorization matrix
 
 Phase 8 must reuse the existing tenant-scoped RBAC model.
