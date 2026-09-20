@@ -175,14 +175,6 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.availabi
         Route::patch('/staff/{staff}/working-hours/{workingHour}/breaks/{break}', [BookingAvailabilityController::class, 'updateBreak'])
             ->name('breaks.update');
 
-        Route::delete('/staff/{staff}/working-hours/{workingHour}/breaks/{break}', [BookingAvailabilityController::class, 'destroyBreak']);
-
-        Route::post('/staff/{staff}/working-hours/{workingHour}/breaks', [BookingAvailabilityController::class, 'storeBreak'])
-            ->name('breaks.store');
-
-        Route::patch('/staff/{staff}/working-hours/{workingHour}/breaks/{break}', [BookingAvailabilityController::class, 'updateBreak'])
-            ->name('breaks.update');
-
         Route::delete('/staff/{staff}/working-hours/{workingHour}/breaks/{break}', [BookingAvailabilityController::class, 'destroyBreak'])
             ->name('breaks.destroy');
 
