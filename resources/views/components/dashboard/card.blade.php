@@ -3,9 +3,9 @@
     'description' => null,
 ])
 
-<section {{ $attributes->merge(['class' => 'rounded-xl border border-border bg-white']) }}>
+<section {{ $attributes->merge(['class' => 'rounded-2xl border border-border bg-white shadow-sm']) }}>
     @if ($title || $description || isset($header))
-        <header class="flex flex-col gap-2 border-b border-border px-5 py-4 sm:px-6">
+        <header class="flex flex-col gap-2 border-b border-border bg-surface/70 px-5 py-4 sm:px-6">
             @if ($title)
                 <h2 class="text-base font-semibold text-secondary">{{ $title }}</h2>
             @endif
