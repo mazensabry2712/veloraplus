@@ -120,20 +120,20 @@ A future editable Platform Control Center still needs a persistent `platform_set
 
 This is intentionally tracked separately from Company Dashboard settings because Platform Admin authorization and control-center routes are not part of the current Company Dashboard phase.
 
-## 8. 8.6 entry gate
+## 8. 8.6 verification gate
 
-8.6 cannot start until:
+The first 8.6 backend slice is now implemented and verified:
 
-- Company profile completion tests pass;
-- Branding tests pass;
-- Social/Tax settings tests pass;
-- public Tenant branding/social integration tests pass;
+- Usage & Limits dedicated tests pass;
+- tenant payment integration read/write is covered by dedicated tests;
+- encrypted provider credentials are never rendered back into Dashboard views;
+- tenant isolation and `settings.view/manage` authorization are covered;
 - full local regression passes;
-- GitHub Actions passes;
-- Phase 8 documentation is reconciled and contains no duplicate/contradictory slice definitions;
-- README current state matches the verified commit.
+- GitHub Actions is green for the verified main commit;
+- Phase 8 documentation is reconciled;
+- local `main` is clean and synchronized.
 
-Current CI verification: 236 tests / 1244 assertions passed on the latest main test run. The remaining gate is final local pull, central migration, targeted completion tests, full suite, and clean git status.
+Verified local state: 6 dedicated Usage/Settings tests / 38 assertions passed, and the full suite is 242 tests / 1282 assertions. The next 8.6 backend increment is the explicit localization/timezone/currency presentation contract before broad Dashboard UI wiring.
 
 ## 9. Frontend rule
 
