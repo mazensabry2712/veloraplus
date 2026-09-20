@@ -243,34 +243,50 @@
         <div class="max-h-[55vh] overflow-y-auto p-2">
             <p id="command-palette-title" class="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">{{ __('dashboard.available_workspaces') }}</p>
 
-            @foreach ([
-                ['label' => __('dashboard.overview'), 'route' => 'dashboard', 'icon' => 'grid'],
-                ['label' => __('dashboard.profile'), 'route' => 'company.profile', 'icon' => 'building'],
-                ['label' => __('dashboard.locations'), 'route' => 'company.locations', 'icon' => 'location'],
-                ['label' => __('dashboard.staff'), 'route' => 'company.staff', 'icon' => 'users'],
-                ['label' => __('dashboard.customers'), 'route' => 'company.customers', 'icon' => 'user'],
-                ['label' => __('dashboard.users'), 'route' => 'company.users', 'icon' => 'users'],
-                ['label' => __('dashboard.roles_permissions'), 'route' => 'company.roles', 'icon' => 'shield'],
-                ['label' => __('dashboard.services'), 'route' => 'dashboard.booking.services.index', 'icon' => 'briefcase'],
-                ['label' => __('dashboard.availability'), 'route' => 'dashboard.booking.availability.index', 'icon' => 'clock'],
-                ['label' => __('dashboard.appointments'), 'route' => 'dashboard.booking.appointments.index', 'icon' => 'calendar'],
-                ['label' => __('dashboard.queue'), 'route' => 'dashboard.booking.queues.index', 'icon' => 'queue'],
-                ['label' => __('dashboard.usage_limits'), 'route' => 'dashboard.usage', 'icon' => 'chart'],
-                ['label' => __('dashboard.settings'), 'route' => 'dashboard.settings', 'icon' => 'settings'],
-            ] as $command)
-                <a
+            @php
+                $commandItems = [
+                    ['label' => __('dashboard.overview'), 'route' => 'dashboard', 'icon' => 'grid'],
+                    ['label' => __('dashboard.profile'), 'route' => 'company.profile', 'permission' => 'company.view', 'icon' => 'building'],
+                    ['label' => __('dashboard.locations'), 'route' => 'company.locations', 'permission' => 'locations.view', 'icon' => 'location'],
+                    ['label' => __('dashboard.staff'), 'route' => 'company.staff', 'permission' => 'staff.view', 'icon' => 'users'],
+                    ['label' => __('dashboard.customers'), 'route' => 'company.customers', 'permission' => 'customers.view', 'icon' => 'user'],
+                    ['label' => __('dashboard.users'), 'route' => 'company.users', 'permission' => 'members.view', 'icon' => 'users'],
+                    ['label' => __('dashboard.roles_permissions'), 'route' => 'company.roles', 'permission' => 'members.view', 'icon' => 'shield'],
+                    ['label' => __('dashboard.services'), 'route' => 'dashboard.booking.services.index', 'permission' => 'booking.services.view', 'entitlement' => 'booking.services', 'icon' => 'briefcase'],
+                    ['label' => __('dashboard.availability'), 'route' => 'dashboard.booking.availability.index', 'permission' => 'booking.availability.view', 'entitlement' => 'booking.availability', 'icon' => 'clock'],
+                    ['label' => __('dashboard.appointments'), 'route' => 'dashboard.booking.appointments.index', 'permission' => 'booking.appointments.view', 'entitlement' => 'booking.appointments', 'icon' => 'calendar'],
+                    ['label' => __('dashboard.queue'), 'route' => 'dashboard.booking.queues.index', 'permission' => 'booking.queues.view', 'entitlement' => 'booking.queues', 'icon' => 'queue'],
+                    ['label' => __('dashboard.usage_limits'), 'route' => 'dashboard.usage', 'permission' => 'settings.view', 'icon' => 'chart'],
+                    ['label' => __('dashboard.settings'), 'route' => 'dashboard.settings', 'permission' => 'settings.view', 'icon' => 'settings'],
+                ];
+            @endphp
+
+            @foreach ($commandItems as $command)
+                @php
+                    $commandAllowed = ($command['permission'] ?? null) === null
+                        || (auth()->user()->can($command['permission'])
+                            && (($command['entitlement'] ?? null) === null
+                                || app('App\Application\Entitlements\EntitlementService')->canUse(
+                                    app('App\Domain\Tenancy\TenantContext')->current(),
+                                    $command['entitlement'],
+                                )));
+                @endphp
+
+                @if ($commandAllowed)
+                    <a
                     data-command-item
                     data-search="{{ strtolower($command['label']) }}"
                     data-active="false"
                     href="{{ route($command['route']) }}"
                     class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-primary/5 hover:text-primary"
-                >
-                    <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface text-muted">
-                        @include('components.dashboard.icon', ['name' => $command['icon']])
-                    </span>
-                    <span class="min-w-0 flex-1 truncate text-sm font-medium text-secondary">{{ $command['label'] }}</span>
-                    <span class="text-muted" aria-hidden="true">→</span>
-                </a>
+                    >
+                        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface text-muted">
+                            @include('components.dashboard.icon', ['name' => $command['icon']])
+                        </span>
+                        <span class="min-w-0 flex-1 truncate text-sm font-medium text-secondary">{{ $command['label'] }}</span>
+                        <span class="text-muted" aria-hidden="true">→</span>
+                    </a>
+                @endif
             @endforeach
         </div>
     </div>
