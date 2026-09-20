@@ -320,3 +320,83 @@ test('booking service route binding is tenant aware', function (): void {
         unlink($pathB);
     }
 });
+
+test('owner can open the Booking Services dashboard screen', function (): void {
+    $path = bookingServiceDashboardTestDatabasePath();
+    $this->bookingServiceDashboardTestDatabasePath = $path;
+
+    $tenant = createBookingServiceDashboardTenant($path);
+    $owner = addBookingServiceDashboardMember($tenant);
+    enableBookingServicesFeature($tenant);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    try {
+        app(ServiceManager::class)->create([
+            'name' => 'Dental Consultation',
+            'duration_minutes' => 60,
+            'price_minor' => 50000,
+            'currency' => 'EGP',
+            'deposit_amount_minor' => 10000,
+            'capacity' => 1,
+            'online_bookable' => true,
+            'status' => 'active',
+        ]);
+    } finally {
+        $manager->disconnect();
+    }
+
+    $this->actingAs($owner)
+        ->get('http://booking-services.velora.test/dashboard/booking/services')
+        ->assertOk()
+        ->assertSee('Booking Services', false)
+        ->assertSee('Dental Consultation', false)
+        ->assertSee('Create Service', false)
+        ->assertSee('Edit', false);
+});
+
+test('viewer can read Booking Services but cannot see management controls', function (): void {
+    $path = bookingServiceDashboardTestDatabasePath();
+    $this->bookingServiceDashboardTestDatabasePath = $path;
+
+    $tenant = createBookingServiceDashboardTenant($path);
+    $viewer = addBookingServiceDashboardMember($tenant, 'viewer');
+    enableBookingServicesFeature($tenant);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    try {
+        app(ServiceManager::class)->create([
+            'name' => 'Viewer Service',
+            'duration_minutes' => 30,
+            'price_minor' => 1000,
+            'currency' => 'EGP',
+            'capacity' => 1,
+        ]);
+    } finally {
+        $manager->disconnect();
+    }
+
+    $this->actingAs($viewer)
+        ->get('http://booking-services.velora.test/dashboard/booking/services')
+        ->assertOk()
+        ->assertSee('Viewer Service', false)
+        ->assertDontSee('Create Service', false)
+        ->assertDontSee('Save Changes', false)
+        ->assertDontSee('Archive', false);
+});
+
+test('Booking Services dashboard requires the feature entitlement', function (): void {
+    $path = bookingServiceDashboardTestDatabasePath();
+    $this->bookingServiceDashboardTestDatabasePath = $path;
+
+    $tenant = createBookingServiceDashboardTenant($path);
+    $owner = addBookingServiceDashboardMember($tenant);
+
+    $this->actingAs($owner)
+        ->get('http://booking-services.velora.test/dashboard/booking/services')
+        ->assertForbidden();
+});
+
