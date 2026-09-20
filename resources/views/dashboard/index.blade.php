@@ -109,7 +109,7 @@
             />
 
             <x-dashboard.stat
-                :label="__('dashboard.active_customers')
+                 :label="__('dashboard.active_customers')"
                 :value="$summary['metrics']['active_customers']"
                 :detail="__('dashboard.customer_records_ready')"
                 icon="users"
@@ -251,7 +251,7 @@
                                         {{ match ($activity->to_status) {
                                             'confirmed' => __('dashboard.confirmed'),
                                             'pending' => __('dashboard.pending'),
-                                            'completed' => __('dashboard.completed', []),
+                                            'completed' => __('dashboard.completed'),
                                             default => str($activity->to_status)->replace('_', ' ')->title(),
                                         } }}
                                         <span class="font-normal text-muted">· {{ $activity->appointment?->customer?->name ?? 'Customer' }}</span>
