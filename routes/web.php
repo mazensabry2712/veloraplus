@@ -128,6 +128,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.services
     ->prefix('dashboard/booking/services')
     ->name('dashboard.booking.services.')
     ->group(function (): void {
+        Route::get('/', [BookingServiceController::class, 'index'])
+            ->name('index');
+
         Route::post('/', [BookingServiceController::class, 'store'])
             ->name('store');
 
