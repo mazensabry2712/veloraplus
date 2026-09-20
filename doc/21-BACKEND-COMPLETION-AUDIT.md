@@ -36,10 +36,10 @@ A phase is closed only when:
 | SEO-5 | Production operations pending | Not a blocker for Dashboard backend implementation, but remains a release gate |
 | Custom Domains | Architecture locked; infrastructure deferred | Separate cross-cutting delivery |
 | Phase 8.1 | Implemented backend/dashboard shell | Verified by existing coverage |
-| Phase 8.2 | **Completion in progress** | Company profile + settings/branding completion must pass |
+| Phase 8.2 | **Backend implemented; local gate pending** | Company profile + settings/branding CI verified; local final verification required |
 | Phase 8.3 | Implemented backend workspace slices | Existing regression must remain green |
 | Phase 8.4 | Implemented and verified | Closed within current backend scope |
-| Phase 8.5 | Marketplace backend implemented | Final CI/local verification required |
+| Phase 8.5 | **Backend implemented; local gate pending** | CI verified at 236 tests / 1244 assertions; local final verification required |
 | Phase 8.6 | Not started | BLOCKED until this audit closes |
 
 ## 3. Company profile completion contract
@@ -132,6 +132,8 @@ This is intentionally tracked separately from Company Dashboard settings because
 - GitHub Actions passes;
 - Phase 8 documentation is reconciled and contains no duplicate/contradictory slice definitions;
 - README current state matches the verified commit.
+
+Current CI verification: 236 tests / 1244 assertions passed on the latest main test run. The remaining gate is final local pull, central migration, targeted completion tests, full suite, and clean git status.
 
 ## 9. Frontend rule
 
