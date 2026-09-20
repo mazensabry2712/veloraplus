@@ -116,8 +116,8 @@
                                                     <div>
                                                         <label class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.status') }}</label>
                                                         <select name="status" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                                            <option value="active" @selected($status === 'active')>{{ __('dashboard.booking_pages.enabled') }}</option>
-                                                            <option value="inactive" @selected($status === 'inactive')>{{ __('dashboard.booking_pages.disabled') }}</option>
+                                                            <option value="active" @selected($status === 'active')>{{ __('dashboard.active') }}</option>
+                                                            <option value="inactive" @selected($status === 'inactive')>{{ __('dashboard.inactive') }}</option>
                                                         </select>
                                                     </div>
                                                     <div>
