@@ -55,6 +55,7 @@ Important references:
 - doc/20-PHASE-8-COMPANY-DASHBOARD.md
 - doc/21-BACKEND-COMPLETION-AUDIT.md
 - doc/22-VISUAL-IDENTITY.md
+- doc/23-DASHBOARD-UI-DIRECTION.md
 
 ## Current implementation
 
@@ -72,7 +73,7 @@ Phase 6 — Payments & Provider Adapters is closed and verified. Kashier is impl
 
 Phase 7 — Booking core is implemented through 7.6: Services, Staff Availability, Appointments, Tenant Payments, Queue, and the Public Booking transaction are implemented and verified. SEO/Public Web is a locked cross-cutting capability; SEO-1 through SEO-4 are implemented and tested, while SEO-5 remains a production deployment/monitoring gate. The canonical contract is doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
 
-Phase 8 — Company Dashboard is in progress. 8.1 Dashboard Shell, 8.2 Company Foundation backend, 8.3 Booking workspace backend mutation layers, 8.4 Platform Billing workspace, and 8.5 Module Marketplace backend are implemented and verified. Company profile, branding, social, tax, and SEO settings have been reconciled with the documented contract. The first 8.6 Usage & Settings backend slice, including Company Preferences, is implemented. The user-verified regression immediately before the current Company read-screen frontend increment was 244 tests / 1306 assertions with a successful Vite production build. The current frontend branch now adds live Company Profile, Locations, Staff, Customers, Users, and Roles & Permissions read screens with permission-aware navigation, tenant-scoped queries, pagination, and shared Blade components. New read-screen tests are pending local execution after this increment.
+Phase 8 — Company Dashboard is in progress. 8.1 Dashboard Shell, 8.2 Company Foundation backend, 8.3 Booking workspace backend mutation layers, 8.4 Platform Billing workspace, and 8.5 Module Marketplace backend are implemented and verified. Company profile, branding, social, tax, and SEO settings have been reconciled with the documented contract. The first 8.6 Usage & Settings backend slice, including Company Preferences, is implemented. The user-verified regression immediately before the current Company read-screen frontend increment was 244 tests / 1306 assertions with a successful Vite production build. The current frontend branch now includes live Company Profile, Locations, Staff, Customers, Users, Roles & Permissions, Booking Services, Availability, Appointments, and Queue surfaces with permission-aware navigation, tenant-scoped queries, pagination, and shared Blade components. The locked Dashboard UI direction is documented in doc/23-DASHBOARD-UI-DIRECTION.md. The latest user-verified regression is 261 tests / 1422 assertions with a successful Vite production build.
 
 The backend completion audit and Dashboard contract remain tracked in doc/20-PHASE-8-COMPANY-DASHBOARD.md and doc/21-BACKEND-COMPLETION-AUDIT.md.
 
