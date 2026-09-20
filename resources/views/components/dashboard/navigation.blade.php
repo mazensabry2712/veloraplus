@@ -9,7 +9,7 @@
             ['label' => 'Roles & Permissions', 'route' => 'company.roles'],
         ],
         'Booking' => [
-            ['label' => 'Services', 'route' => null],
+            ['label' => 'Services', 'route' => 'dashboard.booking.services.index', 'permission' => 'booking.services.view', 'entitlement' => 'booking.services'],
             ['label' => 'Availability', 'route' => null],
             ['label' => 'Appointments', 'route' => null],
             ['label' => 'Queue', 'route' => null],
@@ -40,7 +40,7 @@
             <div class="space-y-1">
                 @foreach ($items as $item)
                     @php
-                        $permission = match ($item['route']) {
+                        $permission = $item['permission'] ?? match ($item['route']) {
                             'company.profile' => 'company.view',
                             'company.locations' => 'locations.view',
                             'company.staff' => 'staff.view',
@@ -48,6 +48,7 @@
                             'company.users', 'company.roles' => 'members.view',
                             default => null,
                         };
+                        $entitlement = $item['entitlement'] ?? null;
                     @endphp
 
                     @if ($item['route'] === null)
@@ -55,7 +56,7 @@
                             :label="$item['label']"
                             disabled
                         />
-                    @elseif ($permission === null || auth()->user()->can($permission))
+                    @elseif (($permission === null || auth()->user()->can($permission)) && ($entitlement === null || app(\App\Application\Entitlements\EntitlementService::class)->canUse(app(\App\Domain\Tenancy\TenantContext::class)->current(), $entitlement)))
                         <x-dashboard.nav-item
                             :label="$item['label']"
                             :href="route($item['route'])"
