@@ -34,6 +34,7 @@ Implementation must follow these documents:
 20. 20-PHASE-8-COMPANY-DASHBOARD.md
 21. 21-BACKEND-COMPLETION-AUDIT.md
 22. 22-VISUAL-IDENTITY.md
+23. 23-DASHBOARD-UI-DIRECTION.md
 
 ## Locked decisions
 
@@ -121,7 +122,7 @@ Phase 4 — Entitlements is closed and verified. Phase 5 — Billing is closed a
 
 Phase 7 — Booking implementation is closed and verified through 7.6: Services, Staff Availability, Appointments, Tenant Payments, Queue, and the Public Booking transaction are implemented and verified.
 
-Phase 8 — Company Dashboard is in progress. The Dashboard Shell, Company Foundation backend, Booking workspace backend, Platform Billing workspace, and Module Marketplace backend are implemented in the current repository. Company Foundation is being reconciled against the full documented profile/branding/social/tax/SEO contract before 8.6 starts. Frontend presentation/listing remains intentionally deferred until the backend completion gate closes.
+Phase 8 — Company Dashboard is in progress. The Dashboard Shell, Company Foundation backend, Booking workspace backend, Platform Billing workspace, and Module Marketplace backend are implemented in the current repository. The frontend now includes Company read surfaces plus Booking Services, Availability, Appointments, and Queue surfaces on the shared Blade/Tailwind Dashboard foundation. The visual system is locked by `22-VISUAL-IDENTITY.md`, with implementation patterns and reference products documented in `23-DASHBOARD-UI-DIRECTION.md`.
 
 SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md. SEO-1 through SEO-4 are implemented and tested; SEO-5 production operations remain pending. The Public Booking transaction is complete in Phase 7.6. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery.
 
