@@ -2,7 +2,7 @@
 
 ## Status
 
-**ACTIVE AUDIT — BLOCKING NEXT PHASE**
+**AUDIT CLOSED — PHASE 8.6 ACTIVE**
 
 No new implementation phase may start until this audit and its referenced verification gates are complete.
 
@@ -36,11 +36,11 @@ A phase is closed only when:
 | SEO-5 | Production operations pending | Not a blocker for Dashboard backend implementation, but remains a release gate |
 | Custom Domains | Architecture locked; infrastructure deferred | Separate cross-cutting delivery |
 | Phase 8.1 | Implemented backend/dashboard shell | Verified by existing coverage |
-| Phase 8.2 | **Backend implemented; local gate pending** | Company profile + settings/branding CI verified; local final verification required |
+| Phase 8.2 | **CLOSED / VERIFIED** | Company profile, branding, social, tax, SEO settings verified locally and in CI |
 | Phase 8.3 | Implemented backend workspace slices | Existing regression must remain green |
 | Phase 8.4 | Implemented and verified | Closed within current backend scope |
-| Phase 8.5 | **Backend implemented; local gate pending** | CI verified at 236 tests / 1244 assertions; local final verification required |
-| Phase 8.6 | Not started | BLOCKED until this audit closes |
+| Phase 8.5 | **CLOSED / VERIFIED** | Marketplace backend verified locally and in CI at 236 tests / 1244 assertions |
+| Phase 8.6 | **ACTIVE** | Usage and Settings backend delivery |
 
 ## 3. Company profile completion contract
 
