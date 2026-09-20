@@ -91,6 +91,9 @@ return [
     ],
     'create_appointment' => 'Create Appointment',
     'create_queue' => 'Create Queue',
+    'minutes' => 'min',
+    'queue_key_placeholder' => 'queue-2026-0001',
+    'no_queues_for' => 'No queues for',
     'booking_pages' => [
         'service_list' => 'Service List','service_list_description' => 'Services are tenant-scoped and paginated for growing catalogs.',
         'service' => 'Service','duration' => 'Duration','price' => 'Price','capacity' => 'Capacity','booking' => 'Booking','actions' => 'Actions',
