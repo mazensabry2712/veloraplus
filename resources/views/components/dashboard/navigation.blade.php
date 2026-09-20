@@ -11,7 +11,7 @@
         'Booking' => [
             ['label' => 'Services', 'route' => 'dashboard.booking.services.index', 'permission' => 'booking.services.view', 'entitlement' => 'booking.services'],
             ['label' => 'Availability', 'route' => 'dashboard.booking.availability.index', 'permission' => 'booking.availability.view', 'entitlement' => 'booking.availability'],
-            ['label' => 'Appointments', 'route' => null],
+            ['label' => 'Appointments', 'route' => 'dashboard.booking.appointments.index', 'permission' => 'booking.appointments.view', 'entitlement' => 'booking.appointments'],
             ['label' => 'Queue', 'route' => null],
             ['label' => 'Payments', 'route' => null],
         ],
