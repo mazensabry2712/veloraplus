@@ -54,6 +54,7 @@ Important references:
 - doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md
 - doc/20-PHASE-8-COMPANY-DASHBOARD.md
 - doc/21-BACKEND-COMPLETION-AUDIT.md
+- doc/22-VISUAL-IDENTITY.md
 
 ## Current implementation
 
