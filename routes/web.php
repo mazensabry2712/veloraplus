@@ -39,6 +39,24 @@ Route::get('/dashboard', CompanyDashboardController::class)
     ->name('dashboard');
 
 Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])->group(function (): void {
+    Route::get('/dashboard/company/profile', [CompanyProfileController::class, 'show'])
+        ->name('company.profile');
+
+    Route::get('/dashboard/company/locations', [LocationController::class, 'index'])
+        ->name('company.locations');
+
+    Route::get('/dashboard/company/staff', [StaffController::class, 'index'])
+        ->name('company.staff');
+
+    Route::get('/dashboard/company/customers', [CustomerController::class, 'index'])
+        ->name('company.customers');
+
+    Route::get('/dashboard/company/users', [TenantMembershipController::class, 'index'])
+        ->name('company.users');
+
+    Route::get('/dashboard/company/roles', [TenantRoleController::class, 'index'])
+        ->name('company.roles');
+
     Route::post('/dashboard/company/profile', [CompanyProfileController::class, 'update'])
         ->name('company.profile.update');
 
