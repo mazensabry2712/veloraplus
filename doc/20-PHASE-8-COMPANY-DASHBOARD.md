@@ -406,15 +406,20 @@ The public Tenant home consumes the same backend state so company branding and c
 
 The Dashboard Booking workspace consumes the already-verified Booking application services and policies. It does not duplicate Booking business rules.
 
-#### 8.3.1 Booking Services — Backend implemented
+#### 8.3.1 Booking Services — Backend implemented, frontend started
 
-The Dashboard Service mutation boundary is implemented on top of the existing `ServiceManager` and `ServicePolicy`.
+The Dashboard Service boundary is implemented on top of the existing `ServiceManager` and `ServicePolicy`. The first live frontend read surface now consumes the same backend contract.
 
-Supported operations:
+Frontend surface:
 
-- create service;
-- update service;
-- archive service.
+- `GET /dashboard/booking/services`;
+- paginated tenant-scoped service listing;
+- create form for authorized members;
+- inline edit form for authorized members;
+- archive action for authorized members;
+- permission-aware Booking navigation;
+- entitlement-aware navigation visibility;
+- responsive Blade/Tailwind presentation using the shared Dashboard components.
 
 The existing ServiceManager remains authoritative for:
 
@@ -431,6 +436,7 @@ Security boundary:
 
 - active Tenant Membership is required;
 - `booking.services` entitlement is required;
+- `booking.services.view` is required to read the page;
 - `booking.services.manage` permission is required for mutations;
 - tenant-aware route model binding runs after tenant context initialization.
 
@@ -445,11 +451,12 @@ Backend components:
 
 Routes:
 
+- `GET /dashboard/booking/services`;
 - `POST /dashboard/booking/services`;
 - `PATCH /dashboard/booking/services/{service}`;
 - `DELETE /dashboard/booking/services/{service}`.
 
-Tests cover create/update/archive, permission denial, entitlement denial, validation, and cross-tenant route-binding isolation.
+Tests cover create/update/archive, read access, management-control visibility, entitlement denial, validation, and cross-tenant route-binding isolation.
 
 #### 8.3.2 Staff Availability — Backend implemented
 
