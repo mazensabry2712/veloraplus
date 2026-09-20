@@ -8,7 +8,7 @@
         'warning' => 'bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200',
         'danger' => 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200',
         'info' => 'bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-200',
-        default => 'bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200',
+        default => 'bg-primary/5 text-secondary ring-1 ring-inset ring-primary/10',
     };
 @endphp
 
