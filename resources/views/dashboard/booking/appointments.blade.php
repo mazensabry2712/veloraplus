@@ -69,7 +69,7 @@
             <x-dashboard.card title="Appointment List" description="Tenant-scoped appointments, sorted by start time.">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-border text-sm">
-                        <thead class="bg-surface">
+                        <thead class="bg-primary/5">
                         <tr class="text-start text-xs font-semibold uppercase tracking-wide text-muted">
                             <th class="px-4 py-3">Appointment</th>
                             <th class="px-4 py-3">Customer</th>
@@ -110,7 +110,7 @@
                                 $localEnd = $appointment->ends_at->setTimezone($timezone);
                             @endphp
 
-                            <tr class="align-top">
+                            <tr class="align-top transition-colors hover:bg-primary/5">
                                 <td class="px-4 py-4">
                                     <div class="font-medium text-secondary">{{ $item?->service_name ?? 'Appointment' }}</div>
                                     <div class="mt-1 whitespace-nowrap text-sm text-muted">
