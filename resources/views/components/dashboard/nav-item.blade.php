@@ -10,7 +10,7 @@
         ? 'bg-primary text-white shadow-sm'
         : ($disabled
             ? 'cursor-not-allowed text-disabled'
-            : 'text-muted hover:bg-surface hover:text-secondary');
+            : 'text-muted hover:bg-primary/5 hover:text-primary');
 @endphp
 
 @if ($disabled || ! $href)
