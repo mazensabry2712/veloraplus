@@ -107,6 +107,70 @@ test('marketplace purchase creates a pending upgrade invoice for an active subsc
         ->and($invoice->items()->where('subscription_item_id', $pending->getKey())->exists())->toBeTrue();
 });
 
+test('marketplace does not allow repurchasing a feature granted by a bundle', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+
+    $module = Module::factory()->create([
+        'key' => 'marketplace.bundle.module.'.Str::lower(Str::random(6)),
+        'name' => 'Marketplace Bundle Module',
+        'status' => 'active',
+    ]);
+
+    $feature = Feature::factory()->create([
+        'module_id' => $module->getKey(),
+        'key' => 'marketplace.bundle.feature.'.Str::lower(Str::random(6)),
+        'name' => 'Marketplace Bundle Feature',
+        'status' => 'active',
+        'is_individually_purchasable' => true,
+    ]);
+
+    $bundle = \App\Models\Bundle::factory()->create([
+        'key' => 'marketplace.bundle.'.Str::lower(Str::random(6)),
+        'name' => 'Marketplace Bundle',
+        'status' => 'active',
+    ]);
+
+    app(CatalogManager::class)->addModuleToBundle($bundle, $module);
+    app(CatalogManager::class)->addFeatureToBundle($bundle, $feature);
+    app(CatalogManager::class)->addPrice($module, [
+        'billing_cycle' => 'monthly',
+        'currency' => 'EGP',
+        'amount_minor' => 4000,
+        'effective_from' => now()->subMinute(),
+    ]);
+    app(CatalogManager::class)->addPrice($feature, [
+        'billing_cycle' => 'monthly',
+        'currency' => 'EGP',
+        'amount_minor' => 3000,
+        'effective_from' => now()->subMinute(),
+    ]);
+    app(CatalogManager::class)->addPrice($bundle, [
+        'billing_cycle' => 'monthly',
+        'currency' => 'EGP',
+        'amount_minor' => 6000,
+        'effective_from' => now()->subMinute(),
+    ]);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $bundle],
+    ], 'monthly', 0);
+
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = app(PaymentService::class)->createPending($invoice);
+    app(PaymentService::class)->markSucceeded($payment);
+
+    app(TenantContext::class)->set($tenant);
+
+    expect(fn () => app(ModuleMarketplaceService::class)->requestPurchase(
+        tenant: $tenant,
+        catalogType: 'feature',
+        catalogKey: $feature->key,
+    ))->toThrow(DomainException::class, "Marketplace item {$feature->key} is already active.");
+});
+
 test('marketplace purchase requires an active or grace subscription', function (): void {
     $tenant = Tenant::factory()->create();
     $feature = marketplaceFeature($tenant, 'marketplace.no-subscription.'.Str::lower(Str::random(6)));
