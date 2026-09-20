@@ -88,6 +88,56 @@
         color: #64748B;
     }
 
+    html.dark .dashboard-shell .bg-green-50 {
+        background-color: #052E16;
+    }
+
+    html.dark .dashboard-shell .text-green-700,
+    html.dark .dashboard-shell .text-green-800 {
+        color: #86EFAC;
+    }
+
+    html.dark .dashboard-shell .border-green-200 {
+        border-color: #166534;
+    }
+
+    html.dark .dashboard-shell .bg-red-50 {
+        background-color: #450A0A;
+    }
+
+    html.dark .dashboard-shell .text-red-700,
+    html.dark .dashboard-shell .text-red-800 {
+        color: #FCA5A5;
+    }
+
+    html.dark .dashboard-shell .border-red-200 {
+        border-color: #991B1B;
+    }
+
+    html.dark .dashboard-shell .bg-amber-50 {
+        background-color: #451A03;
+    }
+
+    html.dark .dashboard-shell .text-amber-800 {
+        color: #FCD34D;
+    }
+
+    html.dark .dashboard-shell .border-amber-200 {
+        border-color: #92400E;
+    }
+
+    html.dark .dashboard-shell .bg-sky-50 {
+        background-color: #082F49;
+    }
+
+    html.dark .dashboard-shell .text-sky-700 {
+        color: #7DD3FC;
+    }
+
+    html.dark .dashboard-shell .border-sky-200 {
+        border-color: #0369A1;
+    }
+
     @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
