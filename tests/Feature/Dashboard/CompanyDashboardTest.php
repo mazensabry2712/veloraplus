@@ -129,7 +129,13 @@ function dashboardSeedOperationalData(Tenant $tenant): void
             'currency' => 'EGP',
             'status' => 'active',
         ]);
-        $staff->services()->attach($service->getKey());
+        DB::table('staff_services')->insert([
+            'id' => (string) Str::ulid(),
+            'staff_id' => $staff->getKey(),
+            'service_id' => $service->getKey(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $customer = Customer::factory()->create([
             'name' => 'Dashboard Customer',
