@@ -229,85 +229,96 @@
             </x-dashboard.card>
 
             @if ($canManage)
-                <x-dashboard.card title="Create Appointment" description="Create through AppointmentManager so availability, conflicts, and idempotency remain authoritative.">
-                    @if ($customers->isEmpty() || $staffMembers->isEmpty() || $services->isEmpty())
-                        <div class="rounded-xl border border-dashed border-border bg-surface p-5 text-sm leading-6 text-muted">
-                            Active customers, staff, and services are required before creating an appointment.
-                        </div>
-                    @else
-                        <form method="POST" action="{{ route('dashboard.booking.appointments.store') }}" class="space-y-4">
-                            @csrf
-
-                            <div>
-                                <label for="appointment-customer" class="mb-1 block text-xs font-medium text-muted">Customer</label>
-                                <select id="appointment-customer" name="customer_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                    <option value="">Select customer</option>
-                                    @foreach ($customers as $customer)
-                                        <option value="{{ $customer->getKey() }}" @selected(old('customer_id') === (string) $customer->getKey())>
-                                            {{ $customer->name }}@if($customer->phone) — {{ $customer->phone }}@endif
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="appointment-staff" class="mb-1 block text-xs font-medium text-muted">Staff</label>
-                                <select id="appointment-staff" name="staff_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                    <option value="">Select staff</option>
-                                    @foreach ($staffMembers as $staffMember)
-                                        <option value="{{ $staffMember->getKey() }}" @selected(old('staff_id') === (string) $staffMember->getKey())>
-                                            {{ $staffMember->name }}@if($staffMember->location) — {{ $staffMember->location->name }}@endif
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="appointment-service" class="mb-1 block text-xs font-medium text-muted">Service</label>
-                                <select id="appointment-service" name="service_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                    <option value="">Select service</option>
-                                    @foreach ($services as $service)
-                                        <option value="{{ $service->getKey() }}" @selected(old('service_id') === (string) $service->getKey())>
-                                            {{ $service->name }} · {{ $service->duration_minutes }} min · {{ number_format($service->price_minor / 100, 2) }} {{ $service->currency }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="appointment-starts-at" class="mb-1 block text-xs font-medium text-muted">Start time</label>
-                                <input
-                                    id="appointment-starts-at"
-                                    name="starts_at"
-                                    value="{{ old('starts_at', now($timezone)->format('Y-m-d\TH:i:sP')) }}"
-                                    required
-                                    placeholder="2026-09-21T10:00:00+03:00"
-                                    class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm"
-                                >
-                                <p class="mt-1 text-[11px] leading-5 text-muted">Use the tenant timezone in the ISO-8601 value.</p>
-                            </div>
-
-                            <div>
-                                <label for="appointment-idempotency-key" class="mb-1 block text-xs font-medium text-muted">Idempotency key <span class="font-normal">(optional)</span></label>
-                                <input
-                                    id="appointment-idempotency-key"
-                                    name="idempotency_key"
-                                    value="{{ old('idempotency_key') }}"
-                                    maxlength="190"
-                                    placeholder="booking-2026-0001"
-                                    class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm"
-                                >
-                            </div>
-
-                            <div>
-                                <label for="appointment-notes" class="mb-1 block text-xs font-medium text-muted">Notes <span class="font-normal">(optional)</span></label>
-                                <textarea id="appointment-notes" name="notes" rows="4" maxlength="5000" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">{{ old('notes') }}</textarea>
-                            </div>
-
-                            <x-dashboard.button type="submit" class="w-full">Create Appointment</x-dashboard.button>
-                        </form>
-                    @endif
-                </x-dashboard.card>
+                <details class="group" @if ($errors->any()) open @endif>
+                <summary class="inline-flex min-h-10 w-full cursor-pointer list-none items-center justify-between rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-primary/30 hover:bg-primary/5 [&::-webkit-details-marker]:hidden sm:w-auto">
+                    <span class="inline-flex items-center gap-2">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true">@include('components.dashboard.icon', ['name' => 'calendar'])</span>
+                        {{ __('dashboard.create_appointment') }}
+                    </span>
+                    <span class="text-muted transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+                </summary>
+                <div class="mt-4">
+                    <x-dashboard.card title="Create Appointment" description="Create through AppointmentManager so availability, conflicts, and idempotency remain authoritative.">
+                                        @if ($customers->isEmpty() || $staffMembers->isEmpty() || $services->isEmpty())
+                                            <div class="rounded-xl border border-dashed border-border bg-surface p-5 text-sm leading-6 text-muted">
+                                                Active customers, staff, and services are required before creating an appointment.
+                                            </div>
+                                        @else
+                                            <form method="POST" action="{{ route('dashboard.booking.appointments.store') }}" class="space-y-4">
+                                                @csrf
+                    
+                                                <div>
+                                                    <label for="appointment-customer" class="mb-1 block text-xs font-medium text-muted">Customer</label>
+                                                    <select id="appointment-customer" name="customer_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                                        <option value="">Select customer</option>
+                                                        @foreach ($customers as $customer)
+                                                            <option value="{{ $customer->getKey() }}" @selected(old('customer_id') === (string) $customer->getKey())>
+                                                                {{ $customer->name }}@if($customer->phone) — {{ $customer->phone }}@endif
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                    
+                                                <div>
+                                                    <label for="appointment-staff" class="mb-1 block text-xs font-medium text-muted">Staff</label>
+                                                    <select id="appointment-staff" name="staff_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                                        <option value="">Select staff</option>
+                                                        @foreach ($staffMembers as $staffMember)
+                                                            <option value="{{ $staffMember->getKey() }}" @selected(old('staff_id') === (string) $staffMember->getKey())>
+                                                                {{ $staffMember->name }}@if($staffMember->location) — {{ $staffMember->location->name }}@endif
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                    
+                                                <div>
+                                                    <label for="appointment-service" class="mb-1 block text-xs font-medium text-muted">Service</label>
+                                                    <select id="appointment-service" name="service_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                                        <option value="">Select service</option>
+                                                        @foreach ($services as $service)
+                                                            <option value="{{ $service->getKey() }}" @selected(old('service_id') === (string) $service->getKey())>
+                                                                {{ $service->name }} · {{ $service->duration_minutes }} min · {{ number_format($service->price_minor / 100, 2) }} {{ $service->currency }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                    
+                                                <div>
+                                                    <label for="appointment-starts-at" class="mb-1 block text-xs font-medium text-muted">Start time</label>
+                                                    <input
+                                                        id="appointment-starts-at"
+                                                        name="starts_at"
+                                                        value="{{ old('starts_at', now($timezone)->format('Y-m-d\TH:i:sP')) }}"
+                                                        required
+                                                        placeholder="2026-09-21T10:00:00+03:00"
+                                                        class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm"
+                                                    >
+                                                    <p class="mt-1 text-[11px] leading-5 text-muted">Use the tenant timezone in the ISO-8601 value.</p>
+                                                </div>
+                    
+                                                <div>
+                                                    <label for="appointment-idempotency-key" class="mb-1 block text-xs font-medium text-muted">Idempotency key <span class="font-normal">(optional)</span></label>
+                                                    <input
+                                                        id="appointment-idempotency-key"
+                                                        name="idempotency_key"
+                                                        value="{{ old('idempotency_key') }}"
+                                                        maxlength="190"
+                                                        placeholder="booking-2026-0001"
+                                                        class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm"
+                                                    >
+                                                </div>
+                    
+                                                <div>
+                                                    <label for="appointment-notes" class="mb-1 block text-xs font-medium text-muted">Notes <span class="font-normal">(optional)</span></label>
+                                                    <textarea id="appointment-notes" name="notes" rows="4" maxlength="5000" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">{{ old('notes') }}</textarea>
+                                                </div>
+                    
+                                                <x-dashboard.button type="submit" class="w-full">{{ __('dashboard.create_appointment') }}</x-dashboard.button>
+                                            </form>
+                                        @endif
+                                    </x-dashboard.card>
+                </div>
+            </details>
             @endif
         </div>
 
