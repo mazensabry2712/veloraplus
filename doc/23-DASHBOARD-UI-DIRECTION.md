@@ -741,3 +741,18 @@ The subscribed tenant experience is white-label by default:
 ## 30. Final rule
 
 **VeloraPlus should look like VeloraPlus — with the operational maturity of modern SaaS dashboards, not a clone of any one product.**
+
+
+## 31. Company workspace consistency delivery
+
+The Company workspace is now normalized around the shared operational pattern:
+
+- Customers, Locations, and Staff keep full-width paginated tables with collapsed create flows.
+- Users now uses the same full-width table + collapsed add flow instead of a persistent side form.
+- Roles keeps permission detail readable while moving custom-role creation into a collapsed flow.
+- Shared Company labels, actions, empty states, and confirmations use the Dashboard translation contract.
+- Arabic Company screens render localized labels through the same Dashboard locale switch.
+- Tenant-facing Company screens do not expose provider branding in their workspace content.
+- The Dashboard topbar shows tenant context once rather than repeating the tenant name.
+
+This increment preserves the existing backend authorization, tenant isolation, pagination, and CRUD routes.
