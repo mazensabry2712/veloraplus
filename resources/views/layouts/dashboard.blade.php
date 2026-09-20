@@ -10,9 +10,9 @@
 <body class="min-h-screen bg-surface font-sans text-text antialiased">
 <div class="min-h-screen lg:flex">
     <aside class="hidden w-72 shrink-0 border-r border-border bg-white lg:flex lg:min-h-screen lg:flex-col">
-        <div class="border-b border-border px-6 py-5">
+        <div class="border-b border-border bg-surface/70 px-6 py-5">
             <x-dashboard.brand />
-            <p class="mt-4 truncate text-base font-semibold text-secondary">{{ $tenant->name }}</p>
+            <div class="mt-4 rounded-xl border border-primary/10 bg-primary/5 px-3 py-3"><p class="truncate text-sm font-semibold text-secondary">{{ $tenant->name }}</p><p class="mt-1 text-xs font-medium uppercase tracking-wide text-primary">{{ $membership->role_key }}</p></div>
             <p class="mt-1 text-xs text-muted">{{ $membership->role_key }}</p>
         </div>
 
