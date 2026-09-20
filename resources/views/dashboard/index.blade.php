@@ -23,39 +23,31 @@
         </x-slot:actions>
     </x-dashboard.page-header>
 
-    <section class="mt-8 overflow-hidden rounded-3xl bg-secondary shadow-sm">
-        <div class="grid gap-8 px-6 py-7 sm:px-8 sm:py-9 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
-            <div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-inset ring-white/10">
-                        <span class="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true"></span>
-                        {{ __('dashboard.roles.'.$membership->role_key) }} · {{ $tenant->name }}
-                    </span>
-                    <span class="text-xs font-medium text-slate-400">{{ request()->getHost() }}</span>
-                </div>
-
-                <h2 class="mt-6 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                    {{ __('dashboard.welcome_back') }}, {{ auth()->user()->name }}
-                </h2>
-
-                <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-                    {{ __('dashboard.command_center_description') }}
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3">
+        <div class="flex min-w-0 items-center gap-3">
+            <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true">
+                @include('components.dashboard.icon', ['name' => 'building'])
+            </span>
+            <div class="min-w-0">
+                <p class="truncate text-sm font-semibold text-secondary">{{ $tenant->name }}</p>
+                <p class="mt-0.5 text-xs text-muted">
+                    {{ __('dashboard.roles.'.$membership->role_key) }}
+                    <span aria-hidden="true">·</span>
+                    {{ $summary['timezone'] }}
                 </p>
             </div>
-
-            <div class="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">{{ __('dashboard.today') }}</p>
-                <p class="mt-2 text-lg font-semibold text-white">{{ $summary['today'] }}</p>
-                <p class="mt-1 text-xs leading-5 text-slate-400">{{ $summary['timezone'] }}</p>
-                <a href="{{ route('dashboard.booking.appointments.index') }}" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white transition-colors hover:text-blue-200">
-                    {{ __('dashboard.open_appointments') }}
-                    <span aria-hidden="true">→</span>
-                </a>
-            </div>
         </div>
-    </section>
 
-    <section class="mt-8">
+        <a
+            href="{{ route('dashboard.booking.appointments.index') }}"
+            class="inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-primary transition-colors hover:bg-primary/5 hover:text-primary-dark"
+        >
+            {{ __('dashboard.open_appointments') }}
+            <span aria-hidden="true">→</span>
+        </a>
+    </div>
+
+    <section class="mt-7">
         <div class="flex items-end justify-between gap-4">
             <div>
                 <p class="dashboard-eyebrow">{{ __('dashboard.today') }}</p>
@@ -97,7 +89,7 @@
         </div>
     </section>
 
-    <section class="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.75fr)]">
+    <section class="mt-7 grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(20rem,0.75fr)]">
         <x-dashboard.card
             :title="__('dashboard.upcoming_appointments')"
             :description="__('dashboard.upcoming_description')"
@@ -191,7 +183,7 @@
         </x-dashboard.card>
     </section>
 
-    <section class="mt-8">
+    <section class="mt-7">
         <x-dashboard.card :title="__('dashboard.recent_activity')" :description="__('dashboard.recent_description')">
             @if ($summary['recent_activity']->isEmpty())
                 <div class="rounded-xl border border-dashed border-border bg-surface px-5 py-9 text-center">
