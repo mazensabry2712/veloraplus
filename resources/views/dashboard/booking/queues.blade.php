@@ -284,44 +284,55 @@
             </div>
 
             @if ($canManage)
-                <x-dashboard.card title="Create Queue" description="Queues are unique by location, service, and business date.">
-                    @if ($locations->isEmpty() || $services->isEmpty())
-                        <div class="rounded-xl border border-dashed border-border bg-surface p-5 text-sm leading-6 text-muted">
-                            Active locations and services are required before creating a queue.
-                        </div>
-                    @else
-                        <form method="POST" action="{{ route('dashboard.booking.queues.store') }}" class="space-y-4">
-                            @csrf
-
-                            <div>
-                                <label for="create-queue-location" class="mb-1 block text-xs font-medium text-muted">Location</label>
-                                <select id="create-queue-location" name="location_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                    <option value="">Select location</option>
-                                    @foreach ($locations as $location)
-                                        <option value="{{ $location->getKey() }}" @selected(old('location_id') === (string) $location->getKey())>{{ $location->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="create-queue-service" class="mb-1 block text-xs font-medium text-muted">Service</label>
-                                <select id="create-queue-service" name="service_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                    <option value="">Select service</option>
-                                    @foreach ($services as $service)
-                                        <option value="{{ $service->getKey() }}" @selected(old('service_id') === (string) $service->getKey())>{{ $service->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="create-queue-date" class="mb-1 block text-xs font-medium text-muted">Business date</label>
-                                <input id="create-queue-date" name="business_date" type="date" value="{{ old('business_date', $businessDate) }}" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                            </div>
-
-                            <x-dashboard.button type="submit" class="w-full">Create Queue</x-dashboard.button>
-                        </form>
-                    @endif
-                </x-dashboard.card>
+                <details class="group" @if ($errors->any()) open @endif>
+                <summary class="inline-flex min-h-10 w-full cursor-pointer list-none items-center justify-between rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-primary/30 hover:bg-primary/5 [&::-webkit-details-marker]:hidden sm:w-auto">
+                    <span class="inline-flex items-center gap-2">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true">@include('components.dashboard.icon', ['name' => 'queue'])</span>
+                        {{ __('dashboard.create_queue') }}
+                    </span>
+                    <span class="text-muted transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+                </summary>
+                <div class="mt-4">
+                    <x-dashboard.card title="Create Queue" description="Queues are unique by location, service, and business date.">
+                                        @if ($locations->isEmpty() || $services->isEmpty())
+                                            <div class="rounded-xl border border-dashed border-border bg-surface p-5 text-sm leading-6 text-muted">
+                                                Active locations and services are required before creating a queue.
+                                            </div>
+                                        @else
+                                            <form method="POST" action="{{ route('dashboard.booking.queues.store') }}" class="space-y-4">
+                                                @csrf
+                    
+                                                <div>
+                                                    <label for="create-queue-location" class="mb-1 block text-xs font-medium text-muted">Location</label>
+                                                    <select id="create-queue-location" name="location_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                                        <option value="">Select location</option>
+                                                        @foreach ($locations as $location)
+                                                            <option value="{{ $location->getKey() }}" @selected(old('location_id') === (string) $location->getKey())>{{ $location->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                    
+                                                <div>
+                                                    <label for="create-queue-service" class="mb-1 block text-xs font-medium text-muted">Service</label>
+                                                    <select id="create-queue-service" name="service_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                                        <option value="">Select service</option>
+                                                        @foreach ($services as $service)
+                                                            <option value="{{ $service->getKey() }}" @selected(old('service_id') === (string) $service->getKey())>{{ $service->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                    
+                                                <div>
+                                                    <label for="create-queue-date" class="mb-1 block text-xs font-medium text-muted">Business date</label>
+                                                    <input id="create-queue-date" name="business_date" type="date" value="{{ old('business_date', $businessDate) }}" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                                </div>
+                    
+                                                <x-dashboard.button type="submit" class="w-full">{{ __('dashboard.create_queue') }}</x-dashboard.button>
+                                            </form>
+                                        @endif
+                                    </x-dashboard.card>
+                </div>
+            </details>
             @endif
         </div>
     </div>
