@@ -260,6 +260,39 @@ test('active tenant member can access the company dashboard', function (): void 
         ->assertSee('2');
 });
 
+test('tenant member can switch dashboard language to arabic', function (): void {
+    $path = dashboardTestTenantDatabasePath();
+    $this->dashboardTenantDatabasePaths[] = $path;
+
+    $tenant = createDashboardTenant($path);
+    $member = PlatformAccount::factory()->create([
+        'name' => 'Dashboard Member',
+    ]);
+
+    TenantMembership::create([
+        'tenant_id' => $tenant->getKey(),
+        'account_id' => $member->getKey(),
+        'role_key' => 'owner',
+        'status' => 'active',
+        'joined_at' => now(),
+    ]);
+
+    app(TenantRbacBootstrapper::class)->bootstrapForTenant($tenant);
+    dashboardSeedOperationalData($tenant);
+
+    $this->actingAs($member)
+        ->post('http://dashboard-tenant.velora.test/dashboard/preferences/locale', [
+            'locale' => 'ar',
+        ])
+        ->assertRedirect();
+
+    $this->get('http://dashboard-tenant.velora.test/dashboard')
+        ->assertOk()
+        ->assertSee('dir="rtl"', false)
+        ->assertSee('نظرة عامة', false)
+        ->assertSee('ملخص التشغيل', false);
+});
+
 test('account without an active tenant membership cannot access the dashboard', function (): void {
     $path = dashboardTestTenantDatabasePath();
     $this->dashboardTenantDatabasePaths[] = $path;
