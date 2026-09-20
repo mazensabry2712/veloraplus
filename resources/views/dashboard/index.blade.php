@@ -1,7 +1,7 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Overview')
-@section('heading', 'Overview')
+@section('title', __('dashboard.overview'))
+@section('heading', __('dashboard.overview'))
 
 @section('content')
     <x-dashboard.page-header
