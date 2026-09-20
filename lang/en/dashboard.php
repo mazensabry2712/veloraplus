@@ -72,6 +72,7 @@ return [
     'access' => 'access',
     'system_ready' => 'System ready',
     'theme' => 'Theme',
+    'welcome_back' => 'Welcome back',
         'page_descriptions' => [
         'profile' => 'Manage the company identity, contact details, localization defaults, and public-facing business information.',
         'locations' => 'Manage the physical locations used by your company and its booking staff.',
