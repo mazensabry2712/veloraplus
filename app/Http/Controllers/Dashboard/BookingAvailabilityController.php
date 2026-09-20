@@ -26,19 +26,20 @@ final class BookingAvailabilityController extends Controller
 {
     public function index(TenantContext $tenantContext, EntitlementService $entitlements): View
     {
-        Gate::authorize('viewAny', Staff::class);
+        Gate::authorize('booking.availability.view');
 
         $tenant = $tenantContext->current();
         $canManage = auth()->user()->can('booking.availability.manage');
+        $servicesEntitled = $entitlements->canUse($tenant, 'booking.services');
 
-        $services = $entitlements->canUse($tenant, 'booking.services')
+        $services = $servicesEntitled
             ? Service::query()->where('status', 'active')->orderBy('name')->get(['id', 'name'])
             : collect();
 
         return view('dashboard.booking.availability', [
             'tenant' => $tenant,
             'canManage' => $canManage,
-            'servicesEntitled' => $entitlements->canUse($tenant, 'booking.services'),
+            'servicesEntitled' => $servicesEntitled,
             'services' => $services,
             'staffMembers' => Staff::query()
                 ->with([
