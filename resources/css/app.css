@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
@@ -30,10 +32,70 @@
         font-family: var(--font-sans);
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
+        transition: background-color 180ms ease, color 180ms ease;
     }
 
     :focus-visible {
         outline: 2px solid var(--color-primary);
         outline-offset: 2px;
+    }
+
+    ::selection {
+        background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+    }
+
+    html.dark {
+        --color-background: #0B1120;
+        --color-surface: #111827;
+        --color-border: #263449;
+        --color-text: #E5E7EB;
+        --color-muted: #94A3B8;
+        --color-disabled: #64748B;
+    }
+}
+
+@layer components {
+    .dashboard-shell {
+        transition: background-color 180ms ease, color 180ms ease;
+    }
+
+    html.dark .dashboard-shell .bg-white {
+        background-color: #0F172A;
+    }
+
+    html.dark .dashboard-shell .bg-white\/95 {
+        background-color: rgb(15 23 42 / 0.95);
+    }
+
+    html.dark .dashboard-shell .bg-surface\/70 {
+        background-color: rgb(17 24 39 / 0.7);
+    }
+
+    html.dark .dashboard-shell .text-secondary {
+        color: #F8FAFC;
+    }
+
+    html.dark .dashboard-shell input,
+    html.dark .dashboard-shell textarea,
+    html.dark .dashboard-shell select {
+        color: #E5E7EB;
+        background-color: #0F172A;
+        border-color: #334155;
+        color-scheme: dark;
+    }
+
+    html.dark .dashboard-shell ::placeholder {
+        color: #64748B;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+        }
     }
 }
