@@ -89,6 +89,17 @@
                 <div class="flex items-center gap-2">
                     <button
                         type="button"
+                        data-theme-toggle
+                        class="dashboard-topbar-button hidden h-10 w-10 items-center justify-center rounded-xl sm:flex"
+                        aria-label="{{ __('dashboard.theme') }}"
+                        title="{{ __('dashboard.theme') }}"
+                    >
+                        <span data-theme-icon="moon" aria-hidden="true">@include('components.dashboard.icon', ['name' => 'moon'])</span>
+                        <span data-theme-icon="sun" aria-hidden="true" hidden>@include('components.dashboard.icon', ['name' => 'sun'])</span>
+                    </button>
+
+                    <button
+                        type="button"
                         data-command-trigger
                         class="dashboard-topbar-button flex h-10 min-w-10 items-center gap-2 rounded-xl px-3 text-sm sm:min-w-36"
                         aria-label="{{ __('dashboard.search') }}"
