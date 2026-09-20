@@ -459,9 +459,12 @@ test('viewer can read Booking Appointments but cannot see management controls', 
         ->assertSee('Dr. Ahmed', false)
         ->assertDontSee('Create Appointment', false)
         ->assertDontSee('Reschedule', false)
-        ->assertDontSee('Complete', false)
         ->assertDontSee('No-show', false)
-        ->assertDontSee('Cancel', false);
+        ->assertDontSee('Cancel Appointment', false)
+        ->assertDontSee('/dashboard/booking/appointments/'.$appointment->getKey().'/complete', false)
+        ->assertDontSee('/dashboard/booking/appointments/'.$appointment->getKey().'/reschedule', false)
+        ->assertDontSee('/dashboard/booking/appointments/'.$appointment->getKey().'/no-show', false)
+        ->assertDontSee('/dashboard/booking/appointments/'.$appointment->getKey().'/cancel', false);
 });
 
 test('Booking Appointments dashboard requires the feature entitlement', function (): void {
