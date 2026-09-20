@@ -8,9 +8,23 @@
         :title="__('dashboard.locations')"
         :description="__('dashboard.page_descriptions.locations')"
 
-    />
+    >
+        @if (auth()->user()->can('locations.manage'))
+            <x-slot:actions>
+                <details class="relative">
+                    <summary class="inline-flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-dark [&::-webkit-details-marker]:hidden">
+                        <span aria-hidden="true">+</span>
+                        Add Location
+                    </summary>
+                    <div class="absolute end-0 top-12 z-20 w-[min(42rem,calc(100vw-2rem))]">
+                        <span class="hidden lg:inline-flex h-2 w-2 rounded-full bg-white/70" aria-hidden="true"></span>
+                    </div>
+                </details>
+            </x-slot:actions>
+        @endif
+    </x-dashboard.page-header>
 
-    <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+    <div class="mt-6 space-y-5">
         <x-dashboard.card title="Location List" description="Only active tenant locations are used for new staff assignments.">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border text-sm">
@@ -65,25 +79,18 @@
                                             </form>
                                         </details>
 
-                                        <form method="POST" action="{{ route('company.locations.destroy', $location) }}" onsubmit="return confirm('Archive this location?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <x-dashboard.button variant="danger" size="sm" type="submit">Archive</x-dashboard.button>
-                                        </form>
-                                    </div>
-                                </td>
-                            @endif
-                        </tr>
-                    @empty
-                        <tr><td colspan="5" class="px-4 py-12 text-center text-muted">No locations have been created yet.</td></tr>
-                    @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <x-dashboard.pagination :paginator="$locations" />
-        </x-dashboard.card>
-
-        @if (auth()->user()->can('locations.manage'))
+                                        <form method="POST" action="{{ route('company.locations.destroy', $location) }}" onsubmit="return confirm('Archive this locatio        @if (auth()->user()->can('locations.manage'))
+            <details class="group" @if ($errors->any()) open @endif>
+                <summary class="inline-flex min-h-10 w-full cursor-pointer list-none items-center justify-between rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-primary/30 hover:bg-primary/5 [&::-webkit-details-marker]:hidden sm:w-auto">
+                    <span class="inline-flex items-center gap-2">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true">@include('components.dashboard.icon', ['name' => 'location'])</span>
+                        Add Location
+                    </span>
+                    <span class="text-muted transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+                </summary>
+                <div class="mt-4">
+                    <x-dashboard.card title="Add Location" description="Create a location before assigning staff to it.">
+user()->can('locations.manage'))
             <x-dashboard.card title="Add Location" description="Create a location before assigning staff to it.">
                 <form method="POST" action="{{ route('company.locations.store') }}" class="space-y-4">
                     @csrf
@@ -95,7 +102,9 @@
                     <textarea name="address" rows="4" placeholder="Address" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">{{ old('address') }}</textarea>
                     <x-dashboard.button type="submit" class="w-full sm:w-auto">Create Location</x-dashboard.button>
                 </form>
-            </x-dashboard.card>
+                    </x-dashboard.card>
+                </div>
+            </details>
         @endif
     </div>
 @endsection
