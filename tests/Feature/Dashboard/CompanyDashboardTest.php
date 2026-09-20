@@ -244,20 +244,18 @@ test('active tenant member can access the company dashboard', function (): void 
         ->get('http://dashboard-tenant.velora.test/dashboard')
         ->assertOk()
         ->assertHeader('X-Robots-Tag', 'noindex, nofollow')
-        ->assertSee('Company Dashboard')
+        ->assertSee('<meta name="robots" content="noindex, nofollow, noarchive">', false)
+        ->assertSee('Overview')
         ->assertSee('Dashboard Tenant')
         ->assertSee('Dashboard Member')
         ->assertSee('Owner')
         ->assertSee('Operational summary')
-        ->assertSee('Appointments')
+        ->assertSee('Upcoming appointments')
+        ->assertSee("Today's queue")
+        ->assertSee('Recent activity')
         ->assertSee('Dashboard Customer')
         ->assertSee('Consultation')
-        ->assertSee('Main Branch')
-        ->assertSee('Appointments today')
-        ->assertSee('Open queues')
-        ->assertSee('Waiting now')
-        ->assertSee('1')
-        ->assertSee('2');
+        ->assertSee('Main Branch');
 });
 
 test('tenant member can switch dashboard language to arabic', function (): void {
