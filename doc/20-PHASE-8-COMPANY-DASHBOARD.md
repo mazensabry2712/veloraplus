@@ -508,20 +508,21 @@ Routes include the read surface at `GET /dashboard/booking/availability` plus St
 
 Tests cover successful lifecycle operations, read access, management-control visibility, permission denial, entitlement denial, validation/ownership boundaries, and required dual entitlement for Service assignment.
 
-#### 8.3.3 Appointments — Backend implemented
+#### 8.3.3 Appointments — Backend implemented, frontend started
 
-The Dashboard Appointment boundary consumes the existing `AppointmentManager`.
+The Dashboard Appointment boundary consumes the existing `AppointmentManager`. The first live frontend read surface now exposes the same tenant-scoped Appointment contract without duplicating Booking business rules.
 
-Supported operations:
+Frontend surface:
 
-- create appointment;
-- reschedule pending/confirmed appointment;
-- confirm pending appointment;
-- complete confirmed appointment;
-- cancel appointment with reason;
-- mark no-show.
-
-Request boundaries validate tenant-local Customer/Staff/Service identifiers and appointment input before the application service is invoked.
+- `GET /dashboard/booking/appointments`;
+- paginated Appointment listing with tenant-local date filtering;
+- search across Customer, Staff, and Service;
+- status filtering;
+- appointment creation form for authorized members;
+- reschedule, confirm, complete, cancel, and no-show actions based on the existing lifecycle states;
+- payment-state visibility without allowing Dashboard success writes;
+- permission-aware and entitlement-aware Booking navigation;
+- responsive Blade/Tailwind presentation using shared Dashboard components.
 
 The existing AppointmentManager remains authoritative for:
 
@@ -540,7 +541,8 @@ Security and entitlement:
 
 - active Tenant Membership is required;
 - `booking.appointments` entitlement is required;
-- `booking.appointments.manage` is enforced through the existing Appointment policy;
+- `booking.appointments.view` is required to read the page;
+- `booking.appointments.manage` is required for mutations;
 - tenant-aware model binding is guaranteed by the centralized tenant-before-bind middleware priority.
 
 Backend components:
@@ -552,6 +554,18 @@ Backend components:
 - existing `AppointmentManager`;
 - existing `AppointmentPolicy`;
 - `AppointmentManagementTest`.
+
+Routes:
+
+- `GET /dashboard/booking/appointments`;
+- `POST /dashboard/booking/appointments`;
+- `PATCH /dashboard/booking/appointments/{appointment}`;
+- `POST /dashboard/booking/appointments/{appointment}/confirm`;
+- `POST /dashboard/booking/appointments/{appointment}/complete`;
+- `POST /dashboard/booking/appointments/{appointment}/cancel`;
+- `POST /dashboard/booking/appointments/{appointment}/no-show`.
+
+The frontend slice adds dedicated read-screen coverage while retaining the existing Appointment backend lifecycle/isolation tests.
 
 Routes:
 
