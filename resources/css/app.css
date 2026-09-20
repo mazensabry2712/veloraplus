@@ -1,9 +1,486 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-primary: #1D4ED8;
+    --color-primary-dark: #1E40AF;
+    --color-secondary: #0F172A;
+    --color-accent: #F59E0B;
+    --color-background: #FFFFFF;
+    --color-surface: #F8FAFC;
+    --color-border: #E2E8F0;
+    --color-text: #0F172A;
+    --color-muted: #64748B;
+    --color-disabled: #94A3B8;
+}
+
+@layer base {
+    :root {
+        --vp-background: #FFFFFF;
+        --vp-surface: #F8FAFC;
+        --vp-surface-raised: #FFFFFF;
+        --vp-border: #E2E8F0;
+        --vp-text: #0F172A;
+        --vp-muted: #64748B;
+        --vp-disabled: #94A3B8;
+        --vp-primary-soft: rgb(29 78 216 / 0.07);
+        --vp-primary-soft-strong: rgb(29 78 216 / 0.12);
+        --vp-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.04);
+    }
+
+    html[data-theme='dark'] {
+        --vp-background: #070B14;
+        --vp-surface: #0D1421;
+        --vp-surface-raised: #111827;
+        --vp-border: #263449;
+        --vp-text: #F8FAFC;
+        --vp-muted: #94A3B8;
+        --vp-disabled: #64748B;
+        --vp-primary-soft: rgb(59 130 246 / 0.12);
+        --vp-primary-soft-strong: rgb(59 130 246 / 0.18);
+        --vp-shadow: 0 1px 2px rgb(0 0 0 / 0.32), 0 14px 32px rgb(0 0 0 / 0.18);
+
+        --color-background: #070B14;
+        --color-surface: #0D1421;
+        --color-border: #263449;
+        --color-text: #F8FAFC;
+        --color-muted: #94A3B8;
+        --color-disabled: #64748B;
+    }
+
+    html,
+    body {
+        min-height: 100%;
+        background: var(--vp-background);
+        color: var(--vp-text);
+    }
+
+    body {
+        min-width: 320px;
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        transition: background-color 180ms ease, color 180ms ease;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+    ::selection {
+        background: rgb(29 78 216 / 0.18);
+    }
+}
+
+@layer components {
+    .dashboard-shell {
+        --vp-sidebar-width: 17rem;
+        background: var(--vp-surface);
+        color: var(--vp-text);
+    }
+
+    .dashboard-sidebar {
+        width: var(--vp-sidebar-width);
+        background: var(--vp-surface-raised);
+        border-color: var(--vp-border);
+    }
+
+    .dashboard-sidebar-header {
+        border-color: var(--vp-border);
+        background: var(--vp-surface);
+    }
+
+    .dashboard-tenant-card {
+        border: 1px solid rgb(29 78 216 / 0.12);
+        background: var(--vp-primary-soft);
+    }
+
+    .dashboard-topbar {
+        background: color-mix(in srgb, var(--vp-surface-raised) 94%, transparent);
+        border-color: var(--vp-border);
+    }
+
+    .dashboard-topbar-button {
+        color: var(--vp-text);
+        background: var(--vp-surface-raised);
+        border: 1px solid var(--vp-border);
+    }
+
+    .dashboard-topbar-button:hover {
+        border-color: rgb(29 78 216 / 0.24);
+        background: var(--vp-primary-soft);
+        color: var(--color-primary);
+    }
+
+    .dashboard-page-header {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0.25rem 0 0.5rem;
+    }
+
+    .dashboard-eyebrow {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--vp-muted);
+    }
+
+    .dashboard-page-marker {
+        width: 0.25rem;
+        height: 2rem;
+        flex: none;
+        border-radius: 999px;
+        background: var(--color-primary);
+        box-shadow: 0 0 0 4px rgb(29 78 216 / 0.08);
+    }
+
+    .dashboard-page-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 1.875rem;
+        line-height: 1.2;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        color: var(--vp-text);
+    }
+
+    .dashboard-page-description {
+        max-width: 48rem;
+        margin-top: 0.625rem;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: var(--vp-muted);
+    }
+
+    .dashboard-page-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .dashboard-panel {
+        overflow: hidden;
+        border: 1px solid var(--vp-border);
+        border-radius: 1rem;
+        background: var(--vp-surface-raised);
+    }
+
+    .dashboard-panel-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--vp-border);
+        background: var(--vp-surface-raised);
+    }
+
+    .dashboard-panel-title {
+        color: var(--vp-text);
+        font-size: 0.9375rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+
+    .dashboard-panel-description {
+        max-width: 44rem;
+        margin-top: 0.25rem;
+        color: var(--vp-muted);
+        font-size: 0.8125rem;
+        line-height: 1.5;
+    }
+
+    .dashboard-panel-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: none;
+    }
+
+    .dashboard-panel-body {
+        padding: 1.25rem;
+    }
+
+    .dashboard-panel table {
+        color: var(--vp-text);
+    }
+
+    .dashboard-panel table thead {
+        background: var(--vp-primary-soft);
+    }
+
+    .dashboard-panel table th {
+        color: var(--vp-muted);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        line-height: 1.25rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .dashboard-panel table th,
+    .dashboard-panel table td {
+        border-color: var(--vp-border);
+    }
+
+    .dashboard-panel table tbody tr {
+        border-color: var(--vp-border);
+    }
+
+    .dashboard-panel table tbody tr:hover {
+        background: var(--vp-primary-soft);
+    }
+
+    .dashboard-panel table td {
+        vertical-align: middle;
+    }
+
+    .dashboard-panel input,
+    .dashboard-panel select,
+    .dashboard-panel textarea {
+        min-height: 2.5rem;
+    }
+
+    .dashboard-panel input:focus,
+    .dashboard-panel select:focus,
+    .dashboard-panel textarea:focus {
+        border-color: rgb(29 78 216 / 0.35);
+        box-shadow: 0 0 0 3px rgb(29 78 216 / 0.08);
+        outline: none;
+    }
+
+    .dashboard-nav-link {
+        display: flex;
+        min-height: 2.5rem;
+        align-items: center;
+        gap: 0.75rem;
+        border-radius: 0.75rem;
+        padding: 0.625rem 0.75rem;
+        color: var(--vp-muted);
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
+    }
+
+    .dashboard-nav-link:hover {
+        background: var(--vp-primary-soft);
+        color: var(--color-primary);
+    }
+
+    .dashboard-nav-link-active {
+        background: var(--color-primary);
+        color: #FFFFFF;
+        box-shadow: 0 6px 16px rgb(29 78 216 / 0.18);
+    }
+
+    .dashboard-nav-link-active:hover {
+        background: var(--color-primary-dark);
+        color: #FFFFFF;
+        transform: translateX(1px);
+    }
+
+    .dashboard-nav-link-disabled {
+        color: var(--vp-disabled);
+        opacity: 0.78;
+    }
+
+    .dashboard-nav-content {
+        display: flex;
+        min-width: 0;
+        flex: 1;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .dashboard-nav-icon {
+        display: inline-flex;
+        width: 1rem;
+        height: 1rem;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dashboard-nav-soon {
+        font-size: 0.625rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--vp-disabled);
+    }
+
+    .dashboard-muted-surface {
+        background: var(--vp-surface);
+        border-color: var(--vp-border);
+        color: var(--vp-muted);
+    }
+
+    .dashboard-raised {
+        background: var(--vp-surface-raised);
+        border-color: var(--vp-border);
+        color: var(--vp-text);
+    }
+
+    .dashboard-command-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-height: 2.75rem;
+        border-radius: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        color: var(--vp-text);
+        transition: background-color 120ms ease, color 120ms ease;
+    }
+
+    .dashboard-command-item:hover,
+    .dashboard-command-item[data-active='true'] {
+        background: var(--vp-primary-soft);
+        color: var(--color-primary);
+    }
+
+    .dashboard-command-icon {
+        display: inline-flex;
+        width: 2.25rem;
+        height: 2.25rem;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--vp-border);
+        border-radius: 0.625rem;
+        background: var(--vp-surface);
+        color: var(--vp-muted);
+    }
+
+    .dashboard-command-item[data-active='true'] .dashboard-command-icon,
+    .dashboard-command-item:hover .dashboard-command-icon {
+        border-color: rgb(29 78 216 / 0.16);
+        background: var(--vp-surface-raised);
+        color: var(--color-primary);
+    }
+
+    .dashboard-shell button,
+    .dashboard-shell a,
+    .dashboard-shell input,
+    .dashboard-shell select,
+    .dashboard-shell textarea {
+        transition-property: background-color, border-color, color, box-shadow, transform;
+        transition-duration: 140ms;
+        transition-timing-function: ease;
+    }
+
+    /* Existing utility-heavy screens are normalized here for the shared theme. */
+    html[data-theme='dark'] .dashboard-shell .bg-white,
+    html[data-theme='dark'] .dashboard-shell .bg-white\/95 {
+        background-color: var(--vp-surface-raised) !important;
+    }
+
+    html[data-theme='dark'] .dashboard-shell .bg-surface,
+    html[data-theme='dark'] .dashboard-shell .bg-surface\/70 {
+        background-color: var(--vp-surface) !important;
+    }
+
+    html[data-theme='dark'] .dashboard-shell .text-secondary,
+    html[data-theme='dark'] .dashboard-shell .text-slate-700,
+    html[data-theme='dark'] .dashboard-shell .text-slate-600 {
+        color: var(--vp-text) !important;
+    }
+
+    html[data-theme='dark'] .dashboard-shell .text-muted,
+    html[data-theme='dark'] .dashboard-shell .text-slate-500,
+    html[data-theme='dark'] .dashboard-shell .text-slate-400,
+    html[data-theme='dark'] .dashboard-shell .text-slate-300 {
+        color: var(--vp-muted) !important;
+    }
+
+    html[data-theme='dark'] .dashboard-shell .border-border,
+    html[data-theme='dark'] .dashboard-shell .border-slate-200,
+    html[data-theme='dark'] .dashboard-shell .border-slate-300 {
+        border-color: var(--vp-border) !important;
+    }
+
+    html[data-theme='dark'] .dashboard-shell input,
+    html[data-theme='dark'] .dashboard-shell textarea,
+    html[data-theme='dark'] .dashboard-shell select {
+        color: var(--vp-text) !important;
+        background-color: var(--vp-surface-raised) !important;
+        border-color: var(--vp-border) !important;
+        color-scheme: dark;
+    }
+
+    html[data-theme='dark'] .dashboard-shell ::placeholder {
+        color: var(--vp-muted) !important;
+    }
+
+    html[data-theme='dark'] .dashboard-shell .bg-green-50 {
+        background-color: rgb(34 197 94 / 0.12) !important;
+        border-color: rgb(74 222 128 / 0.18);
+    }
+
+    html[data-theme='dark'] .dashboard-shell .bg-red-50 {
+        background-color: rgb(239 68 68 / 0.12) !important;
+        border-color: rgb(248 113 113 / 0.18);
+    }
+
+    html[data-theme='dark'] .dashboard-shell .bg-amber-50 {
+        background-color: rgb(245 158 11 / 0.12) !important;
+        border-color: rgb(251 191 36 / 0.18);
+    }
+
+    html[data-theme='dark'] .dashboard-shell .bg-sky-50 {
+        background-color: rgb(14 165 233 / 0.12) !important;
+        border-color: rgb(56 189 248 / 0.18);
+    }
+
+    html[data-theme='dark'] .dashboard-shell .text-green-700,
+    html[data-theme='dark'] .dashboard-shell .text-green-800 {
+        color: #86EFAC;
+    }
+
+    html[data-theme='dark'] .dashboard-shell .text-red-700,
+    html[data-theme='dark'] .dashboard-shell .text-red-800 {
+        color: #FCA5A5;
+    }
+
+    html[data-theme='dark'] .dashboard-shell .text-amber-800 {
+        color: #FCD34D;
+    }
+
+    html[data-theme='dark'] .dashboard-shell .text-sky-700 {
+        color: #7DD3FC;
+    }
+
+    @media (min-width: 640px) {
+        .dashboard-page-header {
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: space-between;
+        }
+
+        .dashboard-page-actions {
+            justify-content: flex-end;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            transition-duration: 0.01ms !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+        }
+    }
 }

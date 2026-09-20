@@ -387,3 +387,95 @@ test('appointment route binding is tenant isolated', function (): void {
         unlink($pathB);
     }
 });
+
+test('owner can open the Booking Appointments dashboard and see lifecycle actions', function (): void {
+    $path = appointmentDashboardDatabasePath();
+    $this->appointmentDashboardDatabasePath = $path;
+
+    $tenant = createAppointmentDashboardTenant($path);
+    $owner = addAppointmentDashboardMember($tenant);
+    enableAppointmentEntitlement($tenant);
+    $fixtures = appointmentDashboardFixtures($tenant);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    try {
+        app(AppointmentManager::class)->create(
+            customer: $fixtures['customer'],
+            staff: $fixtures['staff'],
+            service: $fixtures['service'],
+            startsAt: '2026-09-21 10:00:00+03:00',
+            attributes: ['idempotency_key' => 'dashboard-list-1'],
+        );
+    } finally {
+        $manager->disconnect();
+    }
+
+    $this->actingAs($owner)
+        ->get('http://appointments-tenant.velora.test/dashboard/booking/appointments')
+        ->assertOk()
+        ->assertSee('Appointments', false)
+        ->assertSee('Customer One', false)
+        ->assertSee('Dr. Ahmed', false)
+        ->assertSee('Consultation', false)
+        ->assertSee('Confirmed', false)
+        ->assertSee('Unpaid', false)
+        ->assertSee('Create Appointment', false)
+        ->assertSee('Reschedule', false)
+        ->assertSee('Complete', false)
+        ->assertSee('No-show', false)
+        ->assertSee('Cancel', false);
+});
+
+test('viewer can read Booking Appointments but cannot see management controls', function (): void {
+    $path = appointmentDashboardDatabasePath();
+    $this->appointmentDashboardDatabasePath = $path;
+
+    $tenant = createAppointmentDashboardTenant($path);
+    $viewer = addAppointmentDashboardMember($tenant, 'viewer');
+    enableAppointmentEntitlement($tenant);
+    $fixtures = appointmentDashboardFixtures($tenant);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    try {
+        $appointment = app(AppointmentManager::class)->create(
+            customer: $fixtures['customer'],
+            staff: $fixtures['staff'],
+            service: $fixtures['service'],
+            startsAt: '2026-09-21 10:00:00+03:00',
+            attributes: ['idempotency_key' => 'dashboard-list-viewer'],
+        );
+    } finally {
+        $manager->disconnect();
+    }
+
+    $this->actingAs($viewer)
+        ->get('http://appointments-tenant.velora.test/dashboard/booking/appointments')
+        ->assertOk()
+        ->assertSee('Customer One', false)
+        ->assertSee('Dr. Ahmed', false)
+        ->assertDontSee('Create Appointment', false)
+        ->assertDontSee('Reschedule', false)
+        ->assertDontSee('No-show', false)
+        ->assertDontSee('Cancel Appointment', false)
+        ->assertDontSee('/dashboard/booking/appointments/'.$appointment->getKey().'/complete', false)
+        ->assertDontSee('/dashboard/booking/appointments/'.$appointment->getKey().'/reschedule', false)
+        ->assertDontSee('/dashboard/booking/appointments/'.$appointment->getKey().'/no-show', false)
+        ->assertDontSee('/dashboard/booking/appointments/'.$appointment->getKey().'/cancel', false);
+});
+
+test('Booking Appointments dashboard requires the feature entitlement', function (): void {
+    $path = appointmentDashboardDatabasePath();
+    $this->appointmentDashboardDatabasePath = $path;
+
+    $tenant = createAppointmentDashboardTenant($path);
+    $owner = addAppointmentDashboardMember($tenant);
+
+    $this->actingAs($owner)
+        ->get('http://appointments-tenant.velora.test/dashboard/booking/appointments')
+        ->assertForbidden();
+});
+

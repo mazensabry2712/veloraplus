@@ -352,6 +352,28 @@ Routes:
 
 The test suite covers custom role creation/update, system-role protection, deletion protection for referenced roles, RBAC denial, and cross-tenant isolation.
 
+#### 8.2.9 Company Dashboard read surfaces — Frontend in progress
+
+The first live Company read screens are now wired to the existing backend contracts:
+
+- `GET /dashboard/company/profile`;
+- `GET /dashboard/company/locations`;
+- `GET /dashboard/company/staff`;
+- `GET /dashboard/company/customers`;
+- `GET /dashboard/company/users`;
+- `GET /dashboard/company/roles`.
+
+The implementation keeps business behavior in existing managers/policies and adds only Dashboard presentation/query boundaries:
+
+- permission-aware navigation;
+- backend authorization on every read controller;
+- tenant-aware queries;
+- pagination for Locations, Staff, Customers, and Users;
+- eager loading of Staff → Location and Users → Platform Account;
+- reusable Blade components for page headers, cards, badges, navigation, pagination, and the platform logo;
+- no new frontend framework and no new npm dependency.
+
+The current branch's new read-screen feature coverage still requires local execution after these changes. Existing user-verified regression immediately before this increment was 244 tests / 1306 assertions with a successful Vite production build.
 #### 8.2.8 Company Branding, Social & Commercial Settings — Backend implemented and verified
 
 Company-specific branding and public profile presentation are tenant-scoped.
@@ -384,15 +406,20 @@ The public Tenant home consumes the same backend state so company branding and c
 
 The Dashboard Booking workspace consumes the already-verified Booking application services and policies. It does not duplicate Booking business rules.
 
-#### 8.3.1 Booking Services — Backend implemented
+#### 8.3.1 Booking Services — Backend implemented, frontend started
 
-The Dashboard Service mutation boundary is implemented on top of the existing `ServiceManager` and `ServicePolicy`.
+The Dashboard Service boundary is implemented on top of the existing `ServiceManager` and `ServicePolicy`. The first live frontend read surface now consumes the same backend contract.
 
-Supported operations:
+Frontend surface:
 
-- create service;
-- update service;
-- archive service.
+- `GET /dashboard/booking/services`;
+- paginated tenant-scoped service listing;
+- create form for authorized members;
+- inline edit form for authorized members;
+- archive action for authorized members;
+- permission-aware Booking navigation;
+- entitlement-aware navigation visibility;
+- responsive Blade/Tailwind presentation using the shared Dashboard components.
 
 The existing ServiceManager remains authoritative for:
 
@@ -409,6 +436,7 @@ Security boundary:
 
 - active Tenant Membership is required;
 - `booking.services` entitlement is required;
+- `booking.services.view` is required to read the page;
 - `booking.services.manage` permission is required for mutations;
 - tenant-aware route model binding runs after tenant context initialization.
 
@@ -423,17 +451,30 @@ Backend components:
 
 Routes:
 
+- `GET /dashboard/booking/services`;
 - `POST /dashboard/booking/services`;
 - `PATCH /dashboard/booking/services/{service}`;
 - `DELETE /dashboard/booking/services/{service}`.
 
-Tests cover create/update/archive, permission denial, entitlement denial, validation, and cross-tenant route-binding isolation.
+Tests cover create/update/archive, read access, management-control visibility, entitlement denial, validation, and cross-tenant route-binding isolation.
 
-#### 8.3.2 Staff Availability — Backend implemented
+#### 8.3.2 Staff Availability — Backend implemented, frontend started
 
 The Dashboard Availability boundary consumes the existing `StaffAvailabilityManager`.
 
-Supported operations:
+Frontend surface:
+
+- `GET /dashboard/booking/availability`;
+- active staff availability workspace;
+- recurring working-hours listing;
+- inline working-hours edit/delete;
+- break listing plus add/edit/delete controls;
+- time-off listing plus add/edit/delete controls;
+- staff-to-service assignment and removal when the Booking Services entitlement is available;
+- permission-aware and entitlement-aware Booking navigation;
+- responsive Blade/Tailwind presentation using shared Dashboard components.
+
+Supported backend operations remain:
 
 - assign/unassign an active Booking Service to Staff;
 - create/update/delete recurring working hours;
@@ -443,9 +484,10 @@ Supported operations:
 Authorization and entitlement:
 
 - active Tenant Membership is required;
+- availability reads require `booking.availability`;
 - availability mutations require `booking.availability`;
 - Service assignment additionally requires `booking.services`;
-- `booking.availability.manage` is enforced through the existing Staff policy boundary;
+- `booking.availability.view/manage` is enforced through the Dashboard boundary and existing Staff policy for mutation authorization;
 - nested tenant records are checked against the selected Staff/Working Hour relationships.
 
 Time handling:
@@ -462,24 +504,25 @@ Backend components:
 - `StaffPolicy::manageAvailability`;
 - `BookingAvailabilityManagementTest`.
 
-Routes include Staff/Service assignment plus nested Working Hours, Breaks, and Time Off mutations under `/dashboard/booking/availability`.
+Routes include the read surface at `GET /dashboard/booking/availability` plus Staff/Service assignment and nested Working Hours, Breaks, and Time Off mutations.
 
-Tests cover successful lifecycle operations, permission denial, entitlement denial, validation/ownership boundaries, and required dual entitlement for Service assignment.
+Tests cover successful lifecycle operations, read access, management-control visibility, permission denial, entitlement denial, validation/ownership boundaries, and required dual entitlement for Service assignment.
 
-#### 8.3.3 Appointments — Backend implemented
+#### 8.3.3 Appointments — Backend implemented, frontend started
 
-The Dashboard Appointment boundary consumes the existing `AppointmentManager`.
+The Dashboard Appointment boundary consumes the existing `AppointmentManager`. The first live frontend read surface now exposes the same tenant-scoped Appointment contract without duplicating Booking business rules.
 
-Supported operations:
+Frontend surface:
 
-- create appointment;
-- reschedule pending/confirmed appointment;
-- confirm pending appointment;
-- complete confirmed appointment;
-- cancel appointment with reason;
-- mark no-show.
-
-Request boundaries validate tenant-local Customer/Staff/Service identifiers and appointment input before the application service is invoked.
+- `GET /dashboard/booking/appointments`;
+- paginated Appointment listing with tenant-local date filtering;
+- search across Customer, Staff, and Service;
+- status filtering;
+- appointment creation form for authorized members;
+- reschedule, confirm, complete, cancel, and no-show actions based on the existing lifecycle states;
+- payment-state visibility without allowing Dashboard success writes;
+- permission-aware and entitlement-aware Booking navigation;
+- responsive Blade/Tailwind presentation using shared Dashboard components.
 
 The existing AppointmentManager remains authoritative for:
 
@@ -498,7 +541,8 @@ Security and entitlement:
 
 - active Tenant Membership is required;
 - `booking.appointments` entitlement is required;
-- `booking.appointments.manage` is enforced through the existing Appointment policy;
+- `booking.appointments.view` is required to read the page;
+- `booking.appointments.manage` is required for mutations;
 - tenant-aware model binding is guaranteed by the centralized tenant-before-bind middleware priority.
 
 Backend components:
@@ -513,6 +557,18 @@ Backend components:
 
 Routes:
 
+- `GET /dashboard/booking/appointments`;
+- `POST /dashboard/booking/appointments`;
+- `PATCH /dashboard/booking/appointments/{appointment}`;
+- `POST /dashboard/booking/appointments/{appointment}/confirm`;
+- `POST /dashboard/booking/appointments/{appointment}/complete`;
+- `POST /dashboard/booking/appointments/{appointment}/cancel`;
+- `POST /dashboard/booking/appointments/{appointment}/no-show`.
+
+The frontend slice adds dedicated read-screen coverage while retaining the existing Appointment backend lifecycle/isolation tests.
+
+Routes:
+
 - `POST /dashboard/booking/appointments`;
 - `PATCH /dashboard/booking/appointments/{appointment}`;
 - `POST /dashboard/booking/appointments/{appointment}/confirm`;
@@ -522,18 +578,22 @@ Routes:
 
 Tests cover create/reschedule/complete, permission denial, entitlement denial, validation, lifecycle transition enforcement, and cross-tenant route binding isolation.
 
-#### 8.3.4 Queue — Backend implemented
+#### 8.3.4 Queue — Backend implemented, frontend started
 
-The Dashboard Queue boundary consumes the existing `QueueManager`.
+The Dashboard Queue boundary consumes the existing `QueueManager`. The first live frontend read surface now exposes daily tenant-scoped queues and queue entries without duplicating business rules.
 
-Supported operations:
+Frontend surface:
 
-- create a daily Queue by Location + Service + business date;
-- open/close a Queue;
-- enqueue active Customers;
-- optionally link a Queue Entry to an Appointment;
-- call the next waiting entry;
-- complete, skip, or mark a Queue Entry as no-show.
+- `GET /dashboard/booking/queues`;
+- business-date filter with active Location and Service filters;
+- Open/Closed queue status filter;
+- paginated Queue listing;
+- queue entry counts and up to 50 ordered entries per queue;
+- create queue form for authorized members;
+- add Customer to an open queue with optional Appointment linkage;
+- Call Next, Open, Close, Complete, Skip, and No-show actions based on the existing QueueManager lifecycle;
+- permission-aware and entitlement-aware Booking navigation;
+- responsive Blade/Tailwind presentation using shared Dashboard components.
 
 The existing QueueManager remains authoritative for:
 
@@ -549,7 +609,8 @@ Security and entitlement:
 
 - active Tenant Membership is required;
 - `booking.queues` entitlement is required;
-- `booking.queues.manage` is enforced through the existing Queue policy;
+- `booking.queues.view` is required to read the page;
+- `booking.queues.manage` is required for mutations;
 - nested Queue Entry actions verify that the entry belongs to the addressed Queue.
 
 Backend components:
@@ -562,9 +623,17 @@ Backend components:
 - existing `QueuePolicy`;
 - `QueueManagementTest`.
 
-Routes are under `/dashboard/booking/queues` for Queue lifecycle and Queue Entry operations.
+Routes:
 
-Tests cover queue lifecycle, entry processing, permission/entitlement boundaries, resource validation, nested-record ownership, and existing QueueManager behavior.
+- `GET /dashboard/booking/queues`;
+- `POST /dashboard/booking/queues`;
+- `POST /dashboard/booking/queues/{queue}/open`;
+- `POST /dashboard/booking/queues/{queue}/close`;
+- `POST /dashboard/booking/queues/{queue}/entries`;
+- `POST /dashboard/booking/queues/{queue}/call-next`;
+- Queue Entry Complete/Skip/No-show routes under the queue.
+
+The frontend slice adds dedicated read-screen coverage while retaining the existing Queue lifecycle, validation, entitlement, and tenant-isolation tests.
 
 #### 8.3.5 Tenant Payments — Backend implemented
 
@@ -888,3 +957,54 @@ The following are not part of the initial Dashboard delivery unless separately a
 Phase 8 is a delivery phase, not a redesign of the Core.
 
 If a required Dashboard feature exposes a missing backend capability, the correct response is to add that capability through the existing domain/application architecture and tests before wiring the UI. Do not add business logic directly inside Blade templates or controllers merely to make a screen work.
+
+
+---
+
+## 8.7 Dashboard UI Direction — Locked
+
+The authenticated Dashboard UI direction is now documented in:
+
+- `doc/22-VISUAL-IDENTITY.md` — locked brand/design-system source of truth;
+- `doc/23-DASHBOARD-UI-DIRECTION.md` — Dashboard composition, interaction patterns, density, responsive behavior, QA gate, decisions, and reference products.
+
+The agreed reference model is:
+
+- **Linear** — navigation, hierarchy, and calm workspace presentation;
+- **Stripe Dashboard** — operational data, tables, search, filtering, and scanning;
+- **Vercel** — dashboard structure, workspace context, and responsive navigation.
+
+These products are references only. VeloraPlus must not copy their branding, proprietary screens, logos, or frontend implementations.
+
+### Current visual implementation
+
+The current shared frontend refinement includes:
+
+- stronger Primary Blue active navigation;
+- branded page headers;
+- improved card hierarchy;
+- stronger secondary-control hover states;
+- branded table headers and row hover states;
+- refined neutral badges.
+
+The visual goal is to remove the previous flat white/black feel through controlled brand hierarchy rather than random colors.
+
+### Locked implementation rules
+
+- Shared components first, page-specific styling second.
+- Blade + Tailwind + Alpine/Vanilla JavaScript + Vite remain the frontend stack.
+- Backend authorization, entitlements, validation, booking, queue, billing, and payment rules remain backend-authoritative.
+- Operational screens prioritize scanning and fast actions over decoration.
+- Pagination and bounded data loading remain mandatory for growing datasets.
+- Desktop, tablet, mobile, and RTL/LTR behavior are part of the visual QA gate.
+
+### Current verification baseline
+
+Latest user-verified branch state:
+
+- Vite production build: passed;
+- full automated tests: 261 passed / 1422 assertions;
+- `git diff --check`: clean;
+- working tree: clean.
+
+The next frontend increment should continue from this documented UI direction rather than introducing a separate page-by-page design language.

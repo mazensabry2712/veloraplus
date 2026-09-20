@@ -7,6 +7,7 @@ use App\Http\Controllers\Dashboard\CompanyDashboardController;
 use App\Http\Controllers\Dashboard\CompanyBrandingController;
 use App\Http\Controllers\Dashboard\CompanyProfileController;
 use App\Http\Controllers\Dashboard\CustomerController;
+use App\Http\Controllers\Dashboard\DashboardPreferenceController;
 use App\Http\Controllers\Dashboard\LocationController;
 use App\Http\Controllers\Dashboard\PlatformBillingController;
 use App\Http\Controllers\Dashboard\QueueController;
@@ -39,6 +40,27 @@ Route::get('/dashboard', CompanyDashboardController::class)
     ->name('dashboard');
 
 Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])->group(function (): void {
+    Route::post('/dashboard/preferences/locale', [DashboardPreferenceController::class, 'locale'])
+        ->name('dashboard.preferences.locale');
+
+    Route::get('/dashboard/company/profile', [CompanyProfileController::class, 'show'])
+        ->name('company.profile');
+
+    Route::get('/dashboard/company/locations', [LocationController::class, 'index'])
+        ->name('company.locations');
+
+    Route::get('/dashboard/company/staff', [StaffController::class, 'index'])
+        ->name('company.staff');
+
+    Route::get('/dashboard/company/customers', [CustomerController::class, 'index'])
+        ->name('company.customers');
+
+    Route::get('/dashboard/company/users', [TenantMembershipController::class, 'index'])
+        ->name('company.users');
+
+    Route::get('/dashboard/company/roles', [TenantRoleController::class, 'index'])
+        ->name('company.roles');
+
     Route::post('/dashboard/company/profile', [CompanyProfileController::class, 'update'])
         ->name('company.profile.update');
 
@@ -110,6 +132,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.services
     ->prefix('dashboard/booking/services')
     ->name('dashboard.booking.services.')
     ->group(function (): void {
+        Route::get('/', [BookingServiceController::class, 'index'])
+            ->name('index');
+
         Route::post('/', [BookingServiceController::class, 'store'])
             ->name('store');
 
@@ -124,6 +149,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.availabi
     ->prefix('dashboard/booking/availability')
     ->name('dashboard.booking.availability.')
     ->group(function (): void {
+        Route::get('/', [BookingAvailabilityController::class, 'index'])
+            ->name('index');
+
         Route::post('/staff/{staff}/services/{service}', [BookingAvailabilityController::class, 'assignService'])
             ->middleware('entitled:booking.services')
             ->name('assign-service');
@@ -164,6 +192,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.appointm
     ->prefix('dashboard/booking/appointments')
     ->name('dashboard.booking.appointments.')
     ->group(function (): void {
+        Route::get('/', [AppointmentController::class, 'index'])
+            ->name('index');
+
         Route::post('/', [AppointmentController::class, 'store'])
             ->name('store');
 
@@ -187,6 +218,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.queues',
     ->prefix('dashboard/booking/queues')
     ->name('dashboard.booking.queues.')
     ->group(function (): void {
+        Route::get('/', [QueueController::class, 'index'])
+            ->name('index');
+
         Route::post('/', [QueueController::class, 'store'])
             ->name('store');
 

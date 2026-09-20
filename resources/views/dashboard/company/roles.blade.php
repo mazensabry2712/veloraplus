@@ -1,0 +1,114 @@
+@extends('layouts.dashboard')
+
+@section('title', __('dashboard.roles_permissions'))
+@section('heading', __('dashboard.roles_permissions'))
+
+@section('content')
+    <x-dashboard.page-header
+        :title="__('dashboard.roles_permissions')"
+        :description="__('dashboard.page_descriptions.roles')"
+
+    />
+
+    <div class="mt-6 space-y-5">
+        <x-dashboard.card :title="__('dashboard.company_pages.tenant_roles')" :description="__('dashboard.company_pages.tenant_roles_description')">
+            <div class="space-y-4">
+                @forelse ($roles as $role)
+                    @php
+                        $systemRole = in_array($role->name, ['owner', 'admin', 'manager', 'staff', 'viewer'], true);
+                        $rolePermissions = $role->permissions->pluck('name')->all();
+                    @endphp
+
+                    <article class="rounded-xl border border-border bg-white p-4">
+                        <div class="flex flex-wrap items-start justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-semibold text-secondary">{{ ucfirst($role->name) }}</h3>
+                                    @if ($systemRole)
+                                        <x-dashboard.badge>{{ __('dashboard.company_pages.system_role') }}</x-dashboard.badge>
+                                    @else
+                                        <x-dashboard.badge variant="info">{{ __('dashboard.company_pages.custom_role') }}</x-dashboard.badge>
+                                    @endif
+                                </div>
+                                <p class="mt-1 text-sm text-muted">{{ __('dashboard.company_pages.permission_count', ['count' => count($rolePermissions)]) }}</p>
+                            </div>
+
+                            @if (!$systemRole && auth()->user()->can('members.manage'))
+                                <details>
+                                    <summary class="inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg border border-border px-3 text-xs font-medium text-secondary [&::-webkit-details-marker]:hidden">{{ __('dashboard.company_pages.edit') }}</summary>
+                                    <form method="POST" action="{{ route('company.roles.update', $role) }}" class="mt-3 w-[min(34rem,calc(100vw-3rem))] rounded-xl border border-border bg-surface p-4 shadow-sm">
+                                        @csrf
+                                        @method('PATCH')
+                                        <p class="text-sm font-medium text-secondary">{{ $role->name }}</p>
+                                        <div class="mt-4 grid gap-2 sm:grid-cols-2">
+                                            @foreach ($permissions as $permission)
+                                                <label class="flex items-start gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm">
+                                                    <input type="checkbox" name="permissions[]" value="{{ $permission }}" @checked(in_array($permission, $rolePermissions, true)) class="mt-1 rounded border-border text-primary focus:ring-primary">
+                                                    <span class="text-secondary">{{ $permission }}</span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                        <div class="mt-4 flex justify-end">
+                                            <x-dashboard.button size="sm" type="submit">{{ __('dashboard.company_pages.save_permissions') }}</x-dashboard.button>
+                                        </div>
+                                    </form>
+                                </details>
+                            @endif
+                        </div>
+
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            @forelse ($rolePermissions as $permission)
+                                <span class="rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-muted">{{ $permission }}</span>
+                            @empty
+                                <span class="text-sm text-muted">{{ __('dashboard.company_pages.no_permissions') }}</span>
+                            @endforelse
+                        </div>
+
+                        @if (!$systemRole && auth()->user()->can('members.manage'))
+                            <div class="mt-4 flex justify-end border-t border-border pt-4">
+                                <form method="POST" action="{{ route('company.roles.destroy', $role) }}" onsubmit="return confirm(@js(__('dashboard.company_pages.delete_role_confirm')));">
+                                    @csrf
+                                    @method('DELETE')
+                                    <x-dashboard.button variant="danger" size="sm" type="submit">{{ __('dashboard.company_pages.delete_role') }}</x-dashboard.button>
+                                </form>
+                            </div>
+                        @endif
+                    </article>
+                @empty
+                    <p class="py-10 text-center text-sm text-muted">{{ __('dashboard.company_pages.no_roles') }}</p>
+                @endforelse
+            </div>
+        </x-dashboard.card>
+
+        @if (auth()->user()->can('members.manage'))
+            <details class="group" @if ($errors->any()) open @endif>
+                <summary class="inline-flex min-h-10 w-full cursor-pointer list-none items-center justify-between rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-primary/30 hover:bg-primary/5 [&::-webkit-details-marker]:hidden sm:w-auto">
+                    <span class="inline-flex items-center gap-2">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary" aria-hidden="true">@include('components.dashboard.icon', ['name' => 'shield'])</span>
+                        {{ __('dashboard.company_pages.create_custom_role') }}
+                    </span>
+                    <span class="text-muted transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+                </summary>
+                <div class="mt-4">
+                    <x-dashboard.card :title="__('dashboard.company_pages.create_custom_role')" :description="__('dashboard.company_pages.create_custom_role_description')">
+                        <form method="POST" action="{{ route('company.roles.store') }}" class="space-y-4">
+                            @csrf
+                            <input name="name" value="{{ old('name') }}" required maxlength="100" :placeholder="__('dashboard.company_pages.custom_role_placeholder')" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+
+                            <div class="max-h-[28rem] space-y-2 overflow-y-auto pr-1">
+                                @foreach ($permissions as $permission)
+                                    <label class="flex items-start gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm">
+                                        <input type="checkbox" name="permissions[]" value="{{ $permission }}" @checked(in_array($permission, old('permissions', []), true)) class="mt-1 rounded border-border text-primary focus:ring-primary">
+                                        <span class="text-secondary">{{ $permission }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+
+                            <x-dashboard.button type="submit">{{ __('dashboard.create') }} {{ __('dashboard.company_pages.custom_role') }}</x-dashboard.button>
+                        </form>
+                    </x-dashboard.card>
+                </div>
+            </details>
+        @endif
+    </div>
+@endsection

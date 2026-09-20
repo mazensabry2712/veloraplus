@@ -3,16 +3,39 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Application\Company\TenantMembershipManager;
+use App\Domain\Tenancy\TenantContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\StoreTenantMembershipRequest;
 use App\Http\Requests\Dashboard\UpdateTenantMembershipRequest;
+use App\Models\Role;
 use App\Models\TenantMembership;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 final class TenantMembershipController extends Controller
 {
+    public function index(TenantContext $tenantContext): View
+    {
+        Gate::authorize('members.view');
+
+        $tenant = $tenantContext->current();
+
+        return view('dashboard.company.users', [
+            'memberships' => $tenant->memberships()
+                ->with('account')
+                ->orderByDesc('joined_at')
+                ->paginate(20),
+            'roles' => Role::query()
+                ->where('tenant_id', $tenant->getKey())
+                ->where('guard_name', 'web')
+                ->orderBy('name')
+                ->pluck('name'),
+        ]);
+    }
+
+
     public function store(
         StoreTenantMembershipRequest $request,
         TenantMembershipManager $manager,
