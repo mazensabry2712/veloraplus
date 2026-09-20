@@ -188,6 +188,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.appointm
     ->prefix('dashboard/booking/appointments')
     ->name('dashboard.booking.appointments.')
     ->group(function (): void {
+        Route::get('/', [AppointmentController::class, 'index'])
+            ->name('index');
+
         Route::post('/', [AppointmentController::class, 'store'])
             ->name('store');
 
