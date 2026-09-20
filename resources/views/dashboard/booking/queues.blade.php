@@ -20,7 +20,6 @@
     <x-dashboard.page-header
         :title="__('dashboard.queue')"
         :description="__('dashboard.page_descriptions.queue')"
-        Operate daily queues by location and service without bypassing QueueManager rules."
     />
 
     <div class="mt-6 space-y-6">
