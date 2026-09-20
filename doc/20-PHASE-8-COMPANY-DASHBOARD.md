@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — 8.5 MODULE MARKETPLACE**
+**IN PROGRESS — BACKEND COMPLETION GATE BEFORE 8.6**
 
 Phase 8 is the next major product delivery after the completed Phase 7 Booking implementation. It converts the verified Core + Booking backend capabilities into the authenticated Company Dashboard used by tenant members.
 
@@ -352,7 +352,7 @@ Routes:
 
 The test suite covers custom role creation/update, system-role protection, deletion protection for referenced roles, RBAC denial, and cross-tenant isolation.
 
-#### 8.2.8 Company Branding, Social & Commercial Settings — Backend implemented
+#### 8.2.8 Company Branding, Social & Commercial Settings — Backend implemented; CI verified
 
 Company-specific branding and public profile presentation are tenant-scoped.
 
@@ -696,7 +696,7 @@ Local verification is green at 222 tests / 1154 assertions, including the dedica
 
 ### 8.5 Module Marketplace
 
-#### Current backend status — Implementation in progress
+#### Current backend status — Implemented; final local gate pending
 
 The first Marketplace backend boundary is implemented on top of the existing Catalog, Entitlement, Billing, and Tenant Context services.
 
@@ -715,7 +715,7 @@ Route:
 
 - POST /dashboard/marketplace/purchase
 
-The frontend Marketplace listing and purchase UI remain a later Dashboard UI pass. Verification of the current backend implementation is pending.
+The frontend Marketplace listing and purchase UI remain a later Dashboard UI pass. GitHub Actions verifies the current backend implementation at 236 tests / 1244 assertions. Final local verification is still required before the backend completion audit can close.
 ### 8.6 Usage and settings
 
 This slice is intentionally blocked until the backend completion audit closes.
