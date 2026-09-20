@@ -33,6 +33,7 @@ Implementation must follow these documents:
 19. 19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md
 20. 20-PHASE-8-COMPANY-DASHBOARD.md
 21. 21-BACKEND-COMPLETION-AUDIT.md
+22. 22-VISUAL-IDENTITY.md
 
 ## Locked decisions
 
