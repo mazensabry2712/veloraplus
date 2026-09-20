@@ -400,3 +400,26 @@ test('Booking Services dashboard requires the feature entitlement', function ():
         ->assertForbidden();
 });
 
+
+
+test('Booking Services screen follows the Dashboard locale', function (): void {
+    $path = bookingServiceDashboardTestDatabasePath();
+    $this->bookingServiceDashboardTestDatabasePath = $path;
+
+    $tenant = createBookingServiceDashboardTenant($path);
+    $owner = addBookingServiceDashboardMember($tenant);
+    enableBookingServicesFeature($tenant);
+
+    $this->actingAs($owner)
+        ->post('http://booking-services.velora.test/dashboard/preferences/locale', [
+            'locale' => 'ar',
+        ])
+        ->assertRedirect();
+
+    $this->actingAs($owner)
+        ->get('http://booking-services.velora.test/dashboard/booking/services')
+        ->assertOk()
+        ->assertSee('قائمة الخدمات', false)
+        ->assertSee('إضافة خدمة', false)
+        ->assertDontSee('Service List', false);
+});
