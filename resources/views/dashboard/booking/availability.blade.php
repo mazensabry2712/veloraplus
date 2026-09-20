@@ -28,10 +28,10 @@
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
                             <h2 class="text-lg font-semibold text-secondary">{{ $staff->name }}</h2>
-                            <x-dashboard.badge variant="success">Active</x-dashboard.badge>
+                            <x-dashboard.badge variant="success">{{ __('dashboard.booking_pages.availability_staff_active') }}</x-dashboard.badge>
                         </div>
                         <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
-                            <span>{{ $staff->location?->name ?? 'No location' }}</span>
+                            <span>{{ $staff->location?->name ?? {{ __('dashboard.booking_pages.no_location') }} }}</span>
                             @if ($staff->email)
                                 <span>{{ $staff->email }}</span>
                             @endif
@@ -57,7 +57,7 @@
 
                         @if ($unassignedServices->isNotEmpty())
                             <details>
-                                <summary class="inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg border border-border px-3 text-xs font-medium text-secondary [&::-webkit-details-marker]:hidden">Assign Service</summary>
+                                <summary class="inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg border border-border px-3 text-xs font-medium text-secondary [&::-webkit-details-marker]:hidden">{{ __('dashboard.booking_pages.assign_service') }}</summary>
                                 <div class="mt-3 flex flex-wrap gap-2 rounded-xl border border-border bg-surface p-3">
                                     @foreach ($unassignedServices as $service)
                                         <form method="POST" action="{{ route('dashboard.booking.availability.assign-service', [$staff, $service]) }}">
@@ -76,8 +76,8 @@
                         <section>
                             <div class="flex items-center justify-between gap-3">
                                 <div>
-                                    <h3 class="font-medium text-secondary">Assigned Services</h3>
-                                    <p class="mt-1 text-xs text-muted">Services that this staff member can handle.</p>
+                                    <h3 class="font-medium text-secondary">{{ __('dashboard.booking_pages.assigned_services') }}</h3>
+                                    <p class="mt-1 text-xs text-muted">{{ __('dashboard.booking_pages.assigned_services_description') }}</p>
                                 </div>
                             </div>
 
@@ -89,12 +89,12 @@
                                             <form method="POST" action="{{ route('dashboard.booking.availability.unassign-service', [$staff, $service]) }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="font-semibold text-muted hover:text-secondary" title="Remove service" aria-label="Remove {{ $service->name }}">×</button>
+                                                <button type="submit" class="font-semibold text-muted hover:text-secondary" :title="__('dashboard.booking_pages.remove_service')" aria-label="Remove {{ $service->name }}">×</button>
                                             </form>
                                         @endif
                                     </div>
                                 @empty
-                                    <span class="text-sm text-muted">No services assigned.</span>
+                                    <span class="text-sm text-muted">{{ __('dashboard.booking_pages.no_services_assigned') }}</span>
                                 @endforelse
                             </div>
                         </section>
@@ -102,8 +102,8 @@
                         <section>
                             <div class="flex items-center justify-between gap-3">
                                 <div>
-                                    <h3 class="font-medium text-secondary">Working Hours</h3>
-                                    <p class="mt-1 text-xs text-muted">Recurring weekly schedule in the staff member's local time.</p>
+                                    <h3 class="font-medium text-secondary">{{ __('dashboard.booking_pages.working_hours') }}</h3>
+                                    <p class="mt-1 text-xs text-muted">{{ __('dashboard.booking_pages.working_hours_description') }}</p>
                                 </div>
                             </div>
 
@@ -153,7 +153,7 @@
                                                                 <input name="ends_at" type="time" value="{{ substr((string) $workingHour->ends_at, 0, 5) }}" required class="rounded-lg border border-border bg-white px-3 py-2 text-sm">
                                                             </div>
                                                             <div class="mt-3 flex justify-end">
-                                                                <x-dashboard.button size="sm" type="submit">Save Hours</x-dashboard.button>
+                                                                <x-dashboard.button size="sm" type="submit">{{ __('dashboard.booking_pages.save_hours') }}</x-dashboard.button>
                                                             </div>
                                                         </form>
                                                     </details>
@@ -161,7 +161,7 @@
                                                     <form method="POST" action="{{ route('dashboard.booking.availability.working-hours.destroy', [$staff, $workingHour]) }}" onsubmit="return confirm('Delete these working hours?');">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <x-dashboard.button variant="danger" size="sm" type="submit">Delete</x-dashboard.button>
+                                                        <x-dashboard.button variant="danger" size="sm" type="submit">{{ __('dashboard.booking_pages.delete') }}</x-dashboard.button>
                                                     </form>
                                                 </div>
                                             @endif
@@ -169,13 +169,13 @@
 
                                         @if ($canManage)
                                             <details class="mt-4">
-                                                <summary class="cursor-pointer text-xs font-medium text-primary">Add break</summary>
+                                                <summary class="cursor-pointer text-xs font-medium text-primary">{{ __('dashboard.booking_pages.add_break') }}</summary>
                                                 <form method="POST" action="{{ route('dashboard.booking.availability.breaks.store', [$staff, $workingHour]) }}" class="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_1.5fr_auto]">
                                                     @csrf
                                                     <input name="starts_at" type="time" required class="rounded-lg border border-border bg-white px-3 py-2 text-sm">
                                                     <input name="ends_at" type="time" required class="rounded-lg border border-border bg-white px-3 py-2 text-sm">
-                                                    <input name="label" maxlength="255" placeholder="Label" class="rounded-lg border border-border bg-white px-3 py-2 text-sm">
-                                                    <x-dashboard.button size="sm" type="submit">Add</x-dashboard.button>
+                                                    <input name="label" maxlength="255" :placeholder="__('dashboard.booking_pages.label')" class="rounded-lg border border-border bg-white px-3 py-2 text-sm">
+                                                    <x-dashboard.button size="sm" type="submit">{{ __('dashboard.booking_pages.add') }}</x-dashboard.button>
                                                 </form>
                                             </details>
 
@@ -187,26 +187,26 @@
                                                         @method('PATCH')
                                                         <input name="starts_at" type="time" value="{{ substr((string) $break->starts_at, 0, 5) }}" required class="rounded-lg border border-border bg-white px-3 py-2 text-sm">
                                                         <input name="ends_at" type="time" value="{{ substr((string) $break->ends_at, 0, 5) }}" required class="rounded-lg border border-border bg-white px-3 py-2 text-sm">
-                                                        <input name="label" value="{{ $break->label }}" maxlength="255" placeholder="Label" class="rounded-lg border border-border bg-white px-3 py-2 text-sm">
+                                                        <input name="label" value="{{ $break->label }}" maxlength="255" :placeholder="__('dashboard.booking_pages.label')" class="rounded-lg border border-border bg-white px-3 py-2 text-sm">
                                                         <x-dashboard.button size="sm" type="submit">Save</x-dashboard.button>
                                                     </form>
                                                     <form method="POST" action="{{ route('dashboard.booking.availability.breaks.destroy', [$staff, $workingHour, $break]) }}" class="mt-2 text-end" onsubmit="return confirm('Delete this break?');">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <x-dashboard.button variant="danger" size="sm" type="submit">Delete Break</x-dashboard.button>
+                                                        <x-dashboard.button variant="danger" size="sm" type="submit">{{ __('dashboard.booking_pages.delete_break') }}</x-dashboard.button>
                                                     </form>
                                                 </details>
                                             @endforeach
                                         @endif
                                     </div>
                                 @empty
-                                    <p class="rounded-xl border border-dashed border-border p-6 text-sm text-muted">No recurring working hours configured.</p>
+                                    <p class="rounded-xl border border-dashed border-border p-6 text-sm text-muted">{{ __('dashboard.booking_pages.no_working_hours') }}</p>
                                 @endforelse
                             </div>
 
                             @if ($canManage)
                                 <details class="mt-4">
-                                    <summary class="cursor-pointer text-sm font-medium text-primary">Add working hours</summary>
+                                    <summary class="cursor-pointer text-sm font-medium text-primary">{{ __('dashboard.booking_pages.add_working_hours') }}</summary>
                                     <form method="POST" action="{{ route('dashboard.booking.availability.working-hours.store', $staff) }}" class="mt-3 rounded-xl border border-border bg-surface p-4">
                                         @csrf
                                         <div class="grid gap-3 sm:grid-cols-3">
@@ -219,7 +219,7 @@
                                             <input name="ends_at" type="time" value="17:00" required class="rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
                                         </div>
                                         <div class="mt-3 flex justify-end">
-                                            <x-dashboard.button size="sm" type="submit">Add Hours</x-dashboard.button>
+                                            <x-dashboard.button size="sm" type="submit">{{ __('dashboard.booking_pages.add_hours') }}</x-dashboard.button>
                                         </div>
                                     </form>
                                 </details>
@@ -229,7 +229,7 @@
 
                     <aside>
                         <section>
-                            <h3 class="font-medium text-secondary">Time Off</h3>
+                            <h3 class="font-medium text-secondary">{{ __('dashboard.booking_pages.time_off') }}</h3>
                             <p class="mt-1 text-xs leading-5 text-muted">Blocked periods are accepted as timezone-aware ISO-8601 values and normalized by the backend.</p>
 
                             <div class="mt-3 space-y-3">
@@ -253,7 +253,7 @@
                                                     @method('PATCH')
                                                     <input name="starts_at" value="{{ $timeOff->starts_at?->format('Y-m-d\TH:iP') }}" required class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-xs">
                                                     <input name="ends_at" value="{{ $timeOff->ends_at?->format('Y-m-d\TH:iP') }}" required class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-xs">
-                                                    <input name="reason" value="{{ $timeOff->reason }}" maxlength="255" class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-xs" placeholder="Reason">
+                                                    <input name="reason" value="{{ $timeOff->reason }}" maxlength="255" class="block w-full rounded-lg border border-border bg-white px-3 py-2 text-xs" :placeholder="__('dashboard.booking_pages.reason')">
                                                     <div class="flex justify-end">
                                                         <x-dashboard.button size="sm" type="submit">Save</x-dashboard.button>
                                                     </div>
@@ -263,27 +263,27 @@
                                             <form method="POST" action="{{ route('dashboard.booking.availability.time-off.destroy', [$staff, $timeOff]) }}" class="mt-2" onsubmit="return confirm('Delete this time off?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <x-dashboard.button variant="danger" size="sm" type="submit">Delete</x-dashboard.button>
+                                                <x-dashboard.button variant="danger" size="sm" type="submit">{{ __('dashboard.booking_pages.delete') }}</x-dashboard.button>
                                             </form>
                                         @endif
                                     </div>
                                 @empty
-                                    <p class="rounded-xl border border-dashed border-border p-6 text-sm text-muted">No time off configured.</p>
+                                    <p class="rounded-xl border border-dashed border-border p-6 text-sm text-muted">{{ __('dashboard.booking_pages.no_time_off') }}</p>
                                 @endforelse
                             </div>
 
                             @if ($canManage)
                                 <details class="mt-4">
-                                    <summary class="cursor-pointer text-sm font-medium text-primary">Add time off</summary>
+                                    <summary class="cursor-pointer text-sm font-medium text-primary">{{ __('dashboard.booking_pages.add_time_off') }}</summary>
                                     <form method="POST" action="{{ route('dashboard.booking.availability.time-off.store', $staff) }}" class="mt-3 rounded-xl border border-border bg-surface p-4">
                                         @csrf
                                         <div class="space-y-3">
-                                            <input name="starts_at" required placeholder="2026-09-21T12:00+03:00" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                            <input name="ends_at" required placeholder="2026-09-21T15:00+03:00" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                            <input name="reason" maxlength="255" placeholder="Reason" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                            <input name="starts_at" required :placeholder="__('dashboard.booking_pages.starts_at_placeholder')" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                            <input name="ends_at" required :placeholder="__('dashboard.booking_pages.ends_at_placeholder')" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                            <input name="reason" maxlength="255" :placeholder="__('dashboard.booking_pages.reason')" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
                                         </div>
                                         <div class="mt-3 flex justify-end">
-                                            <x-dashboard.button size="sm" type="submit">Add Time Off</x-dashboard.button>
+                                            <x-dashboard.button size="sm" type="submit">{{ __('dashboard.booking_pages.add_time_off_action') }}</x-dashboard.button>
                                         </div>
                                     </form>
                                 </details>
@@ -295,8 +295,8 @@
         @empty
             <x-dashboard.card>
                 <div class="px-6 py-12 text-center">
-                    <h2 class="font-medium text-secondary">No active staff</h2>
-                    <p class="mt-2 text-sm text-muted">Create or activate staff members before configuring availability.</p>
+                    <h2 class="font-medium text-secondary">{{ __('dashboard.booking_pages.no_active_staff') }}</h2>
+                    <p class="mt-2 text-sm text-muted">{{ __('dashboard.booking_pages.availability_staff_hint') }}</p>
                 </div>
             </x-dashboard.card>
         @endforelse
