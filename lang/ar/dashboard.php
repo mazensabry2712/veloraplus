@@ -120,6 +120,7 @@ return [
         'add_customer' => 'إضافة عميل','select_appointment' => 'اختر الموعد','walk_in_no_appointment' => 'زيارة بدون موعد','add_to_queue' => 'إضافة إلى القائمة','queue_entries' => 'دخولات قائمة الانتظار',
         'queue_entries_hint' => 'عرض ما يصل إلى 50 دخولًا مرتبة حسب موضعها.','next_position' => 'الموضع التالي','skip' => 'تخطي','skip_reason_optional' => 'السبب (اختياري)',
         'skip_entry' => 'تخطي الدخول','mark_no_show' => 'تسجيل عدم الحضور','no_queue_customers' => 'لا يوجد عملاء حاليًا في هذه القائمة.',
+        'queue_key_placeholder' => 'queue-2026-0001','no_queues_for' => 'لا توجد قوائم انتظار بتاريخ',
         'create_queue_hint' => 'أنشئ قائمة لفرع وخدمة لبدء تشغيل الزيارات بدون موعد.','create_queue_description' => 'قوائم الانتظار فريدة حسب الفرع والخدمة وتاريخ التشغيل.',
         'select_location' => 'اختر الفرع','create_queue' => 'إنشاء قائمة انتظار',
     ],
