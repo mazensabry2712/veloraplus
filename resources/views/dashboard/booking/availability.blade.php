@@ -19,7 +19,6 @@
     <x-dashboard.page-header
         :title="__('dashboard.availability')"
         :description="__('dashboard.page_descriptions.availability')"
-        Manage recurring working hours, breaks, time off, and service assignments for active staff."
     />
 
     <div class="mt-6 space-y-6">
