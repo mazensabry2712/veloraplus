@@ -756,3 +756,10 @@ The Company workspace is now normalized around the shared operational pattern:
 - The Dashboard topbar shows tenant context once rather than repeating the tenant name.
 
 This increment preserves the existing backend authorization, tenant isolation, pagination, and CRUD routes.
+
+
+## 32. Booking workspace localization delivery
+
+Services, Availability, Appointments, and Queue now consume the shared Dashboard translation contract for their operational labels, filters, status controls, creation flows, and empty states. The session locale switch presents the same Booking workspace in English or Arabic without moving business logic into the frontend.
+
+Existing Booking entitlements, permissions, tenant isolation, lifecycle transitions, queue controls, and pagination remain unchanged.
