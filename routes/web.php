@@ -7,6 +7,7 @@ use App\Http\Controllers\Dashboard\CompanyDashboardController;
 use App\Http\Controllers\Dashboard\CompanyBrandingController;
 use App\Http\Controllers\Dashboard\CompanyProfileController;
 use App\Http\Controllers\Dashboard\CustomerController;
+use App\Http\Controllers\Dashboard\DashboardPreferenceController;
 use App\Http\Controllers\Dashboard\LocationController;
 use App\Http\Controllers\Dashboard\PlatformBillingController;
 use App\Http\Controllers\Dashboard\QueueController;
@@ -39,6 +40,9 @@ Route::get('/dashboard', CompanyDashboardController::class)
     ->name('dashboard');
 
 Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])->group(function (): void {
+    Route::post('/dashboard/preferences/locale', [DashboardPreferenceController::class, 'locale'])
+        ->name('dashboard.preferences.locale');
+
     Route::get('/dashboard/company/profile', [CompanyProfileController::class, 'show'])
         ->name('company.profile');
 
@@ -164,6 +168,14 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.availabi
 
         Route::delete('/staff/{staff}/working-hours/{workingHour}', [BookingAvailabilityController::class, 'destroyWorkingHour'])
             ->name('working-hours.destroy');
+
+        Route::post('/staff/{staff}/working-hours/{workingHour}/breaks', [BookingAvailabilityController::class, 'storeBreak'])
+            ->name('breaks.store');
+
+        Route::patch('/staff/{staff}/working-hours/{workingHour}/breaks/{break}', [BookingAvailabilityController::class, 'updateBreak'])
+            ->name('breaks.update');
+
+        Route::delete('/staff/{staff}/working-hours/{workingHour}/breaks/{break}', [BookingAvailabilityController::class, 'destroyBreak']);
 
         Route::post('/staff/{staff}/working-hours/{workingHour}/breaks', [BookingAvailabilityController::class, 'storeBreak'])
             ->name('breaks.store');
