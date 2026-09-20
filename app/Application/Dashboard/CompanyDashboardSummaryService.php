@@ -70,7 +70,7 @@ final class CompanyDashboardSummaryService
         return [
             'timezone' => $timezone,
             'currency' => strtoupper((string) ($tenant->default_currency ?: 'EGP')),
-            'today' => $now->format('l, F j'),
+            'today' => $now->locale(app()->getLocale())->translatedFormat('l, F j'),
             'metrics' => [
                 'appointments_today' => (int) $statusCounts->sum(),
                 'confirmed_today' => (int) ($statusCounts[AppointmentStatus::Confirmed->value] ?? 0),
