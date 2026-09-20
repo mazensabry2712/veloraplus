@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — 8.6 USAGE AND SETTINGS**
+**IN PROGRESS — 8.6 USAGE AND SETTINGS (BACKEND PARTIAL VERIFIED)**
 
 Phase 8 is the next major product delivery after the completed Phase 7 Booking implementation. It converts the verified Core + Booking backend capabilities into the authenticated Company Dashboard used by tenant members.
 
