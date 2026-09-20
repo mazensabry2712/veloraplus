@@ -124,8 +124,8 @@ The white/black problem is solved through **hierarchy and controlled brand color
 
 The sidebar communicates:
 
-1. VeloraPlus identity;
-2. current company;
+1. tenant identity;
+2. current company context;
 3. user role;
 4. product sections;
 5. active page.
@@ -143,10 +143,12 @@ Rules:
 
 The header provides:
 
-- workspace/page context;
+- tenant/workspace context;
 - current user;
 - account action;
 - responsive navigation access.
+
+VeloraPlus provider branding is intentionally omitted from the tenant Dashboard shell.
 
 Do not add global controls until the matching capability exists.
 
@@ -727,6 +729,15 @@ The Dashboard foundation now includes a lightweight interaction layer without in
 ### Interaction rule
 Modern interactions must improve navigation speed and visual confidence without turning the Blade Dashboard into a client-heavy application.
 
-## 29. Final rule
+## 29. White-label tenant shell
+
+The subscribed tenant experience is white-label by default:
+
+- tenant name and uploaded tenant logo are used in the Dashboard shell;
+- VeloraPlus must not appear in sidebar branding, page eyebrow, browser title, or primary workspace controls;
+- the only persistent provider attribution is the small "Powered by VeloraPlus" footer;
+- platform/admin surfaces may retain VeloraPlus identity where the operator is working on the SaaS platform itself.
+
+## 30. Final rule
 
 **VeloraPlus should look like VeloraPlus — with the operational maturity of modern SaaS dashboards, not a clone of any one product.**
