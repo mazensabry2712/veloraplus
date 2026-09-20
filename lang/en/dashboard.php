@@ -124,6 +124,7 @@ return [
         'add_customer' => 'Add Customer','select_appointment' => 'Select appointment','walk_in_no_appointment' => 'Walk-in / no appointment','add_to_queue' => 'Add to Queue',
         'queue_entries' => 'Queue Entries','queue_entries_hint' => 'Showing up to 50 entries ordered by queue position.','next_position' => 'Next position','skip' => 'Skip',
         'skip_reason_optional' => 'Reason (optional)','skip_entry' => 'Skip Entry','mark_no_show' => 'Mark No-show','no_queue_customers' => 'No customers are currently in this queue.',
+        'queue_key_placeholder' => 'queue-2026-0001','no_queues_for' => 'No queues for',
         'create_queue_hint' => 'Create a queue for a location and service to start operating walk-ins.','create_queue_description' => 'Queues are unique by location, service, and business date.',
         'select_location' => 'Select location','create_queue' => 'Create Queue',
     ],
