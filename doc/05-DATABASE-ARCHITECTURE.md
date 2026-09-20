@@ -4,6 +4,8 @@
 
 The system uses one central/control database and one dedicated database per Tenant.
 
+Company profile fields required for routing, localization, currency, and platform context live centrally on `tenants`. Tenant-owned presentation/configuration such as branding, social links, SEO defaults, and tenant tax configuration uses the tenant-local `company_settings` boundary.
+
 ## 2. Central database
 
 ### Platform accounts
@@ -408,6 +410,18 @@ updated_at
 ~~~
 
 Important business settings should use typed entities/columns when required.
+
+Supported company settings namespaces include:
+
+~~~
+company.*
+branding.*
+social.*
+seo.*
+tax.*
+~~~
+
+The `company.*` projection mirrors the central Tenant company profile fields. Branding assets are stored as protected tenant-scoped public-storage paths, while public-facing links and configuration remain namespaced settings.
 
 ### Staff
 
