@@ -214,6 +214,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.queues',
     ->prefix('dashboard/booking/queues')
     ->name('dashboard.booking.queues.')
     ->group(function (): void {
+        Route::get('/', [QueueController::class, 'index'])
+            ->name('index');
+
         Route::post('/', [QueueController::class, 'store'])
             ->name('store');
 
