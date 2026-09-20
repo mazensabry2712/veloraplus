@@ -17,10 +17,16 @@ final class CompanyProfileManager
             'name' => trim((string) $attributes['name']),
             'legal_name' => $this->nullableString($attributes['legal_name'] ?? null),
             'industry' => $this->nullableString($attributes['industry'] ?? null),
+            'business_type' => $this->nullableString($attributes['business_type'] ?? null),
             'country_code' => $this->nullableUpper($attributes['country_code'] ?? null),
             'default_currency' => strtoupper(trim((string) $attributes['default_currency'])),
             'timezone' => trim((string) $attributes['timezone']),
             'locale' => trim((string) $attributes['locale']),
+            'phone' => $this->nullableString($attributes['phone'] ?? null),
+            'email' => $this->nullableString($attributes['email'] ?? null),
+            'website' => $this->nullableString($attributes['website'] ?? null),
+            'city' => $this->nullableString($attributes['city'] ?? null),
+            'address' => $this->nullableString($attributes['address'] ?? null),
         ];
 
         $tenant = DB::connection('central')->transaction(function () use ($tenant, $profile): Tenant {
@@ -44,10 +50,16 @@ final class CompanyProfileManager
             'company.name' => [$profile['name'], 'string'],
             'company.legal_name' => [$profile['legal_name'], 'string'],
             'company.industry' => [$profile['industry'], 'string'],
+            'company.business_type' => [$profile['business_type'], 'string'],
             'company.country_code' => [$profile['country_code'], 'string'],
             'company.default_currency' => [$profile['default_currency'], 'string'],
             'company.timezone' => [$profile['timezone'], 'string'],
             'company.locale' => [$profile['locale'], 'string'],
+            'company.phone' => [$profile['phone'], 'string'],
+            'company.email' => [$profile['email'], 'string'],
+            'company.website' => [$profile['website'], 'string'],
+            'company.city' => [$profile['city'], 'string'],
+            'company.address' => [$profile['address'], 'string'],
         ];
 
         foreach ($settings as $key => [$value, $type]) {
