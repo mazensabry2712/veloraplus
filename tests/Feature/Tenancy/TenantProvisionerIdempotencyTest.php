@@ -91,10 +91,17 @@ test('tenant provisioning is idempotent when company settings already exist', fu
             ->all();
 
         expect($settings)
-            ->toHaveCount(6)
+            ->toHaveCount(13)
             ->and($settings['company.legal_name'])->toBe('Existing Legal Name')
             ->and($settings['company.name'])->toBe('Velora Clinic')
-            ->and($settings['company.default_currency'])->toBe('EGP');
+            ->and($settings['company.default_currency'])->toBe('EGP')
+            ->and($settings['company.industry'])->toBeNull()
+            ->and($settings['company.business_type'])->toBeNull()
+            ->and($settings['company.phone'])->toBeNull()
+            ->and($settings['company.email'])->toBeNull()
+            ->and($settings['company.website'])->toBeNull()
+            ->and($settings['company.city'])->toBeNull()
+            ->and($settings['company.address'])->toBeNull();
 
         $manager->disconnect();
     } finally {
