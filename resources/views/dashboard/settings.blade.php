@@ -7,7 +7,6 @@
     <x-dashboard.page-header
         :title="__('dashboard.settings')"
         :description="__('dashboard.page_descriptions.settings')"
-        Company presentation, localization, and payment integration settings. Sensitive provider credentials are write-only in the Dashboard."
     />
 
     <div class="mt-6 space-y-6">
