@@ -2,7 +2,7 @@
 
 ## Status
 
-**IN PROGRESS — 8.4.4 SUBSCRIPTION CHANGES**
+**IN PROGRESS — 8.5 MODULE MARKETPLACE**
 
 Phase 8 is the next major product delivery after the completed Phase 7 Booking implementation. It converts the verified Core + Booking backend capabilities into the authenticated Company Dashboard used by tenant members.
 
@@ -666,6 +666,28 @@ Tests cover successful upgrade/downgrade, RBAC denial, malformed upgrade input, 
 
 Local verification is green at 222 tests / 1154 assertions, including the dedicated Platform Billing/Billing dashboard coverage. The corresponding finalized GitHub Actions test run is also green.
 
+### 8.5 Module Marketplace
+
+#### Current backend status — Implementation in progress
+
+The first Marketplace backend boundary is implemented on top of the existing Catalog, Entitlement, Billing, and Tenant Context services.
+
+Implemented:
+
+- tenant-safe Marketplace overview for active purchasable Modules, individually purchasable Features, and active Bundles;
+- current tenant currency/country pricing resolution through the existing CatalogPricingResolver;
+- Marketplace state presentation for available, active, pending, scheduled-for-removal, and unavailable commercial items;
+- purchase requests delegated to the existing Platform Billing upgrade flow;
+- rejection of inactive catalog items and unavailable catalog dependencies;
+- active/grace subscription requirement for Marketplace purchases;
+- tenant context isolation at the application-service boundary;
+- Dashboard purchase validation and route boundary.
+
+Route:
+
+- POST /dashboard/marketplace/purchase
+
+The frontend Marketplace listing and purchase UI remain a later Dashboard UI pass. Verification of the current backend implementation is pending.
 ### 8.5 Module Marketplace
 
 Build the tenant-facing catalog surface on top of the existing:
