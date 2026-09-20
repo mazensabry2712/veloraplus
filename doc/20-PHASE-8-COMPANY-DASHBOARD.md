@@ -352,6 +352,28 @@ Routes:
 
 The test suite covers custom role creation/update, system-role protection, deletion protection for referenced roles, RBAC denial, and cross-tenant isolation.
 
+#### 8.2.9 Company Dashboard read surfaces — Frontend in progress
+
+The first live Company read screens are now wired to the existing backend contracts:
+
+- `GET /dashboard/company/profile`;
+- `GET /dashboard/company/locations`;
+- `GET /dashboard/company/staff`;
+- `GET /dashboard/company/customers`;
+- `GET /dashboard/company/users`;
+- `GET /dashboard/company/roles`.
+
+The implementation keeps business behavior in existing managers/policies and adds only Dashboard presentation/query boundaries:
+
+- permission-aware navigation;
+- backend authorization on every read controller;
+- tenant-aware queries;
+- pagination for Locations, Staff, Customers, and Users;
+- eager loading of Staff → Location and Users → Platform Account;
+- reusable Blade components for page headers, cards, badges, navigation, pagination, and the platform logo;
+- no new frontend framework and no new npm dependency.
+
+The current branch's new read-screen feature coverage still requires local execution after these changes. Existing user-verified regression immediately before this increment was 244 tests / 1306 assertions with a successful Vite production build.
 #### 8.2.8 Company Branding, Social & Commercial Settings — Backend implemented and verified
 
 Company-specific branding and public profile presentation are tenant-scoped.
