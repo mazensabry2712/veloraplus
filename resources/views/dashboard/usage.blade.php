@@ -7,7 +7,6 @@
     <x-dashboard.page-header
         :title="__('dashboard.usage')"
         :description="__('dashboard.page_descriptions.usage')"
-        Effective tenant entitlement limits. Runtime consumption is shown only where the underlying capability provides a real usage-metering contract."
     />
 
     <div class="mt-6">
