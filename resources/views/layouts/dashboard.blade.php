@@ -40,9 +40,19 @@
             <div class="px-3 pt-5 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Platform
             </div>
-            @foreach (['Subscription', 'Module Marketplace', 'Usage', 'Settings'] as $item)
+            @foreach (['Subscription', 'Module Marketplace'] as $item)
                 <span class="block rounded-lg px-3 py-2 text-sm text-slate-400">{{ $item }} <span class="text-xs">(next)</span></span>
             @endforeach
+
+            <a href="{{ route('dashboard.usage') }}"
+               class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                Usage & Limits
+            </a>
+
+            <a href="{{ route('dashboard.settings') }}"
+               class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                Settings
+            </a>
         </nav>
     </aside>
 
