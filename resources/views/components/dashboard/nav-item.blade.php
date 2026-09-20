@@ -7,7 +7,7 @@
 
 @php
     $classes = $active
-        ? 'bg-surface text-primary ring-1 ring-inset ring-primary/10'
+        ? 'bg-primary text-white shadow-sm'
         : ($disabled
             ? 'cursor-not-allowed text-disabled'
             : 'text-muted hover:bg-surface hover:text-secondary');
