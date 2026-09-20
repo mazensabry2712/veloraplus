@@ -644,9 +644,27 @@ Dashboard Billing remains strictly Company → VeloraPlus. Tenant customer Booki
 
 The 8.4.3 backend slice is implemented and locally verified. The dedicated Platform Billing/Billing tests pass at 26 tests / 110 assertions, and the full local regression suite is green at 218 tests / 1129 assertions.
 
-#### 8.4.4 Subscription changes
+#### 8.4.4 Subscription changes — Dashboard backend implemented
 
-Planned.
+Implemented:
+
+- authorized Dashboard subscription upgrade requests through the existing `SubscriptionService::requestUpgrade()`;
+- catalog item resolution for Module, Feature, and Bundle upgrade inputs;
+- preservation of the subscription's stored billing tax context for upgrade pricing;
+- upgrade requests create separate pending Subscription Items and an open Platform Invoice;
+- upgrade invoice id is returned through Dashboard session state for the later checkout UI flow;
+- authorized Dashboard subscription downgrade scheduling through the existing `SubscriptionService::scheduleDowngrade()`;
+- downgrade keeps the current entitlement active until `current_period_end`;
+- tenant ownership, membership, `billing.manage`, validation, and invalid subscription-item boundaries remain enforced.
+
+Routes:
+
+- `POST /dashboard/billing/subscription/{subscription}/upgrade`
+- `POST /dashboard/billing/subscription/{subscription}/items/{item}/downgrade`
+
+Tests cover successful upgrade/downgrade, RBAC denial, malformed upgrade input, pending upgrade state, invoice creation, and end-of-period entitlement behavior.
+
+Local verification is pending for the current 8.4.4 implementation batch.
 
 ### 8.5 Module Marketplace
 
