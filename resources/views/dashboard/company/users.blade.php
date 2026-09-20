@@ -1,12 +1,13 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Users')
-@section('heading', 'Users')
+@section('title', __('dashboard.users'))
+@section('heading', __('dashboard.users'))
 
 @section('content')
     <x-dashboard.page-header
-        title="Users"
-        description="Manage platform accounts that have access to the current company and control their tenant role."
+        :title="__('dashboard.users')"
+        :description="__('dashboard.page_descriptions.users')"
+
     />
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
