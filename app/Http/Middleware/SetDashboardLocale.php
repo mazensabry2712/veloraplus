@@ -11,10 +11,12 @@ final class SetDashboardLocale
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = $request->session()->get('dashboard_locale', config('app.locale', 'en'));
+        if ($request->is('dashboard*')) {
+            $locale = $request->session()->get('dashboard_locale', config('app.locale', 'en'));
 
-        if (in_array($locale, ['en', 'ar'], true)) {
-            App::setLocale($locale);
+            if (in_array($locale, ['en', 'ar'], true)) {
+                App::setLocale($locale);
+            }
         }
 
         return $next($request);
