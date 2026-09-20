@@ -153,10 +153,17 @@ final class TenantProvisioner implements TenantProvisionerContract
         $settings = [
             'company.name' => [$tenant->name, 'string'],
             'company.legal_name' => [$tenant->legal_name, 'string'],
+            'company.industry' => [$tenant->industry, 'string'],
+            'company.business_type' => [$tenant->business_type, 'string'],
             'company.country_code' => [$tenant->country_code, 'string'],
             'company.default_currency' => [$tenant->default_currency, 'string'],
             'company.timezone' => [$tenant->timezone, 'string'],
             'company.locale' => [$tenant->locale, 'string'],
+            'company.phone' => [$tenant->phone, 'string'],
+            'company.email' => [$tenant->email, 'string'],
+            'company.website' => [$tenant->website, 'string'],
+            'company.city' => [$tenant->city, 'string'],
+            'company.address' => [$tenant->address, 'string'],
         ];
 
         $rows = [];
