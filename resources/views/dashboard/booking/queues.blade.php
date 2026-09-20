@@ -1,7 +1,7 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Queue')
-@section('heading', 'Queue')
+@section('title', __('dashboard.queue'))
+@section('heading', __('dashboard.queue'))
 
 @section('content')
     @php
@@ -18,8 +18,9 @@
     @endphp
 
     <x-dashboard.page-header
-        title="Queue"
-        description="Operate daily queues by location and service without bypassing QueueManager rules."
+        :title="__('dashboard.queue')"
+        :description="__('dashboard.page_descriptions.queue')"
+        Operate daily queues by location and service without bypassing QueueManager rules."
     />
 
     <div class="mt-6 space-y-6">
