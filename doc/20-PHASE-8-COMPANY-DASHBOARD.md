@@ -578,18 +578,22 @@ Routes:
 
 Tests cover create/reschedule/complete, permission denial, entitlement denial, validation, lifecycle transition enforcement, and cross-tenant route binding isolation.
 
-#### 8.3.4 Queue — Backend implemented
+#### 8.3.4 Queue — Backend implemented, frontend started
 
-The Dashboard Queue boundary consumes the existing `QueueManager`.
+The Dashboard Queue boundary consumes the existing `QueueManager`. The first live frontend read surface now exposes daily tenant-scoped queues and queue entries without duplicating business rules.
 
-Supported operations:
+Frontend surface:
 
-- create a daily Queue by Location + Service + business date;
-- open/close a Queue;
-- enqueue active Customers;
-- optionally link a Queue Entry to an Appointment;
-- call the next waiting entry;
-- complete, skip, or mark a Queue Entry as no-show.
+- `GET /dashboard/booking/queues`;
+- business-date filter with active Location and Service filters;
+- Open/Closed queue status filter;
+- paginated Queue listing;
+- queue entry counts and up to 50 ordered entries per queue;
+- create queue form for authorized members;
+- add Customer to an open queue with optional Appointment linkage;
+- Call Next, Open, Close, Complete, Skip, and No-show actions based on the existing QueueManager lifecycle;
+- permission-aware and entitlement-aware Booking navigation;
+- responsive Blade/Tailwind presentation using shared Dashboard components.
 
 The existing QueueManager remains authoritative for:
 
@@ -605,7 +609,8 @@ Security and entitlement:
 
 - active Tenant Membership is required;
 - `booking.queues` entitlement is required;
-- `booking.queues.manage` is enforced through the existing Queue policy;
+- `booking.queues.view` is required to read the page;
+- `booking.queues.manage` is required for mutations;
 - nested Queue Entry actions verify that the entry belongs to the addressed Queue.
 
 Backend components:
@@ -618,9 +623,17 @@ Backend components:
 - existing `QueuePolicy`;
 - `QueueManagementTest`.
 
-Routes are under `/dashboard/booking/queues` for Queue lifecycle and Queue Entry operations.
+Routes:
 
-Tests cover queue lifecycle, entry processing, permission/entitlement boundaries, resource validation, nested-record ownership, and existing QueueManager behavior.
+- `GET /dashboard/booking/queues`;
+- `POST /dashboard/booking/queues`;
+- `POST /dashboard/booking/queues/{queue}/open`;
+- `POST /dashboard/booking/queues/{queue}/close`;
+- `POST /dashboard/booking/queues/{queue}/entries`;
+- `POST /dashboard/booking/queues/{queue}/call-next`;
+- Queue Entry Complete/Skip/No-show routes under the queue.
+
+The frontend slice adds dedicated read-screen coverage while retaining the existing Queue lifecycle, validation, entitlement, and tenant-isolation tests.
 
 #### 8.3.5 Tenant Payments — Backend implemented
 
