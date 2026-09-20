@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Application\Booking\StaffAvailabilityManager;
+use App\Application\Entitlements\EntitlementService;
+use App\Domain\Tenancy\TenantContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\StoreStaffBreakRequest;
 use App\Http\Requests\Dashboard\StoreStaffTimeOffRequest;
@@ -17,10 +19,40 @@ use App\Models\StaffTimeOff;
 use App\Models\StaffWorkingHour;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 use InvalidArgumentException;
 
 final class BookingAvailabilityController extends Controller
 {
+    public function index(TenantContext $tenantContext, EntitlementService $entitlements): View
+    {
+        Gate::authorize('viewAny', Staff::class);
+
+        $tenant = $tenantContext->current();
+        $canManage = auth()->user()->can('booking.availability.manage');
+
+        $services = $entitlements->canUse($tenant, 'booking.services')
+            ? Service::query()->where('status', 'active')->orderBy('name')->get(['id', 'name'])
+            : collect();
+
+        return view('dashboard.booking.availability', [
+            'tenant' => $tenant,
+            'canManage' => $canManage,
+            'servicesEntitled' => $entitlements->canUse($tenant, 'booking.services'),
+            'services' => $services,
+            'staffMembers' => Staff::query()
+                ->with([
+                    'location:id,name',
+                    'services:id,name',
+                    'workingHours' => fn ($query) => $query->orderBy('day_of_week')->orderBy('starts_at')->with('breaks'),
+                    'timeOffs' => fn ($query) => $query->orderBy('starts_at')->limit(10),
+                ])
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->paginate(10),
+        ]);
+    }
+
     public function assignService(
         Staff $staff,
         Service $service,
