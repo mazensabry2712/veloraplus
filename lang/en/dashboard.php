@@ -89,6 +89,8 @@ return [
         'settings' => 'Company presentation, localization, and payment integration settings.',
         'usage' => 'Effective tenant entitlement limits and capability visibility for this workspace.',
     ],
+    'create_appointment' => 'Create Appointment',
+    'create_queue' => 'Create Queue',
     'company_pages' => [
         'customer_list' => 'Customer List',
         'customer_list_description' => 'Customer records are paginated so the page stays responsive with a large database.',
