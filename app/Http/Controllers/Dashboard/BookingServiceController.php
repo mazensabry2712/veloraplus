@@ -10,9 +10,36 @@ use App\Models\Service;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 final class BookingServiceController extends Controller
 {
+    public function index(): View
+    {
+        Gate::authorize('viewAny', Service::class);
+
+        return view('dashboard.booking.services', [
+            'services' => Service::query()
+                ->select([
+                    'id',
+                    'name',
+                    'slug',
+                    'description',
+                    'duration_minutes',
+                    'buffer_before_minutes',
+                    'buffer_after_minutes',
+                    'price_minor',
+                    'currency',
+                    'deposit_amount_minor',
+                    'status',
+                    'online_bookable',
+                    'capacity',
+                ])
+                ->orderBy('name')
+                ->paginate(15),
+        ]);
+    }
+
     public function store(
         StoreBookingServiceRequest $request,
         ServiceManager $manager,
