@@ -3,22 +3,28 @@
     'description' => null,
 ])
 
-<section {{ $attributes->merge(['class' => 'rounded-2xl border border-border bg-white shadow-sm']) }}>
+<section {{ $attributes->merge(['class' => 'dashboard-panel']) }}>
     @if ($title || $description || isset($header))
-        <header class="flex flex-col gap-2 border-b border-border bg-surface/70 px-5 py-4 sm:px-6">
-            @if ($title)
-                <h2 class="text-base font-semibold text-secondary">{{ $title }}</h2>
-            @endif
+        <header class="dashboard-panel-header">
+            <div class="min-w-0">
+                @if ($title)
+                    <h2 class="dashboard-panel-title">{{ $title }}</h2>
+                @endif
 
-            @if ($description)
-                <p class="text-sm leading-6 text-muted">{{ $description }}</p>
-            @endif
+                @if ($description)
+                    <p class="dashboard-panel-description">{{ $description }}</p>
+                @endif
+            </div>
 
-            {{ $header ?? '' }}
+            @isset($header)
+                <div class="dashboard-panel-actions">
+                    {{ $header }}
+                </div>
+            @endisset
         </header>
     @endif
 
-    <div class="p-5 sm:p-6">
+    <div class="dashboard-panel-body">
         {{ $slot }}
     </div>
 </section>
