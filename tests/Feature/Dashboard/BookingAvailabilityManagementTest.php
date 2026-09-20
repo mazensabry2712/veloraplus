@@ -398,3 +398,89 @@ test('availability service assignment is denied when services entitlement is mis
         ->post('http://availability-tenant.velora.test/dashboard/booking/availability/staff/'.$staff->getKey().'/services/'.$service->getKey())
         ->assertForbidden();
 });
+
+test('owner can open the Booking Availability dashboard screen', function (): void {
+    $path = bookingAvailabilityDashboardDatabasePath();
+    $this->bookingAvailabilityDashboardDatabasePath = $path;
+
+    $tenant = createBookingAvailabilityDashboardTenant($path);
+    $owner = addBookingAvailabilityMember($tenant);
+    enableBookingAvailabilityFeature($tenant, 'booking.availability');
+
+    $location = availabilityLocation($tenant);
+    $staff = availabilityStaff($tenant, $location);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    try {
+        app(StaffAvailabilityManager::class)->saveWorkingHour(
+            $staff,
+            1,
+            '09:00',
+            '17:00',
+        );
+    } finally {
+        $manager->disconnect();
+    }
+
+    $this->actingAs($owner)
+        ->get('http://availability-tenant.velora.test/dashboard/booking/availability')
+        ->assertOk()
+        ->assertSee('Availability', false)
+        ->assertSee('Dr. Ahmed', false)
+        ->assertSee('Monday', false)
+        ->assertSee('09:00', false)
+        ->assertSee('17:00', false)
+        ->assertSee('Add working hours', false);
+});
+
+test('viewer can read Booking Availability but cannot see management controls', function (): void {
+    $path = bookingAvailabilityDashboardDatabasePath();
+    $this->bookingAvailabilityDashboardDatabasePath = $path;
+
+    $tenant = createBookingAvailabilityDashboardTenant($path);
+    $viewer = addBookingAvailabilityMember($tenant, 'viewer');
+    enableBookingAvailabilityFeature($tenant, 'booking.availability');
+
+    $location = availabilityLocation($tenant);
+    $staff = availabilityStaff($tenant, $location);
+
+    $this->actingAs($viewer)
+        ->get('http://availability-tenant.velora.test/dashboard/booking/availability')
+        ->assertOk()
+        ->assertSee('Dr. Ahmed', false)
+        ->assertDontSee('Add working hours', false)
+        ->assertDontSee('Add time off', false)
+        ->assertDontSee('Assign Service', false);
+});
+
+test('staff role can read Booking Availability', function (): void {
+    $path = bookingAvailabilityDashboardDatabasePath();
+    $this->bookingAvailabilityDashboardDatabasePath = $path;
+
+    $tenant = createBookingAvailabilityDashboardTenant($path);
+    $staffAccount = addBookingAvailabilityMember($tenant, 'staff');
+    enableBookingAvailabilityFeature($tenant, 'booking.availability');
+
+    $location = availabilityLocation($tenant);
+    $staff = availabilityStaff($tenant, $location);
+
+    $this->actingAs($staffAccount)
+        ->get('http://availability-tenant.velora.test/dashboard/booking/availability')
+        ->assertOk()
+        ->assertSee('Dr. Ahmed', false);
+});
+
+test('Booking Availability dashboard requires the feature entitlement', function (): void {
+    $path = bookingAvailabilityDashboardDatabasePath();
+    $this->bookingAvailabilityDashboardDatabasePath = $path;
+
+    $tenant = createBookingAvailabilityDashboardTenant($path);
+    $owner = addBookingAvailabilityMember($tenant);
+
+    $this->actingAs($owner)
+        ->get('http://availability-tenant.velora.test/dashboard/booking/availability')
+        ->assertForbidden();
+});
+
