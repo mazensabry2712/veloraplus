@@ -7,12 +7,15 @@ use App\Domain\Tenancy\TenantContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\CancelSubscriptionRequest;
 use App\Http\Requests\Dashboard\IssuePlatformCreditRequest;
+use App\Http\Requests\Dashboard\RequestSubscriptionUpgrade;
 use App\Http\Requests\Dashboard\RefundPlatformPaymentRequest;
+use App\Http\Requests\Dashboard\ScheduleSubscriptionDowngradeRequest;
 use App\Http\Requests\Dashboard\VoidPlatformInvoiceRequest;
 use App\Models\PlatformAccount;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformPayment;
 use App\Models\Subscription;
+use App\Models\SubscriptionItem;
 use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
@@ -127,6 +130,41 @@ final class PlatformBillingController extends Controller
         }
 
         return to_route('dashboard')->with('status', 'Platform credit issued successfully.');
+    }
+
+    public function requestUpgrade(
+        RequestSubscriptionUpgrade $request,
+        Subscription $subscription,
+        PlatformBillingDashboardService $billing,
+    ): RedirectResponse {
+        Gate::authorize('manageSubscription', $subscription);
+
+        try {
+            $invoice = $billing->requestUpgrade($subscription, $request->validated('items'));
+        } catch (DomainException $exception) {
+            return back()->withErrors(['billing' => $exception->getMessage()])->withInput();
+        }
+
+        return to_route('dashboard')
+            ->with('status', 'Subscription upgrade requested successfully.')
+            ->with('platform_billing_upgrade_invoice_id', $invoice->getKey());
+    }
+
+    public function scheduleDowngrade(
+        ScheduleSubscriptionDowngradeRequest $request,
+        Subscription $subscription,
+        SubscriptionItem $item,
+        PlatformBillingDashboardService $billing,
+    ): RedirectResponse {
+        Gate::authorize('manageSubscription', $subscription);
+
+        try {
+            $billing->scheduleDowngrade($subscription, $item);
+        } catch (DomainException $exception) {
+            return back()->withErrors(['billing' => $exception->getMessage()])->withInput();
+        }
+
+        return to_route('dashboard')->with('status', 'Subscription downgrade scheduled successfully.');
     }
 
     public function cancelSubscription(
