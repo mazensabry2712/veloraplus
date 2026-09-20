@@ -1,12 +1,13 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Customers')
-@section('heading', 'Customers')
+@section('title', __('dashboard.customers'))
+@section('heading', __('dashboard.customers'))
 
 @section('content')
     <x-dashboard.page-header
-        title="Customers"
-        description="Manage the customer records owned by the current tenant."
+        :title="__('dashboard.customers')"
+        :description="__('dashboard.page_descriptions.customers')"
+
     />
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
