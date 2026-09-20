@@ -1,11 +1,25 @@
 <?php
 
+use App\Application\Authorization\TenantRbacBootstrapper;
+use App\Domain\Booking\AppointmentStatus;
+use App\Domain\Booking\QueueEntryStatus;
+use App\Domain\Booking\QueueStatus;
+use App\Infrastructure\Tenancy\TenantDatabaseManager;
+use App\Models\Appointment;
+use App\Models\AppointmentItem;
+use App\Models\AppointmentStatusHistory;
+use App\Models\Customer;
+use App\Models\Location;
 use App\Models\PlatformAccount;
+use App\Models\Queue;
+use App\Models\QueueEntry;
+use App\Models\Service;
+use App\Models\Staff;
 use App\Models\Tenant;
 use App\Models\TenantDomain;
 use App\Models\TenantMembership;
-use App\Infrastructure\Tenancy\TenantDatabaseManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -14,6 +28,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     $this->originalTenantTemplate = config('database.connections.tenant_template');
+    $this->dashboardTenantDatabasePaths = [];
 });
 
 function dashboardTestTenantDatabasePath(): string
@@ -42,11 +57,36 @@ function dashboardTestTenantDatabasePath(): string
     return $path;
 }
 
+function migrateDashboardTenantDatabase(string $path): void
+{
+    config(['database.connections.tenant_template.database' => $path]);
+
+    $tenant = new Tenant;
+    $tenant->database_name = $path;
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    try {
+        expect(Artisan::call('migrate', [
+            '--database' => TenantDatabaseManager::CONNECTION,
+            '--path' => 'database/migrations/tenant',
+            '--force' => true,
+        ]))->toBe(0);
+    } finally {
+        $manager->disconnect();
+        DB::purge(TenantDatabaseManager::CONNECTION);
+    }
+}
+
 function createDashboardTenant(string $path): Tenant
 {
     $tenant = Tenant::factory()->create([
         'name' => 'Dashboard Tenant',
         'slug' => 'dashboard-tenant',
+        'country_code' => 'EG',
+        'default_currency' => 'EGP',
+        'timezone' => 'Africa/Cairo',
         'database_name' => $path,
         'database_host' => null,
         'database_port' => null,
@@ -63,7 +103,90 @@ function createDashboardTenant(string $path): Tenant
         'verified_at' => now(),
     ]);
 
+    migrateDashboardTenantDatabase($path);
+
     return $tenant;
+}
+
+function dashboardSeedOperationalData(Tenant $tenant): void
+{
+    app(TenantDatabaseManager::class)->connect($tenant);
+
+    try {
+        $location = Location::factory()->create([
+            'name' => 'Main Branch',
+            'timezone' => 'Africa/Cairo',
+            'status' => 'active',
+        ]);
+        $staff = Staff::factory()->forLocation($location)->create([
+            'name' => 'Mazen Staff',
+            'status' => 'active',
+        ]);
+        $service = Service::factory()->create([
+            'name' => 'Consultation',
+            'duration_minutes' => 60,
+            'price_minor' => 25000,
+            'currency' => 'EGP',
+            'status' => 'active',
+        ]);
+        $staff->services()->attach($service->getKey());
+
+        $customer = Customer::factory()->create([
+            'name' => 'Dashboard Customer',
+            'status' => 'active',
+        ]);
+
+        $startsAt = now()->setTimezone('Africa/Cairo')->addHours(2)->utc();
+        $appointment = Appointment::factory()
+            ->for($customer)
+            ->for($staff)
+            ->for($location)
+            ->create([
+                'starts_at' => $startsAt,
+                'ends_at' => $startsAt->copy()->addHour(),
+                'blocked_starts_at' => $startsAt,
+                'blocked_ends_at' => $startsAt->copy()->addHour(),
+                'status' => AppointmentStatus::Confirmed,
+            ]);
+
+        AppointmentItem::query()->create([
+            'appointment_id' => $appointment->getKey(),
+            'service_id' => $service->getKey(),
+            'service_name' => $service->name,
+            'duration_minutes' => $service->duration_minutes,
+            'quantity' => 1,
+            'unit_price_minor' => $service->price_minor,
+            'currency' => $service->currency,
+            'line_total_minor' => $service->price_minor,
+            'metadata' => [],
+        ]);
+
+        AppointmentStatusHistory::query()->create([
+            'appointment_id' => $appointment->getKey(),
+            'from_status' => null,
+            'to_status' => AppointmentStatus::Confirmed->value,
+            'reason' => 'Appointment created.',
+            'changed_at' => now(),
+            'metadata' => [],
+        ]);
+
+        $queue = Queue::factory()->for($location)->for($service)->create([
+            'business_date' => now()->setTimezone('Africa/Cairo')->toDateString(),
+            'status' => QueueStatus::Open,
+            'next_position' => 3,
+        ]);
+
+        QueueEntry::factory()->for($queue)->for($customer)->create([
+            'position' => 1,
+            'status' => QueueEntryStatus::Waiting,
+        ]);
+        QueueEntry::factory()->for($queue)->for($customer)->create([
+            'position' => 2,
+            'status' => QueueEntryStatus::Serving,
+        ]);
+    } finally {
+        app(TenantDatabaseManager::class)->disconnect();
+    }
 }
 
 afterEach(function (): void {
@@ -74,14 +197,16 @@ afterEach(function (): void {
         'database.connections.tenant_template' => $this->originalTenantTemplate,
     ]);
 
-    if (isset($this->dashboardTenantDatabasePath) && is_file($this->dashboardTenantDatabasePath)) {
-        unlink($this->dashboardTenantDatabasePath);
+    foreach ($this->dashboardTenantDatabasePaths as $path) {
+        if (is_file($path)) {
+            unlink($path);
+        }
     }
 });
 
 test('guest is redirected from the company dashboard', function (): void {
     $path = dashboardTestTenantDatabasePath();
-    $this->dashboardTenantDatabasePath = $path;
+    $this->dashboardTenantDatabasePaths[] = $path;
 
     createDashboardTenant($path);
 
@@ -91,7 +216,7 @@ test('guest is redirected from the company dashboard', function (): void {
 
 test('active tenant member can access the company dashboard', function (): void {
     $path = dashboardTestTenantDatabasePath();
-    $this->dashboardTenantDatabasePath = $path;
+    $this->dashboardTenantDatabasePaths[] = $path;
 
     $tenant = createDashboardTenant($path);
     $member = PlatformAccount::factory()->create([
@@ -106,6 +231,9 @@ test('active tenant member can access the company dashboard', function (): void 
         'joined_at' => now(),
     ]);
 
+    app(TenantRbacBootstrapper::class)->bootstrapForTenant($tenant);
+    dashboardSeedOperationalData($tenant);
+
     $this->actingAs($member)
         ->get('http://dashboard-tenant.velora.test/dashboard')
         ->assertOk()
@@ -113,12 +241,22 @@ test('active tenant member can access the company dashboard', function (): void 
         ->assertSee('Company Dashboard')
         ->assertSee('Dashboard Tenant')
         ->assertSee('Dashboard Member')
-        ->assertSee('Owner');
+        ->assertSee('Owner')
+        ->assertSee('Operational summary')
+        ->assertSee('Appointments')
+        ->assertSee('Dashboard Customer')
+        ->assertSee('Consultation')
+        ->assertSee('Main Branch')
+        ->assertSee('Appointments today')
+        ->assertSee('Open queues')
+        ->assertSee('Waiting now')
+        ->assertSee('1')
+        ->assertSee('2');
 });
 
 test('account without an active tenant membership cannot access the dashboard', function (): void {
     $path = dashboardTestTenantDatabasePath();
-    $this->dashboardTenantDatabasePath = $path;
+    $this->dashboardTenantDatabasePaths[] = $path;
 
     createDashboardTenant($path);
     $outsider = PlatformAccount::factory()->create();
