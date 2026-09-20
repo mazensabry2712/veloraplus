@@ -182,7 +182,8 @@ test('owner can open every Company Dashboard management screen', function (): vo
     $this->get('http://company-pages.velora.test/dashboard/company/roles')
         ->assertOk()
         ->assertSee('Owner', false)
-        ->assertSee('System', false);
+        ->assertSee('System', false)
+        ->assertDontSee('VeloraPlus platform', false);
 });
 
 test('staff can view company people pages but cannot open member administration', function (): void {
@@ -249,4 +250,44 @@ test('customer listing is paginated instead of loading the full tenant collectio
         ->assertOk()
         ->assertSee('Customer 1', false)
         ->assertSee('Page 2 of 2', false);
+});
+
+
+test('company management screens follow the dashboard locale', function (): void {
+    $path = companyPagesDatabasePath();
+    $this->companyPagesDatabasePath = $path;
+
+    $tenant = companyPagesTenant($path);
+    $owner = companyPagesMember($tenant, 'owner');
+
+    $this->actingAs($owner)
+        ->post('http://company-pages.velora.test/dashboard/preferences/locale', [
+            'locale' => 'ar',
+        ])
+        ->assertRedirect();
+
+    $this->actingAs($owner)
+        ->get('http://company-pages.velora.test/dashboard/company/customers')
+        ->assertOk()
+        ->assertSee('قائمة العملاء', false)
+        ->assertSee('إضافة عميل', false)
+        ->assertDontSee('Customer List', false);
+
+    $this->actingAs($owner)
+        ->get('http://company-pages.velora.test/dashboard/company/locations')
+        ->assertOk()
+        ->assertSee('قائمة الفروع', false)
+        ->assertSee('إضافة فرع', false);
+
+    $this->actingAs($owner)
+        ->get('http://company-pages.velora.test/dashboard/company/users')
+        ->assertOk()
+        ->assertSee('أعضاء الشركة', false)
+        ->assertSee('إضافة مستخدم', false);
+
+    $this->actingAs($owner)
+        ->get('http://company-pages.velora.test/dashboard/company/roles')
+        ->assertOk()
+        ->assertSee('أدوار الشركة', false)
+        ->assertSee('إنشاء دور مخصص', false);
 });
