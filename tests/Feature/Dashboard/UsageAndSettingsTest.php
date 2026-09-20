@@ -12,11 +12,68 @@ use App\Models\TenantDomain;
 use App\Models\TenantEntitlement;
 use App\Models\TenantMembership;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    $this->originalTenantTemplate = config('database.connections.tenant_template');
+    $this->usageSettingsDatabasePaths = [];
+});
+
+function usageSettingsDatabasePath(string $suffix = ''): string
+{
+    $directory = storage_path('framework/testing');
+
+    File::ensureDirectoryExists($directory);
+
+    $path = $directory.'/usage-settings-'.Str::ulid().$suffix.'.sqlite';
+    touch($path);
+
+    config([
+        'database.connections.tenant_template' => [
+            'driver' => 'sqlite',
+            'url' => null,
+            'database' => $path,
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+            'busy_timeout' => 5000,
+            'journal_mode' => null,
+            'synchronous' => null,
+            'transaction_mode' => 'DEFERRED',
+        ],
+    ]);
+
+    return $path;
+}
+
+function migrateUsageSettingsDatabase(string $path): void
+{
+    config(['database.connections.tenant_template.database' => $path]);
+
+    $tenant = new Tenant;
+    $tenant->database_name = $path;
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    try {
+        expect(Artisan::call('migrate', [
+            '--database' => TenantDatabaseManager::CONNECTION,
+            '--path' => 'database/migrations/tenant',
+            '--force' => true,
+        ]))->toBe(0);
+    } finally {
+        $manager->disconnect();
+        DB::purge(TenantDatabaseManager::CONNECTION);
+    }
+}
+
 function usageSettingsTenant(
+    string $path,
     string $slug,
     string $domain,
 ): Tenant {
@@ -27,6 +84,9 @@ function usageSettingsTenant(
         'default_currency' => 'EGP',
         'timezone' => 'Africa/Cairo',
         'locale' => 'en',
+        'database_name' => $path,
+        'database_host' => null,
+        'database_port' => null,
         'status' => 'active',
         'database_status' => 'ready',
     ]);
@@ -39,6 +99,8 @@ function usageSettingsTenant(
         'status' => 'active',
         'verified_at' => now(),
     ]);
+
+    migrateUsageSettingsDatabase($path);
 
     return $tenant;
 }
@@ -63,10 +125,23 @@ function usageSettingsMember(Tenant $tenant, string $role): PlatformAccount
 afterEach(function (): void {
     DB::purge(TenantDatabaseManager::CONNECTION);
     DB::setDefaultConnection('central');
+
+    config([
+        'database.connections.tenant_template' => $this->originalTenantTemplate,
+    ]);
+
+    foreach ($this->usageSettingsDatabasePaths as $path) {
+        if (is_file($path)) {
+            unlink($path);
+        }
+    }
 });
 
 test('authorized tenant member can view entitlement usage and limits', function (): void {
-    $tenant = usageSettingsTenant('usage-tenant', 'usage-tenant.velora.test');
+    $path = usageSettingsDatabasePath();
+    $this->usageSettingsDatabasePaths[] = $path;
+
+    $tenant = usageSettingsTenant($path, 'usage-tenant', 'usage-tenant.velora.test');
     $owner = usageSettingsMember($tenant, 'owner');
 
     $module = Module::factory()->create([
@@ -96,7 +171,10 @@ test('authorized tenant member can view entitlement usage and limits', function 
 });
 
 test('tenant member without settings view permission cannot view usage', function (): void {
-    $tenant = usageSettingsTenant('usage-staff', 'usage-staff.velora.test');
+    $path = usageSettingsDatabasePath();
+    $this->usageSettingsDatabasePaths[] = $path;
+
+    $tenant = usageSettingsTenant($path, 'usage-staff', 'usage-staff.velora.test');
     $staff = usageSettingsMember($tenant, 'staff');
 
     $this->actingAs($staff)
@@ -105,8 +183,12 @@ test('tenant member without settings view permission cannot view usage', functio
 });
 
 test('usage is isolated by the current tenant context', function (): void {
-    $tenantA = usageSettingsTenant('usage-a', 'usage-a.velora.test');
-    $tenantB = usageSettingsTenant('usage-b', 'usage-b.velora.test');
+    $pathA = usageSettingsDatabasePath('-a');
+    $pathB = usageSettingsDatabasePath('-b');
+    $this->usageSettingsDatabasePaths = [$pathA, $pathB];
+
+    $tenantA = usageSettingsTenant($pathA, 'usage-a', 'usage-a.velora.test');
+    $tenantB = usageSettingsTenant($pathB, 'usage-b', 'usage-b.velora.test');
 
     $ownerA = usageSettingsMember($tenantA, 'owner');
     usageSettingsMember($tenantB, 'owner');
@@ -141,7 +223,10 @@ test('usage is isolated by the current tenant context', function (): void {
 });
 
 test('authorized tenant owner can configure payment integration without exposing credentials', function (): void {
-    $tenant = usageSettingsTenant('settings-tenant', 'settings-tenant.velora.test');
+    $path = usageSettingsDatabasePath();
+    $this->usageSettingsDatabasePaths[] = $path;
+
+    $tenant = usageSettingsTenant($path, 'settings-tenant', 'settings-tenant.velora.test');
     $owner = usageSettingsMember($tenant, 'owner');
 
     $this->actingAs($owner)
@@ -184,7 +269,10 @@ test('authorized tenant owner can configure payment integration without exposing
 });
 
 test('staff member without settings management cannot change payment integration', function (): void {
-    $tenant = usageSettingsTenant('settings-staff', 'settings-staff.velora.test');
+    $path = usageSettingsDatabasePath();
+    $this->usageSettingsDatabasePaths[] = $path;
+
+    $tenant = usageSettingsTenant($path, 'settings-staff', 'settings-staff.velora.test');
     $staff = usageSettingsMember($tenant, 'staff');
 
     $this->actingAs($staff)
@@ -201,8 +289,12 @@ test('staff member without settings management cannot change payment integration
 });
 
 test('payment integration settings stay isolated between tenants', function (): void {
-    $tenantA = usageSettingsTenant('settings-a', 'settings-a.velora.test');
-    $tenantB = usageSettingsTenant('settings-b', 'settings-b.velora.test');
+    $pathA = usageSettingsDatabasePath('-a');
+    $pathB = usageSettingsDatabasePath('-b');
+    $this->usageSettingsDatabasePaths = [$pathA, $pathB];
+
+    $tenantA = usageSettingsTenant($pathA, 'settings-a', 'settings-a.velora.test');
+    $tenantB = usageSettingsTenant($pathB, 'settings-b', 'settings-b.velora.test');
     $ownerA = usageSettingsMember($tenantA, 'owner');
     $ownerB = usageSettingsMember($tenantB, 'owner');
 
