@@ -212,6 +212,55 @@
         padding: 1.25rem;
     }
 
+    .dashboard-panel table {
+        color: var(--vp-text);
+    }
+
+    .dashboard-panel table thead {
+        background: var(--vp-primary-soft);
+    }
+
+    .dashboard-panel table th {
+        color: var(--vp-muted);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        line-height: 1.25rem;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .dashboard-panel table th,
+    .dashboard-panel table td {
+        border-color: var(--vp-border);
+    }
+
+    .dashboard-panel table tbody tr {
+        border-color: var(--vp-border);
+    }
+
+    .dashboard-panel table tbody tr:hover {
+        background: var(--vp-primary-soft);
+    }
+
+    .dashboard-panel table td {
+        vertical-align: middle;
+    }
+
+    .dashboard-panel input,
+    .dashboard-panel select,
+    .dashboard-panel textarea {
+        min-height: 2.5rem;
+    }
+
+    .dashboard-panel input:focus,
+    .dashboard-panel select:focus,
+    .dashboard-panel textarea:focus {
+        border-color: rgb(29 78 216 / 0.35);
+        box-shadow: 0 0 0 3px rgb(29 78 216 / 0.08);
+        outline: none;
+    }
+
     .dashboard-nav-link {
         display: flex;
         min-height: 2.5rem;
@@ -374,11 +423,24 @@
         color: var(--vp-muted) !important;
     }
 
-    html[data-theme='dark'] .dashboard-shell .bg-green-50,
-    html[data-theme='dark'] .dashboard-shell .bg-red-50,
-    html[data-theme='dark'] .dashboard-shell .bg-amber-50,
+    html[data-theme='dark'] .dashboard-shell .bg-green-50 {
+        background-color: rgb(34 197 94 / 0.12) !important;
+        border-color: rgb(74 222 128 / 0.18);
+    }
+
+    html[data-theme='dark'] .dashboard-shell .bg-red-50 {
+        background-color: rgb(239 68 68 / 0.12) !important;
+        border-color: rgb(248 113 113 / 0.18);
+    }
+
+    html[data-theme='dark'] .dashboard-shell .bg-amber-50 {
+        background-color: rgb(245 158 11 / 0.12) !important;
+        border-color: rgb(251 191 36 / 0.18);
+    }
+
     html[data-theme='dark'] .dashboard-shell .bg-sky-50 {
-        border-color: var(--vp-border);
+        background-color: rgb(14 165 233 / 0.12) !important;
+        border-color: rgb(56 189 248 / 0.18);
     }
 
     html[data-theme='dark'] .dashboard-shell .text-green-700,
