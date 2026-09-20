@@ -286,6 +286,53 @@
         color: var(--vp-text);
     }
 
+    .dashboard-command-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-height: 2.75rem;
+        border-radius: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        color: var(--vp-text);
+        transition: background-color 120ms ease, color 120ms ease;
+    }
+
+    .dashboard-command-item:hover,
+    .dashboard-command-item[data-active='true'] {
+        background: var(--vp-primary-soft);
+        color: var(--color-primary);
+    }
+
+    .dashboard-command-icon {
+        display: inline-flex;
+        width: 2.25rem;
+        height: 2.25rem;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--vp-border);
+        border-radius: 0.625rem;
+        background: var(--vp-surface);
+        color: var(--vp-muted);
+    }
+
+    .dashboard-command-item[data-active='true'] .dashboard-command-icon,
+    .dashboard-command-item:hover .dashboard-command-icon {
+        border-color: rgb(29 78 216 / 0.16);
+        background: var(--vp-surface-raised);
+        color: var(--color-primary);
+    }
+
+    .dashboard-shell button,
+    .dashboard-shell a,
+    .dashboard-shell input,
+    .dashboard-shell select,
+    .dashboard-shell textarea {
+        transition-property: background-color, border-color, color, box-shadow, transform;
+        transition-duration: 140ms;
+        transition-timing-function: ease;
+    }
+
     /* Existing utility-heavy screens are normalized here for the shared theme. */
     html[data-theme='dark'] .dashboard-shell .bg-white,
     html[data-theme='dark'] .dashboard-shell .bg-white\/95 {
