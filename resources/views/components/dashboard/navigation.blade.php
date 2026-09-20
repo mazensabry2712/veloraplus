@@ -1,23 +1,23 @@
 @php
     $sections = [
         'Company' => [
-            ['label' => 'Profile', 'route' => 'company.profile'],
-            ['label' => 'Locations', 'route' => 'company.locations'],
-            ['label' => 'Staff', 'route' => 'company.staff'],
-            ['label' => 'Customers', 'route' => 'company.customers'],
-            ['label' => 'Users', 'route' => 'company.users'],
-            ['label' => 'Roles & Permissions', 'route' => 'company.roles'],
+            ['label' => 'Profile', 'route' => 'company.profile', 'icon' => 'building'],
+            ['label' => 'Locations', 'route' => 'company.locations', 'icon' => 'location'],
+            ['label' => 'Staff', 'route' => 'company.staff', 'icon' => 'users'],
+            ['label' => 'Customers', 'route' => 'company.customers', 'icon' => 'user'],
+            ['label' => 'Users', 'route' => 'company.users', 'icon' => 'users'],
+            ['label' => 'Roles & Permissions', 'route' => 'company.roles', 'icon' => 'shield'],
         ],
         'Booking' => [
-            ['label' => 'Services', 'route' => 'dashboard.booking.services.index', 'permission' => 'booking.services.view', 'entitlement' => 'booking.services'],
-            ['label' => 'Availability', 'route' => 'dashboard.booking.availability.index', 'permission' => 'booking.availability.view', 'entitlement' => 'booking.availability'],
-            ['label' => 'Appointments', 'route' => 'dashboard.booking.appointments.index', 'permission' => 'booking.appointments.view', 'entitlement' => 'booking.appointments'],
-            ['label' => 'Queue', 'route' => 'dashboard.booking.queues.index', 'permission' => 'booking.queues.view', 'entitlement' => 'booking.queues'],
-            ['label' => 'Payments', 'route' => null],
+            ['label' => 'Services', 'route' => 'dashboard.booking.services.index', 'permission' => 'booking.services.view', 'entitlement' => 'booking.services', 'icon' => 'briefcase'],
+            ['label' => 'Availability', 'route' => 'dashboard.booking.availability.index', 'permission' => 'booking.availability.view', 'entitlement' => 'booking.availability', 'icon' => 'clock'],
+            ['label' => 'Appointments', 'route' => 'dashboard.booking.appointments.index', 'permission' => 'booking.appointments.view', 'entitlement' => 'booking.appointments', 'icon' => 'calendar'],
+            ['label' => 'Queue', 'route' => 'dashboard.booking.queues.index', 'permission' => 'booking.queues.view', 'entitlement' => 'booking.queues', 'icon' => 'queue'],
+            ['label' => 'Payments', 'route' => null, 'icon' => 'card'],
         ],
         'Platform' => [
-            ['label' => 'Subscription', 'route' => null],
-            ['label' => 'Module Marketplace', 'route' => null],
+            ['label' => 'Subscription', 'route' => null, 'icon' => 'sparkles'],
+            ['label' => 'Module Marketplace', 'route' => null, 'icon' => 'grid'],
         ],
     ];
 @endphp
@@ -30,6 +30,7 @@
             label="Overview"
             :href="route('dashboard')"
             :active="request()->routeIs('dashboard')"
+            icon="grid"
         />
     </section>
 
@@ -54,13 +55,15 @@
                     @if ($item['route'] === null)
                         <x-dashboard.nav-item
                             :label="$item['label']"
+                            :icon="$item['icon']"
                             disabled
                         />
-                    @elseif (($permission === null || auth()->user()->can($permission)) && ($entitlement === null || app(\App\Application\Entitlements\EntitlementService::class)->canUse(app(\App\Domain\Tenancy\TenantContext::class)->current(), $entitlement)))
+                    @elseif (($permission === null || auth()->user()->can($permission)) && ($entitlement === null || app(AppApplicationEntitlementsEntitlementService::class)->canUse(app(AppDomainTenancyTenantContext::class)->current(), $entitlement)))
                         <x-dashboard.nav-item
                             :label="$item['label']"
                             :href="route($item['route'])"
                             :active="request()->routeIs($item['route'])"
+                            :icon="$item['icon']"
                         />
                     @endif
                 @endforeach
@@ -76,12 +79,14 @@
                 label="Usage & Limits"
                 :href="route('dashboard.usage')"
                 :active="request()->routeIs('dashboard.usage')"
+                icon="chart"
             />
 
             <x-dashboard.nav-item
                 label="Settings"
                 :href="route('dashboard.settings')"
                 :active="request()->routeIs('dashboard.settings')"
+                icon="settings"
             />
         </div>
     </section>
