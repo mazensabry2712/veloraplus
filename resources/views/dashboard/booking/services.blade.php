@@ -7,7 +7,6 @@
     <x-dashboard.page-header
         :title="__('dashboard.services')"
         :description="__('dashboard.page_descriptions.services')"
-        Configure the services your company offers through the Booking workspace."
     />
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
