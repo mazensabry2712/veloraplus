@@ -7,10 +7,10 @@
 ])
 
 @php
-    $classes = 'group block rounded-2xl border border-border bg-white p-5 shadow-sm transition-all duration-150';
+    $classes = 'group block rounded-2xl border border-border bg-white p-5 transition-all duration-150';
 
     if ($href) {
-        $classes .= ' hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+        $classes .= ' hover:border-primary/25 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
     }
 @endphp
 
