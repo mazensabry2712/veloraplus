@@ -53,6 +53,7 @@ Important references:
 - doc/18-PHASE-7-BOOKING.md
 - doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md
 - doc/20-PHASE-8-COMPANY-DASHBOARD.md
+- doc/21-BACKEND-COMPLETION-AUDIT.md
 
 ## Current implementation
 
@@ -70,7 +71,9 @@ Phase 6 — Payments & Provider Adapters is closed and verified. Kashier is impl
 
 Phase 7 — Booking core is implemented through 7.6: Services, Staff Availability, Appointments, Tenant Payments, Queue, and the Public Booking transaction are implemented and verified. SEO/Public Web is a locked cross-cutting capability; SEO-1 through SEO-4 are implemented and tested, while SEO-5 remains a production deployment/monitoring gate. The canonical contract is doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
 
-Phase 8 — Company Dashboard is in progress. 8.1 Dashboard Shell, 8.2 Company Foundation, 8.3 Booking workspace backend mutation layers, and 8.4 Platform Billing workspace are implemented and verified for the documented capabilities with tenant isolation, RBAC, entitlement boundaries, and provider-neutral financial flows. 8.4.4 Subscription Changes is implemented and verified; the current local regression suite is green at 222 tests / 1154 assertions, with 30 dedicated Dashboard Billing/Billing tests. 8.5 Module Marketplace backend is now in implementation with catalog overview/state resolution and purchase-request flow. Frontend listing/forms remain for the later Dashboard UI pass.
+Phase 8 — Company Dashboard is in progress. 8.1 Dashboard Shell, 8.3 Booking workspace backend mutation layers, and 8.4 Platform Billing workspace are implemented. 8.5 Module Marketplace backend is implemented. 8.2 Company Foundation completion is being finalized to match the documented company profile, branding, social, tax, and SEO settings contract before 8.6 starts. Frontend listing/forms remain intentionally deferred until the backend completion gate is closed.
+
+The backend completion gate is tracked in doc/21-BACKEND-COMPLETION-AUDIT.md. No new Phase 8 slice starts while that gate is open.
 
 ## Development principle
 
