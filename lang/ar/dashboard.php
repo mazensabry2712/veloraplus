@@ -91,6 +91,9 @@ return [
     ],
     'create_appointment' => 'إنشاء موعد',
     'create_queue' => 'إنشاء قائمة انتظار',
+    'minutes' => 'دقائق',
+    'queue_key_placeholder' => 'queue-2026-0001',
+    'no_queues_for' => 'لا توجد قوائم انتظار بتاريخ',
     'booking_pages' => [
         'service_list' => 'قائمة الخدمات','service_list_description' => 'الخدمات تابعة للشركة ومقسمة إلى صفحات للحفاظ على الأداء مع نمو الكتالوج.',
         'service' => 'الخدمة','duration' => 'المدة','price' => 'السعر','capacity' => 'السعة','booking' => 'الحجز','actions' => 'الإجراءات',
