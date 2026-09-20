@@ -458,11 +458,23 @@ Routes:
 
 Tests cover create/update/archive, read access, management-control visibility, entitlement denial, validation, and cross-tenant route-binding isolation.
 
-#### 8.3.2 Staff Availability — Backend implemented
+#### 8.3.2 Staff Availability — Backend implemented, frontend started
 
 The Dashboard Availability boundary consumes the existing `StaffAvailabilityManager`.
 
-Supported operations:
+Frontend surface:
+
+- `GET /dashboard/booking/availability`;
+- active staff availability workspace;
+- recurring working-hours listing;
+- inline working-hours edit/delete;
+- break listing plus add/edit/delete controls;
+- time-off listing plus add/edit/delete controls;
+- staff-to-service assignment and removal when the Booking Services entitlement is available;
+- permission-aware and entitlement-aware Booking navigation;
+- responsive Blade/Tailwind presentation using shared Dashboard components.
+
+Supported backend operations remain:
 
 - assign/unassign an active Booking Service to Staff;
 - create/update/delete recurring working hours;
@@ -472,9 +484,10 @@ Supported operations:
 Authorization and entitlement:
 
 - active Tenant Membership is required;
+- availability reads require `booking.availability`;
 - availability mutations require `booking.availability`;
 - Service assignment additionally requires `booking.services`;
-- `booking.availability.manage` is enforced through the existing Staff policy boundary;
+- `booking.availability.view/manage` is enforced through the Dashboard boundary and existing Staff policy for mutation authorization;
 - nested tenant records are checked against the selected Staff/Working Hour relationships.
 
 Time handling:
@@ -491,9 +504,9 @@ Backend components:
 - `StaffPolicy::manageAvailability`;
 - `BookingAvailabilityManagementTest`.
 
-Routes include Staff/Service assignment plus nested Working Hours, Breaks, and Time Off mutations under `/dashboard/booking/availability`.
+Routes include the read surface at `GET /dashboard/booking/availability` plus Staff/Service assignment and nested Working Hours, Breaks, and Time Off mutations.
 
-Tests cover successful lifecycle operations, permission denial, entitlement denial, validation/ownership boundaries, and required dual entitlement for Service assignment.
+Tests cover successful lifecycle operations, read access, management-control visibility, permission denial, entitlement denial, validation/ownership boundaries, and required dual entitlement for Service assignment.
 
 #### 8.3.3 Appointments — Backend implemented
 
