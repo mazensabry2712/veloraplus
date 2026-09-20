@@ -145,6 +145,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'entitled:booking.availabi
     ->prefix('dashboard/booking/availability')
     ->name('dashboard.booking.availability.')
     ->group(function (): void {
+        Route::get('/', [BookingAvailabilityController::class, 'index'])
+            ->name('index');
+
         Route::post('/staff/{staff}/services/{service}', [BookingAvailabilityController::class, 'assignService'])
             ->middleware('entitled:booking.services')
             ->name('assign-service');
