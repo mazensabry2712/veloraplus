@@ -40,7 +40,7 @@ A phase is closed only when:
 | Phase 8.3 | Implemented backend workspace slices | Existing regression must remain green |
 | Phase 8.4 | Implemented and verified | Closed within current backend scope |
 | Phase 8.5 | **CLOSED / VERIFIED** | Marketplace backend verified locally and in CI at 236 tests / 1244 assertions |
-| Phase 8.6 | **ACTIVE — PARTIAL VERIFIED** | Usage & Limits, Tenant Payment Integration, and Company Preferences are implemented; latest preferences increment is pending local/CI verification |
+| Phase 8.6 | **ACTIVE — PARTIAL VERIFIED** | Usage & Limits, Tenant Payment Integration, and Company Preferences are implemented; GitHub Actions is green and final local preferences verification remains |
 
 ## 3. Company profile completion contract
 
