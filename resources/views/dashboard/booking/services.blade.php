@@ -13,7 +13,7 @@
         <x-dashboard.card title="Service List" description="Services are tenant-scoped and paginated for growing catalogs.">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border text-sm">
-                    <thead class="bg-surface">
+                    <thead class="bg-primary/5">
                     <tr class="text-start text-xs font-semibold uppercase tracking-wide text-muted">
                         <th class="px-4 py-3">Service</th>
                         <th class="px-4 py-3">Duration</th>
@@ -35,7 +35,7 @@
                                 : (string) $service->status;
                         @endphp
 
-                        <tr class="align-top">
+                        <tr class="align-top transition-colors hover:bg-primary/5">
                             <td class="px-4 py-4">
                                 <div class="font-medium text-secondary">{{ $service->name }}</div>
                                 <div class="mt-1 text-xs text-muted">{{ $service->slug }}</div>
