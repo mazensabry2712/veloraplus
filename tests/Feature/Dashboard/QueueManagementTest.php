@@ -333,3 +333,87 @@ test('queue entry reason actions enforce entry-to-queue ownership', function ():
         ])
         ->assertNotFound();
 });
+
+test('owner can open the Booking Queue dashboard and see queue entries and controls', function (): void {
+    $path = queueDashboardDatabasePath();
+    $this->queueDashboardDatabasePath = $path;
+
+    $tenant = createQueueDashboardTenant($path);
+    $owner = addQueueDashboardMember($tenant);
+    enableQueueEntitlement($tenant);
+    $fixtures = queueDashboardFixtures($tenant);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    try {
+        $queue = app(QueueManager::class)->createQueue(
+            $fixtures['location'],
+            $fixtures['service'],
+            '2026-09-21',
+        );
+        app(QueueManager::class)->enqueue($queue, $fixtures['customer']);
+    } finally {
+        $manager->disconnect();
+    }
+
+    $this->actingAs($owner)
+        ->get('http://queue-tenant.velora.test/dashboard/booking/queues?date=2026-09-21')
+        ->assertOk()
+        ->assertSee('Queue', false)
+        ->assertSee('Walk-in', false)
+        ->assertSee('Main Branch', false)
+        ->assertSee('Customer One', false)
+        ->assertSee('Waiting', false)
+        ->assertSee('Call Next', false)
+        ->assertSee('Close Queue', false)
+        ->assertSee('Add Customer', false)
+        ->assertSee('Create Queue', false);
+});
+
+test('viewer can read Booking Queue but cannot see management controls', function (): void {
+    $path = queueDashboardDatabasePath();
+    $this->queueDashboardDatabasePath = $path;
+
+    $tenant = createQueueDashboardTenant($path);
+    $viewer = addQueueDashboardMember($tenant, 'viewer');
+    enableQueueEntitlement($tenant);
+    $fixtures = queueDashboardFixtures($tenant);
+
+    $manager = app(TenantDatabaseManager::class);
+    $manager->connect($tenant);
+
+    try {
+        $queue = app(QueueManager::class)->createQueue(
+            $fixtures['location'],
+            $fixtures['service'],
+            '2026-09-21',
+        );
+        app(QueueManager::class)->enqueue($queue, $fixtures['customer']);
+    } finally {
+        $manager->disconnect();
+    }
+
+    $this->actingAs($viewer)
+        ->get('http://queue-tenant.velora.test/dashboard/booking/queues?date=2026-09-21')
+        ->assertOk()
+        ->assertSee('Customer One', false)
+        ->assertSee('Waiting', false)
+        ->assertDontSee('Create Queue', false)
+        ->assertDontSee('Call Next', false)
+        ->assertDontSee('Close Queue', false)
+        ->assertDontSee('Add Customer', false);
+});
+
+test('Booking Queue dashboard requires the feature entitlement', function (): void {
+    $path = queueDashboardDatabasePath();
+    $this->queueDashboardDatabasePath = $path;
+
+    $tenant = createQueueDashboardTenant($path);
+    $owner = addQueueDashboardMember($tenant);
+
+    $this->actingAs($owner)
+        ->get('http://queue-tenant.velora.test/dashboard/booking/queues')
+        ->assertForbidden();
+});
+
