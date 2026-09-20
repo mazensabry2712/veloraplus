@@ -7,9 +7,9 @@
 
 @php
     $classes = $active
-        ? 'bg-blue-50 text-primary'
+        ? 'bg-surface text-primary ring-1 ring-inset ring-primary/10'
         : ($disabled
-            ? 'cursor-not-allowed text-slate-400'
+            ? 'cursor-not-allowed text-disabled'
             : 'text-muted hover:bg-surface hover:text-secondary');
 @endphp
 
@@ -20,7 +20,7 @@
         {{ $attributes }}
     >
         <span>{{ $label }}</span>
-        <span class="text-[11px] font-medium uppercase tracking-wide text-slate-400">Soon</span>
+        <span class="text-[11px] font-medium uppercase tracking-wide text-disabled">Soon</span>
     </span>
 @else
     <a
