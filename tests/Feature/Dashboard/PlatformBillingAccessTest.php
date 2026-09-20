@@ -15,6 +15,7 @@ use App\Models\CatalogPrice;
 use App\Models\Feature;
 use App\Models\PlatformAccount;
 use App\Models\Subscription;
+use App\Models\SubscriptionItem;
 use App\Models\Tenant;
 use App\Models\TenantDomain;
 use App\Models\TenantMembership;
@@ -396,6 +397,158 @@ test('owner cannot refund beyond the remaining platform payment amount', functio
             'reason' => 'too much',
         ])
         ->assertSessionHasErrors('billing');
+});
+
+test('owner can request a subscription upgrade and receives a pending invoice', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $owner = addBillingDashboardMember($tenant);
+
+    $base = billingCatalogItem();
+    $extra = billingCatalogItem();
+    $extra->update(['key' => 'billing.upgrade.extra.'.Str::lower(Str::random(6))]);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $base],
+    ], 'monthly', 0);
+
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = app(PaymentService::class)->createPending($invoice);
+    app(PaymentService::class)->markSucceeded($payment);
+
+    $host = $tenant->domains()->firstOrFail()->domain;
+
+    $response = $this->actingAs($owner)
+        ->post('http://'.$host.'/dashboard/billing/subscription/'.$subscription->getKey().'/upgrade', [
+            'items' => [
+                [
+                    'catalog_type' => 'feature',
+                    'catalog_key' => $extra->key,
+                    'quantity' => 1,
+                ],
+            ],
+        ]);
+
+    $response->assertRedirect('/dashboard')
+        ->assertSessionHas('status', 'Subscription upgrade requested successfully.');
+
+    $pending = $subscription->fresh('items')->items->firstWhere('catalog_key', $extra->key);
+    $upgradeInvoice = PlatformInvoice::query()
+        ->where('subscription_id', $subscription->getKey())
+        ->latest('issued_at')
+        ->firstOrFail();
+
+    expect($pending)->not->toBeNull()
+        ->and($pending->status)->toBe(\App\Domain\Billing\SubscriptionItemStatus::Pending)
+        ->and($upgradeInvoice->status)->toBe(\App\Domain\Billing\InvoiceStatus::Open)
+        ->and($upgradeInvoice->items()->where('subscription_item_id', $pending->getKey())->exists())->toBeTrue()
+        ->and($response->getSession()->get('platform_billing_upgrade_invoice_id'))->toBe($upgradeInvoice->getKey());
+});
+
+test('owner can schedule a subscription downgrade at period end', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $owner = addBillingDashboardMember($tenant);
+
+    $base = billingCatalogItem();
+    $removable = billingCatalogItem();
+    $removable->update(['key' => 'billing.downgrade.removable.'.Str::lower(Str::random(6))]);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $base],
+        ['item' => $removable],
+    ], 'monthly', 0);
+
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = app(PaymentService::class)->createPending($invoice);
+    app(PaymentService::class)->markSucceeded($payment);
+
+    $item = $subscription->fresh('items')->items->firstWhere('catalog_key', $removable->key);
+    $periodEnd = $subscription->fresh()->current_period_end;
+
+    $this->actingAs($owner)
+        ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/subscription/'.$subscription->getKey().'/items/'.$item->getKey().'/downgrade')
+        ->assertRedirect('/dashboard')
+        ->assertSessionHas('status', 'Subscription downgrade scheduled successfully.');
+
+    $scheduled = $item->fresh();
+
+    expect($scheduled->status)->toBe(\App\Domain\Billing\SubscriptionItemStatus::Scheduled)
+        ->and($scheduled->ends_at)->toEqual($periodEnd)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, $removable->key))->toBeTrue()
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature(
+            $tenant,
+            $removable->key,
+            $periodEnd->addSecond(),
+        ))->toBeFalse();
+});
+
+test('viewer cannot request or schedule subscription changes', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $viewer = addBillingDashboardMember($tenant, 'viewer');
+
+    $base = billingCatalogItem();
+    $extra = billingCatalogItem();
+    $extra->update(['key' => 'billing.viewer.extra.'.Str::lower(Str::random(6))]);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $base],
+    ], 'monthly', 0);
+
+    $item = $subscription->fresh('items')->items->first();
+
+    $host = $tenant->domains()->firstOrFail()->domain;
+
+    $this->actingAs($viewer)
+        ->post('http://'.$host.'/dashboard/billing/subscription/'.$subscription->getKey().'/upgrade', [
+            'items' => [
+                [
+                    'catalog_type' => 'feature',
+                    'catalog_key' => $extra->key,
+                ],
+            ],
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($viewer)
+        ->post('http://'.$host.'/dashboard/billing/subscription/'.$subscription->getKey().'/items/'.$item->getKey().'/downgrade')
+        ->assertForbidden();
+});
+
+test('subscription upgrade rejects malformed catalog items', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $owner = addBillingDashboardMember($tenant);
+
+    $base = billingCatalogItem();
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $base],
+    ], 'monthly', 0);
+
+    $this->actingAs($owner)
+        ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/subscription/'.$subscription->getKey().'/upgrade', [
+            'items' => [
+                [
+                    'catalog_type' => 'unknown',
+                    'catalog_key' => 'not-valid',
+                    'quantity' => 0,
+                ],
+            ],
+        ])
+        ->assertSessionHasErrors([
+            'items.0.catalog_type',
+            'items.0.catalog_key',
+            'items.0.quantity',
+        ]);
 });
 
 test('owner can issue a platform credit and it appears in the billing overview', function (): void {
