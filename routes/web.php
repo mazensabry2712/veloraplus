@@ -222,6 +222,12 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
         Route::post('/credits', [PlatformBillingController::class, 'issueCredit'])
             ->name('credits.store');
 
+        Route::post('/subscription/{subscription}/upgrade', [PlatformBillingController::class, 'requestUpgrade'])
+            ->name('subscription.upgrade');
+
+        Route::post('/subscription/{subscription}/items/{item}/downgrade', [PlatformBillingController::class, 'scheduleDowngrade'])
+            ->name('subscription.downgrade');
+
         Route::post('/subscription/{subscription}/cancel', [PlatformBillingController::class, 'cancelSubscription'])
             ->name('subscription.cancel');
     });
