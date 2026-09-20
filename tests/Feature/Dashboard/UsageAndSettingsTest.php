@@ -222,6 +222,89 @@ test('usage is isolated by the current tenant context', function (): void {
         ->assertDontSee('Tenant B Limits', false);
 });
 
+test('authorized tenant owner can update company locale timezone and currency', function (): void {
+    $path = usageSettingsDatabasePath();
+    $this->usageSettingsDatabasePaths[] = $path;
+
+    $tenant = usageSettingsTenant($path, 'preferences-tenant', 'preferences-tenant.velora.test');
+    $owner = usageSettingsMember($tenant, 'owner');
+
+    $this->actingAs($owner)
+        ->put('https://preferences-tenant.velora.test/dashboard/settings/preferences', [
+            'default_currency' => 'usd',
+            'timezone' => 'Europe/London',
+            'locale' => 'ar_EG',
+        ])
+        ->assertRedirect('/dashboard/settings')
+        ->assertSessionHas('status', 'Company preferences updated successfully.');
+
+    $tenant->refresh();
+
+    expect($tenant->default_currency)->toBe('USD')
+        ->and($tenant->timezone)->toBe('Europe/London')
+        ->and($tenant->locale)->toBe('ar_EG');
+
+    app(TenantDatabaseManager::class)->connect($tenant);
+
+    try {
+        expect(
+            \App\Models\CompanySetting::query()
+                ->where('key', 'company.default_currency')
+                ->value('value')
+        )->toBe('USD')
+            ->and(
+                \App\Models\CompanySetting::query()
+                    ->where('key', 'company.timezone')
+                    ->value('value')
+            )->toBe('Europe/London')
+            ->and(
+                \App\Models\CompanySetting::query()
+                    ->where('key', 'company.locale')
+                    ->value('value')
+            )->toBe('ar_EG');
+    } finally {
+        app(TenantDatabaseManager::class)->disconnect();
+    }
+});
+
+test('company preferences validation and tenant isolation are enforced', function (): void {
+    $pathA = usageSettingsDatabasePath('-a');
+    $pathB = usageSettingsDatabasePath('-b');
+    $this->usageSettingsDatabasePaths = [$pathA, $pathB];
+
+    $tenantA = usageSettingsTenant($pathA, 'preferences-a', 'preferences-a.velora.test');
+    $tenantB = usageSettingsTenant($pathB, 'preferences-b', 'preferences-b.velora.test');
+
+    $ownerA = usageSettingsMember($tenantA, 'owner');
+    usageSettingsMember($tenantB, 'owner');
+
+    $this->actingAs($ownerA)
+        ->put('https://preferences-a.velora.test/dashboard/settings/preferences', [
+            'default_currency' => 'INVALID',
+            'timezone' => 'Not/A_Timezone',
+            'locale' => 'invalid locale',
+        ])
+        ->assertSessionHasErrors(['default_currency', 'timezone', 'locale']);
+
+    $this->actingAs($ownerA)
+        ->put('https://preferences-a.velora.test/dashboard/settings/preferences', [
+            'default_currency' => 'EUR',
+            'timezone' => 'Africa/Cairo',
+            'locale' => 'en',
+        ])
+        ->assertRedirect('/dashboard/settings');
+
+    $tenantA->refresh();
+    $tenantB->refresh();
+
+    expect($tenantA->default_currency)->toBe('EUR')
+        ->and($tenantA->timezone)->toBe('Africa/Cairo')
+        ->and($tenantA->locale)->toBe('en')
+        ->and($tenantB->default_currency)->toBe('EGP')
+        ->and($tenantB->timezone)->toBe('Africa/Cairo')
+        ->and($tenantB->locale)->toBe('en');
+});
+
 test('authorized tenant owner can configure payment integration without exposing credentials', function (): void {
     $path = usageSettingsDatabasePath();
     $this->usageSettingsDatabasePaths[] = $path;
