@@ -108,7 +108,7 @@ Navigation visibility may improve the UX, but it must never be the authorization
 
 ### 8.2 Company foundation
 
-Company Foundation is now in progress.
+Company Foundation backend delivery is being completed before any new Phase 8 slice starts. The Company surface must include the full documented company profile, branding, social, tax, and SEO settings contract before 8.6 begins.
 
 #### 8.2.1 Company Profile — Backend implemented
 
@@ -144,7 +144,7 @@ Backend components:
 - `POST /dashboard/company/profile` is the update route;
 - `CompanyProfileTest` covers successful updates, RBAC denial, validation failure, and projection synchronization.
 
-The existing Phase 1–7 regression suite was green before the current Phase 8 additions; final full-suite verification for the current batch is pending.
+The original Phase 1–7 regression suite remains a required regression gate for this completion batch.
 
 #### 8.2.2 Locations / Branches — Backend implemented
 
@@ -351,6 +351,34 @@ Routes:
 - `DELETE /dashboard/company/roles/{role}`.
 
 The test suite covers custom role creation/update, system-role protection, deletion protection for referenced roles, RBAC denial, and cross-tenant isolation.
+
+#### 8.2.8 Company Branding, Social & Commercial Settings — Backend implemented
+
+Company-specific branding and public profile presentation are tenant-scoped.
+
+Branding supports:
+
+- logo upload;
+- favicon upload;
+- primary color;
+- secondary color;
+- accent color;
+- background color;
+- text color.
+
+Branding assets are stored on the configured public storage disk and referenced from tenant-local `company_settings` using `branding.*` keys. Provider-specific or storage implementation details remain outside Blade/controllers.
+
+Routes:
+
+- `PUT /dashboard/company/branding`;
+
+Authorization:
+
+- active tenant membership is required;
+- `settings.manage` is required;
+- tenant context remains the storage and settings boundary.
+
+The public Tenant home consumes the same backend state so company branding and configured social links are not merely stored settings; they drive the public presentation contract.
 
 ### 8.3 Booking workspace
 
@@ -688,93 +716,6 @@ Route:
 - POST /dashboard/marketplace/purchase
 
 The frontend Marketplace listing and purchase UI remain a later Dashboard UI pass. Verification of the current backend implementation is pending.
-### 8.5 Module Marketplace
-
-Build the tenant-facing catalog surface on top of the existing:
-
-- Modules;
-- Features;
-- Bundles;
-- Prices;
-- Entitlements;
-- subscription flow.
-
-The UI must distinguish:
-
-- available but not owned;
-- active;
-- scheduled for removal;
-- unavailable because of dependencies or commercial state.
-
-Purchasing/activation must require the established Billing + Payment + Entitlement flow.
-
-### 8.6 Usage and settings
-
-Provide authorized views for:
-
-- entitlement limits;
-- tenant configuration;
-- localization/timezone/currency presentation;
-- integration settings that already have a backend contract.
-
-Future settings that need new business logic remain out of this slice.
-
-### 8.3 Booking workspace
-
-Use the existing Booking application services and policies for:
-
-- Services;
-- Staff Availability;
-- Appointments;
-- Queue;
-- Tenant Payments.
-
-The Dashboard must consume the existing Tenant Payment boundary for customer payments. It must not route customer Booking payments through Platform Billing.
-
-### 8.4 Billing workspace
-
-Expose the existing Platform Billing domain to authorized tenant members:
-
-- current subscription;
-- subscription items;
-- pricing context;
-- invoices;
-- payment state;
-- refunds / credits where appropriate.
-
-Billing UI must never rewrite financial state directly. State changes go through the existing Billing application services.
-
-### 8.5 Module Marketplace
-
-Build the tenant-facing catalog surface on top of the existing:
-
-- Modules;
-- Features;
-- Bundles;
-- Prices;
-- Entitlements;
-- subscription flow.
-
-The UI must distinguish:
-
-- available but not owned;
-- active;
-- scheduled for removal;
-- unavailable because of dependencies or commercial state.
-
-Purchasing/activation must require the established Billing + Payment + Entitlement flow.
-
-### 8.6 Usage and settings
-
-Provide authorized views for:
-
-- entitlement limits;
-- tenant configuration;
-- localization/timezone/currency presentation;
-- integration settings that already have a backend contract.
-
-Future settings that need new business logic remain out of this slice.
-
 ## 5. Authorization matrix
 
 Phase 8 must reuse the existing tenant-scoped RBAC model.
