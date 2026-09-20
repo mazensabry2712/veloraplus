@@ -247,7 +247,7 @@ test('active tenant member can access the company dashboard', function (): void 
         ->assertSee('<meta name="robots" content="noindex, nofollow, noarchive">', false)
         ->assertSee('Overview')
         ->assertSee('Dashboard Tenant')
-        ->assertSee('Powered by VeloraPlus')
+        ->assertSeeText('Powered by VeloraPlus')
         ->assertSee('<title>Overview · Dashboard Tenant</title>', false)
         ->assertDontSee('<title>Overview · VeloraPlus</title>', false)
         ->assertDontSee('alt="VeloraPlus"', false)
