@@ -441,7 +441,7 @@ test('viewer can read Booking Appointments but cannot see management controls', 
     $manager->connect($tenant);
 
     try {
-        app(AppointmentManager::class)->create(
+        $appointment = app(AppointmentManager::class)->create(
             customer: $fixtures['customer'],
             staff: $fixtures['staff'],
             service: $fixtures['service'],
