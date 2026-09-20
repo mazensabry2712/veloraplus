@@ -26,7 +26,7 @@
         <x-dashboard.card>
             <form method="GET" action="{{ route('dashboard.booking.queues.index') }}" class="grid gap-4 lg:grid-cols-[10rem_1fr_1fr_auto] lg:items-end">
                 <div>
-                    <label for="queue-date" class="mb-1 block text-xs font-medium text-muted">Business date</label>
+                    <label for="queue-date" class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.business_date') }}</label>
                     <input
                         id="queue-date"
                         name="date"
@@ -37,9 +37,9 @@
                 </div>
 
                 <div>
-                    <label for="queue-location" class="mb-1 block text-xs font-medium text-muted">Location</label>
+                    <label for="queue-location" class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.location') }}</label>
                     <select id="queue-location" name="location_id" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                        <option value="">All locations</option>
+                        <option value="">{{ __('dashboard.booking_pages.all_locations') }}</option>
                         @foreach ($locations as $location)
                             <option value="{{ $location->getKey() }}" @selected(request('location_id') === (string) $location->getKey())>{{ $location->name }}</option>
                         @endforeach
@@ -47,9 +47,9 @@
                 </div>
 
                 <div>
-                    <label for="queue-service" class="mb-1 block text-xs font-medium text-muted">Service</label>
+                    <label for="queue-service" class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.service') }}</label>
                     <select id="queue-service" name="service_id" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                        <option value="">All services</option>
+                        <option value="">{{ __('dashboard.booking_pages.all_services') }}</option>
                         @foreach ($services as $service)
                             <option value="{{ $service->getKey() }}" @selected(request('service_id') === (string) $service->getKey())>{{ $service->name }}</option>
                         @endforeach
@@ -58,12 +58,12 @@
 
                 <div class="flex gap-2">
                     <select name="status" class="min-h-10 rounded-lg border border-border bg-white px-3 text-sm" aria-label="Queue status">
-                        <option value="">All statuses</option>
+                        <option value="">{{ __('dashboard.booking_pages.all_statuses') }}</option>
                         @foreach ($statusOptions as $value => $label)
                             <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
-                    <x-dashboard.button type="submit" size="sm">Filter</x-dashboard.button>
+                    <x-dashboard.button type="submit" size="sm">{{ __('dashboard.booking_pages.filter') }}</x-dashboard.button>
                     @if (request()->hasAny(['date', 'location_id', 'service_id', 'status']))
                         <a href="{{ route('dashboard.booking.queues.index') }}" class="inline-flex min-h-9 items-center rounded-lg border border-border px-3 text-xs font-medium text-secondary hover:bg-surface">
                             Clear
@@ -94,13 +94,13 @@
                         <div class="flex flex-col gap-4 border-b border-border pb-5 lg:flex-row lg:items-start lg:justify-between">
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <h2 class="text-lg font-semibold text-secondary">{{ $queue->service?->name ?? 'Service' }}</h2>
+                                    <h2 class="text-lg font-semibold text-secondary">{{ $queue->service?->name ?? {{ __('dashboard.booking_pages.service') }} }}</h2>
                                     <x-dashboard.badge :variant="$queueStatus === 'open' ? 'success' : 'neutral'">
                                         {{ $queueStatus === 'open' ? 'Open' : 'Closed' }}
                                     </x-dashboard.badge>
                                 </div>
                                 <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
-                                    <span>{{ $queue->location?->name ?? 'Location' }}</span>
+                                    <span>{{ $queue->location?->name ?? {{ __('dashboard.booking_pages.location') }} }}</span>
                                     <span>{{ $queue->business_date }}</span>
                                     <span>{{ $queueTimezone }}</span>
                                 </div>
@@ -116,17 +116,17 @@
                                     @if ($queueStatus === 'open')
                                         <form method="POST" action="{{ route('dashboard.booking.queues.call-next', $queue) }}">
                                             @csrf
-                                            <x-dashboard.button type="submit" size="sm">Call Next</x-dashboard.button>
+                                            <x-dashboard.button type="submit" size="sm">{{ __('dashboard.booking_pages.call_next') }}</x-dashboard.button>
                                         </form>
 
                                         <form method="POST" action="{{ route('dashboard.booking.queues.close', $queue) }}">
                                             @csrf
-                                            <x-dashboard.button variant="danger" type="submit" size="sm">Close Queue</x-dashboard.button>
+                                            <x-dashboard.button variant="danger" type="submit" size="sm">{{ __('dashboard.booking_pages.close_queue') }}</x-dashboard.button>
                                         </form>
                                     @else
                                         <form method="POST" action="{{ route('dashboard.booking.queues.open', $queue) }}">
                                             @csrf
-                                            <x-dashboard.button type="submit" size="sm">Open Queue</x-dashboard.button>
+                                            <x-dashboard.button type="submit" size="sm">{{ __('dashboard.booking_pages.open_queue') }}</x-dashboard.button>
                                         </form>
                                     @endif
                                 </div>
@@ -135,14 +135,14 @@
 
                         @if ($canManage && $queueStatus === 'open')
                             <details class="mt-5">
-                                <summary class="cursor-pointer text-sm font-medium text-primary">Add Customer</summary>
+                                <summary class="cursor-pointer text-sm font-medium text-primary">{{ __('dashboard.booking_pages.add_customer') }}</summary>
                                 <form method="POST" action="{{ route('dashboard.booking.queues.entries.store', $queue) }}" class="mt-3 rounded-xl border border-border bg-surface p-4">
                                     @csrf
                                     <div class="grid gap-4 lg:grid-cols-2">
                                         <div>
-                                            <label class="mb-1 block text-xs font-medium text-muted">Customer</label>
+                                            <label class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.customer') }}</label>
                                             <select name="customer_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                                <option value="">Select customer</option>
+                                                <option value="">{{ __('dashboard.booking_pages.select_customer') }}</option>
                                                 @foreach ($customers as $customer)
                                                     <option value="{{ $customer->getKey() }}">
                                                         {{ $customer->name }}@if($customer->phone) — {{ $customer->phone }}@endif
@@ -152,9 +152,9 @@
                                         </div>
 
                                         <div>
-                                            <label class="mb-1 block text-xs font-medium text-muted">Appointment <span class="font-normal">(optional)</span></label>
+                                            <label class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.appointment') }} <span class="font-normal">({{ __('dashboard.booking_pages.optional') }})</span></label>
                                             <select name="appointment_id" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                                <option value="">Walk-in / no appointment</option>
+                                                <option value="">{{ __('dashboard.booking_pages.walk_in_no_appointment') }}</option>
                                                 @foreach ($appointments as $appointment)
                                                     @php
                                                         $appointmentStart = $appointment->starts_at->setTimezone($queueTimezone);
@@ -167,18 +167,18 @@
                                         </div>
 
                                         <div>
-                                            <label class="mb-1 block text-xs font-medium text-muted">Idempotency key <span class="font-normal">(optional)</span></label>
-                                            <input name="idempotency_key" maxlength="190" placeholder="queue-2026-0001" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
+                                            <label class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.idempotency_key') }} <span class="font-normal">({{ __('dashboard.booking_pages.optional') }})</span></label>
+                                            <input name="idempotency_key" maxlength="190" placeholder="{{ __('dashboard.queue_key_placeholder') }}" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
                                         </div>
 
                                         <div>
-                                            <label class="mb-1 block text-xs font-medium text-muted">Notes <span class="font-normal">(optional)</span></label>
+                                            <label class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.notes') }} <span class="font-normal">({{ __('dashboard.booking_pages.optional') }})</span></label>
                                             <input name="notes" maxlength="1000" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
                                         </div>
                                     </div>
 
                                     <div class="mt-4 flex justify-end">
-                                        <x-dashboard.button type="submit" size="sm">Add to Queue</x-dashboard.button>
+                                        <x-dashboard.button type="submit" size="sm">{{ __('dashboard.booking_pages.add_to_queue') }}</x-dashboard.button>
                                     </div>
                                 </form>
                             </details>
@@ -187,10 +187,10 @@
                         <div class="mt-5">
                             <div class="mb-3 flex items-center justify-between gap-3">
                                 <div>
-                                    <h3 class="font-medium text-secondary">Queue Entries</h3>
-                                    <p class="mt-1 text-xs text-muted">Showing up to 50 entries ordered by queue position.</p>
+                                    <h3 class="font-medium text-secondary">{{ __('dashboard.booking_pages.queue_entries') }}</h3>
+                                    <p class="mt-1 text-xs text-muted">{{ __('dashboard.booking_pages.queue_entries_hint') }}</p>
                                 </div>
-                                <span class="text-xs text-muted">Next position {{ $queue->next_position }}</span>
+                                <span class="text-xs text-muted">{{ __('dashboard.booking_pages.next_position') }} {{ $queue->next_position }}</span>
                             </div>
 
                             <div class="space-y-3">
@@ -232,31 +232,31 @@
                                                     @if ($entryStatus === 'serving')
                                                         <form method="POST" action="{{ route('dashboard.booking.queues.entries.complete', [$queue, $entry]) }}">
                                                             @csrf
-                                                            <x-dashboard.button type="submit" size="sm">Complete</x-dashboard.button>
+                                                            <x-dashboard.button type="submit" size="sm">{{ __('dashboard.booking_pages.complete') }}</x-dashboard.button>
                                                         </form>
                                                     @endif
 
                                                     @if (in_array($entryStatus, ['waiting', 'serving'], true))
                                                         <details>
-                                                            <summary class="inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg border border-border px-3 text-xs font-medium text-secondary [&::-webkit-details-marker]:hidden">Skip</summary>
+                                                            <summary class="inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg border border-border px-3 text-xs font-medium text-secondary [&::-webkit-details-marker]:hidden">{{ __('dashboard.booking_pages.skip') }}</summary>
                                                             <form method="POST" action="{{ route('dashboard.booking.queues.entries.skip', [$queue, $entry]) }}" class="mt-3 w-[min(22rem,calc(100vw-3rem))] rounded-xl border border-border bg-white p-4 shadow-sm">
                                                                 @csrf
                                                                 <label class="mb-1 block text-xs font-medium text-muted">Reason <span class="font-normal">(optional)</span></label>
                                                                 <input name="reason" maxlength="255" class="block w-full rounded-lg border border-border px-3 py-2.5 text-sm">
                                                                 <div class="mt-3 flex justify-end">
-                                                                    <x-dashboard.button type="submit" size="sm">Skip Entry</x-dashboard.button>
+                                                                    <x-dashboard.button type="submit" size="sm">{{ __('dashboard.booking_pages.skip_entry') }}</x-dashboard.button>
                                                                 </div>
                                                             </form>
                                                         </details>
 
                                                         <details>
-                                                            <summary class="inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg border border-red-200 px-3 text-xs font-medium text-red-700 [&::-webkit-details-marker]:hidden">No-show</summary>
+                                                            <summary class="inline-flex min-h-9 cursor-pointer list-none items-center rounded-lg border border-red-200 px-3 text-xs font-medium text-red-700 [&::-webkit-details-marker]:hidden">{{ __('dashboard.booking_pages.no_show') }}</summary>
                                                             <form method="POST" action="{{ route('dashboard.booking.queues.entries.no-show', [$queue, $entry]) }}" class="mt-3 w-[min(22rem,calc(100vw-3rem))] rounded-xl border border-border bg-white p-4 shadow-sm">
                                                                 @csrf
                                                                 <label class="mb-1 block text-xs font-medium text-muted">Reason <span class="font-normal">(optional)</span></label>
                                                                 <input name="reason" maxlength="255" class="block w-full rounded-lg border border-border px-3 py-2.5 text-sm">
                                                                 <div class="mt-3 flex justify-end">
-                                                                    <x-dashboard.button variant="danger" type="submit" size="sm">Mark No-show</x-dashboard.button>
+                                                                    <x-dashboard.button variant="danger" type="submit" size="sm">{{ __('dashboard.booking_pages.mark_no_show') }}</x-dashboard.button>
                                                                 </div>
                                                             </form>
                                                         </details>
@@ -266,7 +266,7 @@
                                         </div>
                                     </div>
                                 @empty
-                                    <p class="rounded-xl border border-dashed border-border p-6 text-sm text-muted">No customers are currently in this queue.</p>
+                                    <p class="rounded-xl border border-dashed border-border p-6 text-sm text-muted">{{ __('dashboard.booking_pages.no_queue_customers') }}</p>
                                 @endforelse
                             </div>
                         </div>
@@ -274,8 +274,8 @@
                 @empty
                     <x-dashboard.card>
                         <div class="px-6 py-12 text-center">
-                            <h2 class="font-medium text-secondary">No queues for {{ $businessDate }}</h2>
-                            <p class="mt-2 text-sm text-muted">Create a queue for a location and service to start operating walk-ins.</p>
+                            <h2 class="font-medium text-secondary">{{ __('dashboard.booking_pages.no_queues_for') }} {{ $businessDate }}</h2>
+                            <p class="mt-2 text-sm text-muted">{{ __('dashboard.booking_pages.create_queue_hint') }}</p>
                         </div>
                     </x-dashboard.card>
                 @endforelse
@@ -293,7 +293,7 @@
                     <span class="text-muted transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
                 </summary>
                 <div class="mt-4">
-                    <x-dashboard.card title="Create Queue" description="Queues are unique by location, service, and business date.">
+                    <x-dashboard.card :title="__('dashboard.booking_pages.create_queue')" :description="__('dashboard.booking_pages.create_queue_description')">
                                         @if ($locations->isEmpty() || $services->isEmpty())
                                             <div class="rounded-xl border border-dashed border-border bg-surface p-5 text-sm leading-6 text-muted">
                                                 Active locations and services are required before creating a queue.
@@ -303,9 +303,9 @@
                                                 @csrf
                     
                                                 <div>
-                                                    <label for="create-queue-location" class="mb-1 block text-xs font-medium text-muted">Location</label>
+                                                    <label for="create-queue-location" class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.location') }}</label>
                                                     <select id="create-queue-location" name="location_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                                        <option value="">Select location</option>
+                                                        <option value="">{{ __('dashboard.booking_pages.select_location') }}</option>
                                                         @foreach ($locations as $location)
                                                             <option value="{{ $location->getKey() }}" @selected(old('location_id') === (string) $location->getKey())>{{ $location->name }}</option>
                                                         @endforeach
@@ -313,9 +313,9 @@
                                                 </div>
                     
                                                 <div>
-                                                    <label for="create-queue-service" class="mb-1 block text-xs font-medium text-muted">Service</label>
+                                                    <label for="create-queue-service" class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.service') }}</label>
                                                     <select id="create-queue-service" name="service_id" required class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
-                                                        <option value="">Select service</option>
+                                                        <option value="">{{ __('dashboard.booking_pages.select_service') }}</option>
                                                         @foreach ($services as $service)
                                                             <option value="{{ $service->getKey() }}" @selected(old('service_id') === (string) $service->getKey())>{{ $service->name }}</option>
                                                         @endforeach
@@ -323,7 +323,7 @@
                                                 </div>
                     
                                                 <div>
-                                                    <label for="create-queue-date" class="mb-1 block text-xs font-medium text-muted">Business date</label>
+                                                    <label for="create-queue-date" class="mb-1 block text-xs font-medium text-muted">{{ __('dashboard.booking_pages.business_date') }}</label>
                                                     <input id="create-queue-date" name="business_date" type="date" value="{{ old('business_date', $businessDate) }}" class="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm">
                                                 </div>
                     
