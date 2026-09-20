@@ -1,12 +1,12 @@
 @php
     $sections = [
         'Company' => [
-            ['label' => 'Profile', 'route' => null],
-            ['label' => 'Locations', 'route' => null],
-            ['label' => 'Staff', 'route' => null],
-            ['label' => 'Customers', 'route' => null],
-            ['label' => 'Users', 'route' => null],
-            ['label' => 'Roles & Permissions', 'route' => null],
+            ['label' => 'Profile', 'route' => 'company.profile'],
+            ['label' => 'Locations', 'route' => 'company.locations'],
+            ['label' => 'Staff', 'route' => 'company.staff'],
+            ['label' => 'Customers', 'route' => 'company.customers'],
+            ['label' => 'Users', 'route' => 'company.users'],
+            ['label' => 'Roles & Permissions', 'route' => 'company.roles'],
         ],
         'Booking' => [
             ['label' => 'Services', 'route' => null],
@@ -24,7 +24,7 @@
 
 <div class="space-y-5">
     <section>
-        <h2 class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Workspace</h2>
+        <h2 class="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">Workspace</h2>
 
         <x-dashboard.nav-item
             label="Overview"
@@ -39,11 +39,24 @@
 
             <div class="space-y-1">
                 @foreach ($items as $item)
-                    <x-dashboard.nav-item
-                        :label="$item['label']"
-                        :href="$item['route'] ? route($item['route']) : null"
-                        :disabled="$item['route'] === null"
-                    />
+                    @php
+                        $permission = match ($item['route']) {
+                            'company.profile' => 'company.view',
+                            'company.locations' => 'locations.view',
+                            'company.staff' => 'staff.view',
+                            'company.customers' => 'customers.view',
+                            'company.users', 'company.roles' => 'members.view',
+                            default => null,
+                        };
+                    @endphp
+
+                    @if ($permission === null || auth()->user()->can($permission))
+                        <x-dashboard.nav-item
+                            :label="$item['label']"
+                            :href="route($item['route'])"
+                            :active="request()->routeIs($item['route'])"
+                        />
+                    @endif
                 @endforeach
             </div>
         </section>
