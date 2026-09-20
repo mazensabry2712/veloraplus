@@ -9,9 +9,20 @@ use App\Http\Requests\Dashboard\UpdateCustomerRequest;
 use App\Models\Customer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 final class CustomerController extends Controller
 {
+    public function index(): View
+    {
+        Gate::authorize('customers.view');
+
+        return view('dashboard.company.customers', [
+            'customers' => Customer::query()->latest()->paginate(20),
+        ]);
+    }
+
+
     public function store(StoreCustomerRequest $request, CustomerManager $manager): RedirectResponse
     {
         Gate::authorize('create', Customer::class);
