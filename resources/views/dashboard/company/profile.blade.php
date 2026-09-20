@@ -1,12 +1,13 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Company Profile')
-@section('heading', 'Company Profile')
+@section('title', __('dashboard.profile'))
+@section('heading', __('dashboard.profile'))
 
 @section('content')
     <x-dashboard.page-header
-        title="Company Profile"
-        description="Manage the company identity, contact details, localization defaults, and public-facing business information."
+        :title="__('dashboard.profile')"
+        :description="__('dashboard.page_descriptions.profile')"
+
     />
 
     <div class="mt-6">
