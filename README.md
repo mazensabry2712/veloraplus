@@ -71,7 +71,7 @@ Phase 6 — Payments & Provider Adapters is closed and verified. Kashier is impl
 
 Phase 7 — Booking core is implemented through 7.6: Services, Staff Availability, Appointments, Tenant Payments, Queue, and the Public Booking transaction are implemented and verified. SEO/Public Web is a locked cross-cutting capability; SEO-1 through SEO-4 are implemented and tested, while SEO-5 remains a production deployment/monitoring gate. The canonical contract is doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md.
 
-Phase 8 — Company Dashboard is in progress. 8.1 Dashboard Shell, 8.3 Booking workspace backend mutation layers, and 8.4 Platform Billing workspace are implemented. 8.5 Module Marketplace backend is implemented. 8.2 Company Foundation completion is being finalized to match the documented company profile, branding, social, tax, and SEO settings contract before 8.6 starts. Frontend listing/forms remain intentionally deferred until the backend completion gate is closed.
+Phase 8 — Company Dashboard is in progress. 8.1 Dashboard Shell, 8.2 Company Foundation backend, 8.3 Booking workspace backend mutation layers, 8.4 Platform Billing workspace, and 8.5 Module Marketplace backend are implemented. Company profile, branding, social, tax, and SEO settings have been reconciled with the documented contract. Latest GitHub Actions verification is green at 236 tests / 1244 assertions. Final local verification remains the blocking gate before 8.6 or any broad Dashboard frontend pass.
 
 The backend completion gate is tracked in doc/21-BACKEND-COMPLETION-AUDIT.md. No new Phase 8 slice starts while that gate is open.
 
