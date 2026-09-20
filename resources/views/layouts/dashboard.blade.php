@@ -11,8 +11,8 @@
 <div class="min-h-screen lg:flex">
     <aside class="hidden w-72 shrink-0 border-r border-border bg-white lg:flex lg:min-h-screen lg:flex-col">
         <div class="border-b border-border px-6 py-5">
-            <p class="text-sm font-semibold tracking-wide text-primary">VeloraPlus</p>
-            <p class="mt-1 truncate text-base font-semibold text-secondary">{{ $tenant->name }}</p>
+            <x-dashboard.brand />
+            <p class="mt-4 truncate text-base font-semibold text-secondary">{{ $tenant->name }}</p>
             <p class="mt-1 text-xs text-muted">{{ $membership->role_key }}</p>
         </div>
 
