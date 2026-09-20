@@ -94,13 +94,13 @@
                         <div class="flex flex-col gap-4 border-b border-border pb-5 lg:flex-row lg:items-start lg:justify-between">
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <h2 class="text-lg font-semibold text-secondary">{{ $queue->service?->name ?? {{ __('dashboard.booking_pages.service') }} }}</h2>
+                                    <h2 class="text-lg font-semibold text-secondary">{{ $queue->service?->name ?? __('dashboard.booking_pages.service') }}</h2>
                                     <x-dashboard.badge :variant="$queueStatus === 'open' ? 'success' : 'neutral'">
                                         {{ $queueStatus === 'open' ? 'Open' : 'Closed' }}
                                     </x-dashboard.badge>
                                 </div>
                                 <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
-                                    <span>{{ $queue->location?->name ?? {{ __('dashboard.booking_pages.location') }} }}</span>
+                                    <span>{{ $queue->location?->name ?? __('dashboard.booking_pages.location') }}</span>
                                     <span>{{ $queue->business_date }}</span>
                                     <span>{{ $queueTimezone }}</span>
                                 </div>
