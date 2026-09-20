@@ -50,7 +50,12 @@
                         };
                     @endphp
 
-                    @if ($permission === null || auth()->user()->can($permission))
+                    @if ($item['route'] === null)
+                        <x-dashboard.nav-item
+                            :label="$item['label']"
+                            disabled
+                        />
+                    @elseif ($permission === null || auth()->user()->can($permission))
                         <x-dashboard.nav-item
                             :label="$item['label']"
                             :href="route($item['route'])"
