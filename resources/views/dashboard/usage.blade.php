@@ -1,12 +1,13 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Usage & Limits')
-@section('heading', 'Usage & Limits')
+@section('title', __('dashboard.usage'))
+@section('heading', __('dashboard.usage'))
 
 @section('content')
     <x-dashboard.page-header
-        title="Usage & Limits"
-        description="Effective tenant entitlement limits. Runtime consumption is shown only where the underlying capability provides a real usage-metering contract."
+        :title="__('dashboard.usage')"
+        :description="__('dashboard.page_descriptions.usage')"
+        Effective tenant entitlement limits. Runtime consumption is shown only where the underlying capability provides a real usage-metering contract."
     />
 
     <div class="mt-6">
