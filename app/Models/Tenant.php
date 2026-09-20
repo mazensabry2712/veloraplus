@@ -6,12 +6,11 @@ use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'legal_name', 'slug', 'status', 'industry', 'country_code', 'default_currency', 'timezone', 'locale', 'database_name', 'database_host', 'database_port', 'database_status', 'database_ready_at', 'database_provisioning_error', 'metadata'])]
+#[Fillable(['name', 'legal_name', 'slug', 'status', 'industry', 'business_type', 'country_code', 'default_currency', 'timezone', 'locale', 'phone', 'email', 'website', 'city', 'address', 'database_name', 'database_host', 'database_port', 'database_status', 'database_ready_at', 'database_provisioning_error', 'metadata'])]
 class Tenant extends Model
 {
     use HasFactory, HasUlids;
