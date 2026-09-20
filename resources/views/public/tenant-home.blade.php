@@ -36,6 +36,10 @@
                 color: var(--brand-secondary);
             }
 
+            h1 {
+                color: var(--brand-secondary);
+            }
+
             .brand-button {
                 display: inline-block;
                 padding: 0.6rem 1rem;
@@ -72,7 +76,7 @@
                 >
             @endif
 
-            <h1 class="brand-secondary">{{ $tenant->name }}</h1>
+            <h1>{{ $tenant->name }}</h1>
 
             @if ($tenant->industry)
                 <p>{{ $tenant->industry }}</p>
