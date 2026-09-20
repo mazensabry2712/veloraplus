@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0F172A">
-    <title>@yield('title', __('dashboard.company_dashboard')) · VeloraPlus</title>
+    <title>@yield('title', __('dashboard.company_dashboard')) · {{ $tenant->name }}</title>
     <meta name="robots" content="noindex, nofollow, noarchive">
 
     <script>
@@ -25,7 +25,7 @@
 <div class="min-h-screen lg:flex">
     <aside class="dashboard-sidebar hidden shrink-0 border-e lg:flex lg:min-h-screen lg:flex-col">
         <div class="dashboard-sidebar-header border-b px-5 py-5">
-            <x-dashboard.brand />
+            <x-dashboard.brand :tenant="$tenant" :branding="$branding" />
 
             <div class="dashboard-tenant-card mt-5 rounded-2xl p-4">
                 <div class="flex items-center gap-3">
@@ -76,7 +76,7 @@
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2">
                         <span class="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-muted sm:inline">
-                            {{ __('dashboard.company_dashboard') }}
+                            {{ $tenant->name }}
                         </span>
                         <span class="hidden h-1 w-1 rounded-full bg-accent sm:inline-block" aria-hidden="true"></span>
                         <span class="hidden truncate text-[11px] font-medium text-muted md:inline">{{ $tenant->name }}</span>
@@ -189,6 +189,12 @@
 
             @yield('content')
         </main>
+
+        <footer class="mx-auto w-full max-w-[1600px] border-t border-border px-4 py-5 sm:px-6 lg:px-8">
+            <p class="text-center text-xs text-muted">
+                {{ __('dashboard.powered_by') }} <span class="font-semibold text-secondary">VeloraPlus</span>
+            </p>
+        </footer>
     </div>
 </div>
 
