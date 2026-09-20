@@ -112,7 +112,6 @@
         color: var(--vp-text);
         background: var(--vp-surface-raised);
         border: 1px solid var(--vp-border);
-        box-shadow: 0 1px 2px rgb(15 23 42 / 0.03);
     }
 
     .dashboard-topbar-button:hover {
@@ -175,7 +174,6 @@
         border: 1px solid var(--vp-border);
         border-radius: 1rem;
         background: var(--vp-surface-raised);
-        box-shadow: var(--vp-shadow);
     }
 
     .dashboard-panel-header {
@@ -185,7 +183,7 @@
         gap: 1rem;
         padding: 1rem 1.25rem;
         border-bottom: 1px solid var(--vp-border);
-        background: color-mix(in srgb, var(--vp-surface) 78%, var(--vp-surface-raised));
+        background: var(--vp-surface-raised);
     }
 
     .dashboard-panel-title {
