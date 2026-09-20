@@ -17,7 +17,6 @@
     <x-dashboard.page-header
         :title="__('dashboard.appointments')"
         :description="__('dashboard.page_descriptions.appointments')"
-        Schedule, review, and manage appointments using the existing Booking rules."
     />
 
     <div class="mt-6 space-y-6">
