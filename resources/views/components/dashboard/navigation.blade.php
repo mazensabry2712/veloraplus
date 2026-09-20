@@ -12,7 +12,7 @@
             ['label' => 'Services', 'route' => 'dashboard.booking.services.index', 'permission' => 'booking.services.view', 'entitlement' => 'booking.services'],
             ['label' => 'Availability', 'route' => 'dashboard.booking.availability.index', 'permission' => 'booking.availability.view', 'entitlement' => 'booking.availability'],
             ['label' => 'Appointments', 'route' => 'dashboard.booking.appointments.index', 'permission' => 'booking.appointments.view', 'entitlement' => 'booking.appointments'],
-            ['label' => 'Queue', 'route' => null],
+            ['label' => 'Queue', 'route' => 'dashboard.booking.queues.index', 'permission' => 'booking.queues.view', 'entitlement' => 'booking.queues'],
             ['label' => 'Payments', 'route' => null],
         ],
         'Platform' => [
