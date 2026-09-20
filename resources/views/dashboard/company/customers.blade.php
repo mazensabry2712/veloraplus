@@ -13,7 +13,7 @@
         <x-dashboard.card title="Customer List" description="Customer records are paginated so the page stays responsive with a large database.">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-border text-sm">
-                    <thead class="bg-surface">
+                    <thead class="bg-primary/5">
                     <tr class="text-start text-xs font-semibold uppercase tracking-wide text-muted">
                         <th class="px-4 py-3">Customer</th>
                         <th class="px-4 py-3">Contact</th>
@@ -26,7 +26,7 @@
                     </thead>
                     <tbody class="divide-y divide-border">
                     @forelse ($customers as $customer)
-                        <tr class="align-top">
+                        <tr class="align-top transition-colors hover:bg-primary/5">
                             <td class="px-4 py-4">
                                 <div class="font-medium text-secondary">{{ $customer->name }}</div>
                                 <div class="mt-1 text-xs text-muted">{{ $customer->email ?: 'No email' }}</div>
