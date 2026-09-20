@@ -91,6 +91,8 @@ return [
     'no_queues_detail' => 'Create a queue when you are ready for walk-in operations.',
     'recent_description' => 'The latest appointment lifecycle events recorded by the backend.',
     'status_updated' => 'Appointment status updated.',
+    'completed' => 'Completed',
+    'no_show' => 'No-show',
     'capacity_description' => 'The active operational footprint of this tenant.',
 
 ];
