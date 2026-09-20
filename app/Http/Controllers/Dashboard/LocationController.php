@@ -9,9 +9,20 @@ use App\Http\Requests\Dashboard\UpdateLocationRequest;
 use App\Models\Location;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 final class LocationController extends Controller
 {
+    public function index(): View
+    {
+        Gate::authorize('locations.view');
+
+        return view('dashboard.company.locations', [
+            'locations' => Location::query()->orderBy('name')->paginate(15),
+        ]);
+    }
+
+
     public function store(StoreLocationRequest $request, LocationManager $manager): RedirectResponse
     {
         Gate::authorize('create', Location::class);
