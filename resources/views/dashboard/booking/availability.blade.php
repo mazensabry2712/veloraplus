@@ -1,7 +1,7 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Availability')
-@section('heading', 'Availability')
+@section('title', __('dashboard.availability'))
+@section('heading', __('dashboard.availability'))
 
 @section('content')
     @php
@@ -17,8 +17,9 @@
     @endphp
 
     <x-dashboard.page-header
-        title="Availability"
-        description="Manage recurring working hours, breaks, time off, and service assignments for active staff."
+        :title="__('dashboard.availability')"
+        :description="__('dashboard.page_descriptions.availability')"
+        Manage recurring working hours, breaks, time off, and service assignments for active staff."
     />
 
     <div class="mt-6 space-y-6">
