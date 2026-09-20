@@ -79,7 +79,6 @@
                             {{ $tenant->name }}
                         </span>
                         <span class="hidden h-1 w-1 rounded-full bg-accent sm:inline-block" aria-hidden="true"></span>
-                        <span class="hidden truncate text-[11px] font-medium text-muted md:inline">{{ $tenant->name }}</span>
                     </div>
                     <h1 class="truncate text-lg font-semibold tracking-tight text-secondary">
                         @yield('heading', __('dashboard.overview'))
