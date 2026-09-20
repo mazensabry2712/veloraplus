@@ -10,7 +10,7 @@
         ],
         'Booking' => [
             ['label' => 'Services', 'route' => 'dashboard.booking.services.index', 'permission' => 'booking.services.view', 'entitlement' => 'booking.services'],
-            ['label' => 'Availability', 'route' => null],
+            ['label' => 'Availability', 'route' => 'dashboard.booking.availability.index', 'permission' => 'booking.availability.view', 'entitlement' => 'booking.availability'],
             ['label' => 'Appointments', 'route' => null],
             ['label' => 'Queue', 'route' => null],
             ['label' => 'Payments', 'route' => null],
