@@ -13,7 +13,7 @@
         default => 'min-h-10 px-4 text-sm',
     };
     $variantClasses = match ($variant) {
-        'secondary' => 'border border-border bg-white text-secondary shadow-sm hover:border-primary/30 hover:bg-primary/5 hover:text-primary focus-visible:outline-primary',
+        'secondary' => 'border border-border bg-white text-secondary hover:border-primary/30 hover:bg-primary/5 hover:text-primary focus-visible:outline-primary',
         'ghost' => 'text-muted hover:bg-primary/5 hover:text-primary focus-visible:outline-primary',
         'danger' => 'bg-red-700 text-white hover:bg-red-800 focus-visible:outline-red-700',
         default => 'bg-primary text-white hover:bg-primary-dark focus-visible:outline-primary',
