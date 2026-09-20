@@ -697,6 +697,36 @@ Rules:
 - icons support navigation meaning but never replace labels;
 - the same icon treatment is used across desktop and mobile navigation.
 
-## 27. Final rule
+
+## 28. Modern interaction layer
+
+The Dashboard foundation now includes a lightweight interaction layer without introducing a frontend framework.
+
+### Theme
+- Light and Dark modes are supported.
+- The preference is stored locally under a VeloraPlus-specific storage key.
+- First visit follows the operating-system color preference.
+- The Tailwind `dark` variant is driven by an explicit `.dark` class on the document root.
+- Semantic Dashboard colors remain token-driven so dark mode does not require page-by-page palette reinvention.
+
+### Language
+- Dashboard language can be switched between English and Arabic.
+- The selected Dashboard locale is stored in the session.
+- Arabic switches the document direction to RTL through the existing layout contract.
+- Navigation and Dashboard Overview strings are translated through Laravel language files.
+- Page headers across Company, Booking, Settings, and Usage use the same translation contract.
+- Tenant-level locale remains a company configuration; the Dashboard switch is a per-session presentation preference.
+
+### Command palette
+- `Ctrl/⌘ + K` opens the workspace command palette.
+- Keyboard navigation with arrow keys and Enter is supported.
+- Search is client-side over a bounded list of known workspace destinations.
+- Items are filtered by the same permission and entitlement checks used by navigation.
+- No external command-palette dependency is introduced.
+
+### Interaction rule
+Modern interactions must improve navigation speed and visual confidence without turning the Blade Dashboard into a client-heavy application.
+
+## 29. Final rule
 
 **VeloraPlus should look like VeloraPlus — with the operational maturity of modern SaaS dashboards, not a clone of any one product.**
