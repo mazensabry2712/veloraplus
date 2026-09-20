@@ -684,6 +684,19 @@ External:
 
 ---
 
+
+
+### Recent UI refinement
+
+The Dashboard shell now includes a lightweight shared outline-icon set for navigation items.
+
+Rules:
+- icons are implemented as a local Blade component;
+- no icon package/dependency is introduced;
+- icons inherit the current text color so active/inactive/disabled states remain coherent;
+- icons support navigation meaning but never replace labels;
+- the same icon treatment is used across desktop and mobile navigation.
+
 ## 27. Final rule
 
 **VeloraPlus should look like VeloraPlus — with the operational maturity of modern SaaS dashboards, not a clone of any one product.**
