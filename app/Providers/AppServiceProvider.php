@@ -22,6 +22,8 @@ use App\Policies\TenantMembershipPolicy;
 use App\Policies\QueuePolicy;
 use App\Policies\PlatformBillingPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
+use App\View\Composers\DashboardLayoutComposer;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -56,6 +58,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(PlatformPayment::class, PlatformBillingPolicy::class);
         Gate::policy(PlatformRefund::class, PlatformBillingPolicy::class);
         Gate::policy(PlatformCredit::class, PlatformBillingPolicy::class);
+
+        View::composer('layouts.dashboard', DashboardLayoutComposer::class);
 
         Blade::if('entitled', function (string $capability): bool {
             $tenant = app(TenantContext::class)->get();
