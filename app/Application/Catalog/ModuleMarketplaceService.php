@@ -104,6 +104,12 @@ final class ModuleMarketplaceService
             throw new DomainException('An active or grace subscription is required to purchase a Marketplace item.');
         }
 
+        $ownedState = $this->ownedState($tenant, $subscription, $item);
+
+        if ($ownedState !== null) {
+            throw new DomainException("Marketplace item {$item->key} is already {$ownedState}.");
+        }
+
         return $this->billing->requestUpgrade($subscription, [[
             'catalog_type' => $item->getMorphClass(),
             'catalog_key' => $item->key,
@@ -136,6 +142,37 @@ final class ModuleMarketplaceService
             'billing_cycle' => $subscription?->billing_cycle,
             'metadata' => $item->metadata,
         ];
+    }
+
+    private function ownedState(
+        Tenant $tenant,
+        Subscription $subscription,
+        Module|Feature|Bundle $item,
+    ): ?string {
+        $subscriptionItem = $subscription->items()
+            ->where('catalog_type', $item->getMorphClass())
+            ->where('catalog_key', $item->key)
+            ->latest()
+            ->first();
+
+        if ($subscriptionItem !== null) {
+            return match ($subscriptionItem->status) {
+                SubscriptionItemStatus::Active => 'active',
+                SubscriptionItemStatus::Scheduled => 'scheduled_for_removal',
+                SubscriptionItemStatus::Pending => 'pending',
+                default => null,
+            };
+        }
+
+        if ($item instanceof Bundle) {
+            return null;
+        }
+
+        return match ($this->entitlements->status($tenant, $item->key)) {
+            EntitlementStatus::Active => 'active',
+            EntitlementStatus::ScheduledForRemoval => 'scheduled_for_removal',
+            default => null,
+        };
     }
 
     private function state(
