@@ -1,12 +1,13 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Staff')
-@section('heading', 'Staff')
+@section('title', __('dashboard.staff'))
+@section('heading', __('dashboard.staff'))
 
 @section('content')
     <x-dashboard.page-header
-        title="Staff"
-        description="Manage the people who operate this company and assign them to active locations."
+        :title="__('dashboard.staff')"
+        :description="__('dashboard.page_descriptions.staff')"
+
     />
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
