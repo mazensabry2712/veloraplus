@@ -138,6 +138,24 @@
         border-color: #0369A1;
     }
 
+    html.dark .dashboard-shell .text-slate-300,
+    html.dark .dashboard-shell .text-slate-400,
+    html.dark .dashboard-shell .text-slate-500,
+    html.dark .dashboard-shell .text-slate-600,
+    html.dark .dashboard-shell .text-slate-700 {
+        color: #CBD5E1;
+    }
+
+    html.dark .dashboard-shell .border-slate-200,
+    html.dark .dashboard-shell .border-slate-300 {
+        border-color: #334155;
+    }
+
+    html.dark .dashboard-shell .bg-slate-50,
+    html.dark .dashboard-shell .bg-slate-100 {
+        background-color: #111827;
+    }
+
     @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
