@@ -7,6 +7,58 @@
     <section class="rounded-xl border border-slate-200 bg-white p-6">
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
+                <h3 class="text-base font-semibold text-slate-900">Company Preferences</h3>
+                <p class="mt-1 text-sm text-slate-500">
+                    These values are the company-level source of truth for locale, timezone, and default currency.
+                </p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ route('dashboard.settings.preferences.update') }}" class="mt-5 space-y-5">
+            @csrf
+            @method('PUT')
+
+            <div class="grid gap-5 md:grid-cols-3">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700" for="default_currency">Default Currency</label>
+                    <input id="default_currency" name="default_currency"
+                           value="{{ old('default_currency', $tenant->default_currency) }}"
+                           required maxlength="3"
+                           class="mt-1 block w-full rounded-lg border-slate-300 text-sm uppercase">
+                    @error('default_currency') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700" for="locale">Locale</label>
+                    <input id="locale" name="locale"
+                           value="{{ old('locale', $tenant->locale) }}"
+                           required maxlength="10"
+                           placeholder="en or en_US"
+                           class="mt-1 block w-full rounded-lg border-slate-300 text-sm">
+                    @error('locale') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700" for="timezone">Timezone</label>
+                    <input id="timezone" name="timezone"
+                           value="{{ old('timezone', $tenant->timezone) }}"
+                           required
+                           placeholder="Africa/Cairo"
+                           class="mt-1 block w-full rounded-lg border-slate-300 text-sm">
+                    @error('timezone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                Save Preferences
+            </button>
+        </form>
+    </section>
+
+    <section class="rounded-xl border border-slate-200 bg-white p-6">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
                 <h3 class="text-base font-semibold text-slate-900">Tenant Payment Integration</h3>
                 <p class="mt-1 text-sm text-slate-500">
                     Provider credentials are encrypted at rest and are never rendered back into this dashboard.
