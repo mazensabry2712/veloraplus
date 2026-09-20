@@ -435,6 +435,26 @@ test('owner can open the Booking Availability dashboard screen', function (): vo
         ->assertSee('Add working hours', false);
 });
 
+test('owner can render service assignment controls on Booking Availability', function (): void {
+    $path = bookingAvailabilityDashboardDatabasePath();
+    $this->bookingAvailabilityDashboardDatabasePath = $path;
+
+    $tenant = createBookingAvailabilityDashboardTenant($path);
+    $owner = addBookingAvailabilityMember($tenant);
+    $bookingModule = enableBookingAvailabilityFeature($tenant, 'booking.availability');
+    enableBookingAvailabilityFeature($tenant, 'booking.services', $bookingModule);
+
+    $location = availabilityLocation($tenant);
+    availabilityStaff($tenant, $location);
+    availabilityService($tenant);
+
+    $this->actingAs($owner)
+        ->get('http://availability-tenant.velora.test/dashboard/booking/availability')
+        ->assertOk()
+        ->assertSee('Assign Service', false)
+        ->assertSee('Consultation', false);
+});
+
 test('viewer can read Booking Availability but cannot see management controls', function (): void {
     $path = bookingAvailabilityDashboardDatabasePath();
     $this->bookingAvailabilityDashboardDatabasePath = $path;
