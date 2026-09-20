@@ -4,6 +4,7 @@ use App\Http\Controllers\Dashboard\AppointmentController;
 use App\Http\Controllers\Dashboard\BookingAvailabilityController;
 use App\Http\Controllers\Dashboard\BookingServiceController;
 use App\Http\Controllers\Dashboard\CompanyDashboardController;
+use App\Http\Controllers\Dashboard\CompanyBrandingController;
 use App\Http\Controllers\Dashboard\CompanyProfileController;
 use App\Http\Controllers\Dashboard\CustomerController;
 use App\Http\Controllers\Dashboard\LocationController;
@@ -37,6 +38,9 @@ Route::get('/dashboard', CompanyDashboardController::class)
 Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])->group(function (): void {
     Route::post('/dashboard/company/profile', [CompanyProfileController::class, 'update'])
         ->name('company.profile.update');
+
+    Route::put('/dashboard/company/branding', [CompanyBrandingController::class, 'update'])
+        ->name('company.branding.update');
 
     Route::post('/dashboard/company/locations', [LocationController::class, 'store'])
         ->name('company.locations.store');
