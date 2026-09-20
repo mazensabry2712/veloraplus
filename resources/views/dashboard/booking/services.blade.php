@@ -1,12 +1,13 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Booking Services')
-@section('heading', 'Booking Services')
+@section('title', __('dashboard.services'))
+@section('heading', __('dashboard.services'))
 
 @section('content')
     <x-dashboard.page-header
-        title="Booking Services"
-        description="Configure the services your company offers through the Booking workspace."
+        :title="__('dashboard.services')"
+        :description="__('dashboard.page_descriptions.services')"
+        Configure the services your company offers through the Booking workspace."
     />
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
