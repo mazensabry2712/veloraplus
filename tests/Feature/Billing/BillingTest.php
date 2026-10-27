@@ -375,3 +375,53 @@ test('a tenant cannot have two open subscriptions', function () {
         0,
     ))->toThrow(DomainException::class);
 });
+
+
+test('subscription quotes add a shared billable dependency exactly once with an explanation', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $customers = billingFeature($module, 'sales.customers');
+    $reporting = billingFeature($module, 'sales.reporting');
+
+    billingPrice($orders, 5000);
+    billingPrice($reporting, 4000);
+    billingPrice($customers, 2000);
+
+    $catalog = app(\App\Application\Catalog\CatalogManager::class);
+    $catalog->addDependency($orders, $customers, 'billable');
+    $catalog->addDependency($reporting, $customers, 'billable');
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+        ['item' => $reporting],
+    ], 'monthly', 0);
+
+    $items = $subscription->fresh('items')->items;
+    $dependencyItem = $items->firstWhere('catalog_key', 'sales.customers');
+
+    expect($items)->toHaveCount(3)
+        ->and($subscription->total_minor)->toBe(11000)
+        ->and($dependencyItem)->not->toBeNull()
+        ->and($dependencyItem->metadata['commercial_origin'])->toBe('required_dependency')
+        ->and($dependencyItem->metadata['required_by'])->toContain('sales.orders', 'sales.reporting');
+});
+
+test('included dependencies are granted without creating a second billable line', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $customers = billingFeature($module, 'sales.customers');
+    billingPrice($orders, 5000);
+    billingPrice($customers, 2000);
+
+    app(\App\Application\Catalog\CatalogManager::class)->addDependency($orders, $customers, 'included');
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+    ]);
+
+    expect($subscription->fresh('items')->items)->toHaveCount(1)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'sales.orders'))->toBeTrue()
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'sales.customers'))->toBeTrue();
+});
