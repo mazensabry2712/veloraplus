@@ -58,7 +58,7 @@ final class KashierWebhookHandler
             ]);
         });
 
-        return DB::connection('central')->transaction(function () use ($event, $eventId): array {
+        return DB::connection('central')->transaction(function () use ($event, $eventId, $payloadHash): array {
             $stored = WebhookEvent::query()
                 ->where('provider', 'kashier')
                 ->where('provider_event_id', $eventId)
