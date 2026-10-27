@@ -27,6 +27,7 @@ final class ModuleMarketplaceController extends Controller
         }
 
         return view('dashboard.marketplace', [
+            'tenant' => $tenant,
             'catalog' => $marketplace->overview($tenant),
         ]);
     }
