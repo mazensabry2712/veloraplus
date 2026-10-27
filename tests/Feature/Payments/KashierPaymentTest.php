@@ -254,10 +254,10 @@ test('duplicate verified webhook is acknowledged without charging again', functi
     $payload = ['event' => 'pay', 'data' => $data];
     $raw = json_encode($payload, JSON_THROW_ON_ERROR);
     $headers = ['X-Kashier-Signature' => kashierSignature($data)];
-    $handler = app(KashierWebhookHandler::class);
 
-    expect($handler->handle($payload, $headers, $raw)['duplicate'])->toBeFalse()
-        ->and($handler->handle($payload, $headers, $raw)['duplicate'])->toBeTrue();
+    $this->postJson('/webhooks/kashier/platform', $payload, $headers)->assertOk();
+    // Duplicate deliveries must be acknowledged with 2xx so the provider stops retrying.
+    $this->postJson('/webhooks/kashier/platform', $payload, $headers)->assertOk();
 
     $payment->refresh();
 
