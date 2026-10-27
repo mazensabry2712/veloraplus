@@ -804,7 +804,20 @@ test('zero-value subscriptions activate immediately and renew without a payment 
         ->and($invoice->payments()->count())->toBe(0)
         ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'free-booking.services'))->toBeTrue();
 
-    expect(fn () => app(\App\Application\Billing\PaymentService::class)->createPending($invoice))
+    $openZeroInvoice = PlatformInvoice::query()->create([
+        'tenant_id' => $tenant->getKey(),
+        'subscription_id' => $subscription->getKey(),
+        'number' => 'ZERO-'.str()->upper(str()->random(12)),
+        'status' => InvoiceStatus::Open,
+        'currency' => 'EGP',
+        'subtotal_minor' => 0,
+        'discount_minor' => 0,
+        'tax_minor' => 0,
+        'total_minor' => 0,
+        'issued_at' => now(),
+    ]);
+
+    expect(fn () => app(\App\Application\Billing\PaymentService::class)->createPending($openZeroInvoice))
         ->toThrow(DomainException::class, 'Zero-value invoices do not require a payment attempt.');
 
     $periodEnd = $subscription->fresh()->current_period_end;
