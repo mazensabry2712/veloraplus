@@ -488,3 +488,44 @@ test('upgrade does not bill a billable dependency already covered by the subscri
         ->and($invoice->items)->toHaveCount(1)
         ->and($invoice->items->first()->catalog_key)->toBe('sales.orders');
 });
+
+
+test('purchasing an individual Feature does not grant its parent Module or sibling Features', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('crm');
+    $contacts = billingFeature($module, 'crm.contacts');
+    $leads = billingFeature($module, 'crm.leads');
+    billingPrice($contacts, 5000);
+
+    paidSubscription($tenant, [['item' => $contacts]]);
+
+    $entitlements = app(\\App\\Application\\Entitlements\\EntitlementService::class);
+
+    expect($entitlements->hasFeature($tenant, 'crm.contacts'))->toBeTrue()
+        ->and($entitlements->hasModule($tenant, 'crm'))->toBeFalse()
+        ->and($entitlements->hasFeature($tenant, 'crm.leads'))->toBeFalse();
+});
+
+test('purchasing a Module grants its active Features but not inactive Features', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $services = billingFeature($module, 'booking.services');
+    $appointments = billingFeature($module, 'booking.appointments');
+    $retired = \\App\\Models\\Feature::factory()->create([
+        'module_id' => $module->getKey(),
+        'key' => 'booking.legacy',
+        'name' => 'booking.legacy',
+        'status' => 'retired',
+        'is_individually_purchasable' => false,
+    ]);
+    billingPrice($module, 12000);
+
+    paidSubscription($tenant, [['item' => $module]]);
+
+    $entitlements = app(\\App\\Application\\Entitlements\\EntitlementService::class);
+
+    expect($entitlements->hasModule($tenant, 'booking'))->toBeTrue()
+        ->and($entitlements->hasFeature($tenant, 'booking.services'))->toBeTrue()
+        ->and($entitlements->hasFeature($tenant, 'booking.appointments'))->toBeTrue()
+        ->and($entitlements->hasFeature($tenant, 'booking.legacy'))->toBeFalse();
+});
