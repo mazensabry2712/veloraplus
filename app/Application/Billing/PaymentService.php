@@ -39,6 +39,10 @@ final class PaymentService
                 throw new DomainException('Only open invoices can receive payment attempts.');
             }
 
+            if ($lockedInvoice->total_minor < 1) {
+                throw new DomainException('Zero-value invoices do not require a payment attempt.');
+            }
+
             $existingPending = PlatformPayment::query()
                 ->where('invoice_id', $lockedInvoice->getKey())
                 ->where('status', PaymentStatus::Pending->value)
