@@ -413,7 +413,7 @@ test('public booking uses the appointment final availability lock and rejects a 
         customer: $customer,
         staff: $fixtures['staff'][0],
         service: $fixtures['service'],
-        startsAt: publicBookingFutureSlot().':00+03:00',
+        startsAt: publicBookingFutureSlot().':00',
         attributes: ['idempotency_key' => 'existing-public-conflict'],
     );
 
