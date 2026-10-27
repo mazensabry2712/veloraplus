@@ -9,11 +9,28 @@ use App\Http\Requests\Dashboard\PurchaseMarketplaceItemRequest;
 use App\Models\Subscription;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
 final class ModuleMarketplaceController extends Controller
 {
+    public function index(
+        ModuleMarketplaceService $marketplace,
+        TenantContext $context,
+    ): View|RedirectResponse {
+        $tenant = $context->current();
+
+        if ($tenant === null) {
+            return redirect()->route('dashboard')
+                ->withErrors(['marketplace' => 'Tenant marketplace context is required.']);
+        }
+
+        return view('dashboard.marketplace', [
+            'catalog' => $marketplace->overview($tenant),
+        ]);
+    }
+
     public function preview(
         PurchaseMarketplaceItemRequest $request,
         ModuleMarketplaceService $marketplace,
