@@ -34,6 +34,7 @@ Implementation must follow these documents:
 20. 20-PHASE-8-COMPANY-DASHBOARD.md
 21. 21-BACKEND-COMPLETION-AUDIT.md
 22. 22-VISUAL-IDENTITY.md
+23. 23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md
 
 ## Locked decisions
 
@@ -124,6 +125,10 @@ Phase 7 — Booking implementation is closed and verified through 7.6: Services,
 Phase 8 — Company Dashboard is in progress. The Dashboard Shell, Company Foundation backend, Booking workspace backend, Platform Billing workspace, and Module Marketplace backend are implemented in the current repository. Company Foundation is being reconciled against the full documented profile/branding/social/tax/SEO contract before 8.6 starts. Frontend presentation/listing remains intentionally deferred until the backend completion gate closes.
 
 SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md. SEO-1 through SEO-4 are implemented and tested; SEO-5 production operations remain pending. The Public Booking transaction is complete in Phase 7.6. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery.
+
+## Commercial roadmap note
+
+The revenue strategy and rollout order are defined in `23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md`. This is a proposed roadmap, not a claim that all listed channels are implemented. The first commercial engineering priority is transparent, dependency-aware catalog quoting and subscription commerce; usage billing, partner marketplace, payment-related revenue, and AI monetization remain gated on their own implementation, operational, and legal requirements.
 
 ## Non-negotiable rules
 
