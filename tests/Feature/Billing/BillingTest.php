@@ -499,7 +499,7 @@ test('purchasing an individual Feature does not grant its parent Module or sibli
 
     paidSubscription($tenant, [['item' => $contacts]]);
 
-    $entitlements = app(\\App\\Application\\Entitlements\\EntitlementService::class);
+    $entitlements = app(\App\Application\Entitlements\EntitlementService::class);
 
     expect($entitlements->hasFeature($tenant, 'crm.contacts'))->toBeTrue()
         ->and($entitlements->hasModule($tenant, 'crm'))->toBeFalse()
@@ -511,7 +511,7 @@ test('purchasing a Module grants its active Features but not inactive Features',
     $module = billingModule('booking');
     $services = billingFeature($module, 'booking.services');
     $appointments = billingFeature($module, 'booking.appointments');
-    $retired = \\App\\Models\\Feature::factory()->create([
+    $retired = \App\Models\Feature::factory()->create([
         'module_id' => $module->getKey(),
         'key' => 'booking.legacy',
         'name' => 'booking.legacy',
@@ -522,7 +522,7 @@ test('purchasing a Module grants its active Features but not inactive Features',
 
     paidSubscription($tenant, [['item' => $module]]);
 
-    $entitlements = app(\\App\\Application\\Entitlements\\EntitlementService::class);
+    $entitlements = app(\App\Application\Entitlements\EntitlementService::class);
 
     expect($entitlements->hasModule($tenant, 'booking'))->toBeTrue()
         ->and($entitlements->hasFeature($tenant, 'booking.services'))->toBeTrue()
