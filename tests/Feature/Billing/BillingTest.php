@@ -632,3 +632,25 @@ test('purchasing a Module grants its active Features but not inactive Features',
         ->and($entitlements->hasFeature($tenant, 'booking.appointments'))->toBeTrue()
         ->and($entitlements->hasFeature($tenant, 'booking.legacy'))->toBeFalse();
 });
+
+
+test('failed initial invoice creation rolls back the pending subscription and its items', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $this->mock(\App\Application\Billing\InvoiceService::class, function ($mock): void {
+        $mock->shouldReceive('createForSubscription')
+            ->once()
+            ->andThrow(new RuntimeException('invoice creation failed'));
+    });
+
+    expect(fn () => app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0))->toThrow(RuntimeException::class, 'invoice creation failed');
+
+    expect(Subscription::query()->where('tenant_id', $tenant->getKey())->count())->toBe(0)
+        ->and(\App\Models\SubscriptionItem::query()->count())->toBe(0)
+        ->and(PlatformInvoice::query()->where('tenant_id', $tenant->getKey())->count())->toBe(0);
+});
