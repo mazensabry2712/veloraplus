@@ -212,6 +212,7 @@
             const lines = document.getElementById('marketplace-quote-lines');
             const confirmButton = document.getElementById('confirm-marketplace-purchase');
             let selectionName = '';
+            let lastQuotedSelection = null;
 
             if (!previewForm) return;
 
@@ -284,6 +285,12 @@
                         : 'No additional billable dependencies were added to this selection.';
 
                     syncPurchaseFields();
+                    lastQuotedSelection = {
+                        catalog_type: data.catalog_type,
+                        catalog_key: data.catalog_key,
+                        quantity: data.quantity,
+                        total_minor: Number(quote.total_minor),
+                    };
                     output.hidden = false;
                     if (confirmButton) {
                         confirmButton.disabled = false;
@@ -313,6 +320,7 @@
                     previewForm.elements.quantity.value = '1';
                     selectionName = card.querySelector('h4')?.textContent?.trim() || card.dataset.key;
                     document.getElementById('quote-selection-name').textContent = selectionName;
+                    lastQuotedSelection = null;
                     syncPurchaseFields();
                     panel.hidden = false;
                     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -325,13 +333,42 @@
                 preview();
             });
 
+            previewForm.elements.quantity.addEventListener('input', () => {
+                lastQuotedSelection = null;
+                if (confirmButton) confirmButton.disabled = true;
+            });
+
             document.getElementById('close-marketplace-quote')?.addEventListener('click', () => {
                 panel.hidden = true;
             });
 
             purchaseForm?.addEventListener('submit', event => {
-                if (!confirm('Create an upgrade invoice for this selection?')) {
+                const current = {
+                    catalog_type: previewForm.elements.catalog_type.value,
+                    catalog_key: previewForm.elements.catalog_key.value,
+                    quantity: Number(previewForm.elements.quantity.value),
+                };
+
+                if (!lastQuotedSelection
+                    || lastQuotedSelection.catalog_type !== current.catalog_type
+                    || lastQuotedSelection.catalog_key !== current.catalog_key
+                    || lastQuotedSelection.quantity !== current.quantity) {
                     event.preventDefault();
+                    preview();
+                    return;
+                }
+
+                if (!confirm(current.quantity > 1
+                    ? 'Create an upgrade invoice for ' + current.quantity + ' units of this selection?'
+                    : 'Create an upgrade invoice for this selection?')) {
+                    event.preventDefault();
+                    return;
+                }
+
+                const submitButton = purchaseForm.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Submitting purchase…';
                 }
             });
         })();
