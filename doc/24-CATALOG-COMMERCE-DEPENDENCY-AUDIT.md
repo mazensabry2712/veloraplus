@@ -145,6 +145,7 @@ The backend now exposes an authorized Marketplace preview endpoint:
 - `POST /dashboard/marketplace/preview`
 - Uses the same catalog item validation, dependency expansion, subscription cycle, currency, and pricing engine as the upgrade request.
 - Returns quote totals and line metadata, including `commercial_origin` and `required_by` for required billable dependencies.
+- Preserves the subscription's configured `tax_bps`, matching the actual Marketplace upgrade path.
 - Does not create subscription items, invoices, or payment attempts.
 - Uses `SubscriptionService::previewUpgrade()` as the shared quote boundary; the actual upgrade request calls the same method before creating pending subscription items.
 - Requires the current tenant context and billing-management authorization.
