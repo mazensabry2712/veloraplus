@@ -219,6 +219,7 @@
             const confirmButton = document.getElementById('confirm-marketplace-purchase');
             let selectionName = '';
             let lastQuotedSelection = null;
+            let previewRequestId = 0;
 
             if (!previewForm) return;
 
@@ -242,6 +243,7 @@
             };
 
             const preview = async () => {
+                const requestId = ++previewRequestId;
                 error.hidden = true;
                 output.hidden = true;
                 loading.hidden = false;
@@ -264,6 +266,7 @@
                         body: JSON.stringify(data),
                     });
                     const quote = await response.json();
+                    if (requestId !== previewRequestId) return;
 
                     if (!response.ok) {
                         throw new Error(quote.message || 'The quote could not be calculated.');
@@ -314,7 +317,7 @@
                     error.textContent = exception.message || 'The quote could not be calculated.';
                     error.hidden = false;
                 } finally {
-                    loading.hidden = true;
+                    if (requestId === previewRequestId) loading.hidden = true;
                 }
             };
 
@@ -340,7 +343,10 @@
             });
 
             previewForm.elements.quantity.addEventListener('input', () => {
+                previewRequestId += 1;
                 lastQuotedSelection = null;
+                output.hidden = true;
+                loading.hidden = true;
                 if (confirmButton) confirmButton.disabled = true;
             });
 
