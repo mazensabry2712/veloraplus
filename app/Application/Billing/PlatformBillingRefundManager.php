@@ -102,7 +102,15 @@ final class PlatformBillingRefundManager
                 'merchant_order_id' => $payment->getKey(),
             ]);
         } catch (\Throwable $exception) {
-            $this->refunds->markFailed($refund, 'Platform provider refund failed.');
+            // A timeout or transport error does not prove the provider rejected
+            // the refund. Keep the amount reserved until reconciliation confirms
+            // whether the provider completed it.
+            $refund->update([
+                'metadata' => array_merge($refund->metadata ?? [], [
+                    'provider_outcome' => 'unknown',
+                    'provider_error_class' => class_basename($exception),
+                ]),
+            ]);
 
             throw $exception;
         }
