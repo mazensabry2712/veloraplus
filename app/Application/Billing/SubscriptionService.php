@@ -201,14 +201,24 @@ final class SubscriptionService
         array $items,
         int $taxBps = 0,
     ): PlatformInvoice {
-        $quote = $this->previewUpgrade($subscription, $items, $taxBps);
+        // Lock and re-quote inside the transaction so concurrent requests cannot
+        // both pass the "not already subscribed" check using stale item state.
+        $invoice = $subscription->getConnection()->transaction(function () use (
+            $subscription,
+            $items,
+            $taxBps,
+        ): PlatformInvoice {
+            $lockedSubscription = Subscription::query()
+                ->whereKey($subscription->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $newItems = $subscription->getConnection()->transaction(function () use ($subscription, $quote): array {
-            $created = [];
+            $quote = $this->previewUpgrade($lockedSubscription, $items, $taxBps);
+            $newItems = [];
 
             foreach ($quote['lines'] as $line) {
-                $created[] = SubscriptionItem::query()->create([
-                    'subscription_id' => $subscription->getKey(),
+                $newItems[] = SubscriptionItem::query()->create([
+                    'subscription_id' => $lockedSubscription->getKey(),
                     'item_type' => 'recurring',
                     'catalog_type' => $line['catalog_type'],
                     'catalog_key' => $line['catalog_key'],
@@ -227,12 +237,10 @@ final class SubscriptionService
                 ]);
             }
 
-            return $created;
+            return $this->invoices->createForSubscription($lockedSubscription, $newItems, null, [
+                'type' => 'upgrade',
+            ]);
         });
-
-        $invoice = $this->invoices->createForSubscription($subscription, $newItems, null, [
-            'type' => 'upgrade',
-        ]);
 
         $this->audit->record($subscription->tenant, 'subscription.upgrade_requested', $subscription, [
             'invoice_id' => $invoice->getKey(),
