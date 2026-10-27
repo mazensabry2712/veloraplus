@@ -490,6 +490,39 @@ test('upgrade does not bill a billable dependency already covered by the subscri
 });
 
 
+
+test('upgrade preview is read-only and matches the invoice amount created for the same selection', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $base = billingFeature($module, 'booking.services');
+    $extra = billingFeature($module, 'booking.queue');
+    billingPrice($base, 5000);
+    billingPrice($extra, 3000);
+
+    $subscription = paidSubscription($tenant, [['item' => $base]]);
+    $subscription->load('items');
+    $itemCountBefore = $subscription->items->count();
+    $invoiceCountBefore = $subscription->invoices()->count();
+
+    $preview = app(SubscriptionService::class)->previewUpgrade($subscription, [
+        ['item' => $extra, 'quantity' => 2],
+    ]);
+
+    expect($preview['subtotal_minor'])->toBe(6000)
+        ->and($preview['total_minor'])->toBe(6000)
+        ->and($preview['lines'])->toHaveCount(1)
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemCountBefore)
+        ->and($subscription->invoices()->count())->toBe($invoiceCountBefore);
+
+    $invoice = app(SubscriptionService::class)->requestUpgrade($subscription->fresh(), [
+        ['item' => $extra, 'quantity' => 2],
+    ]);
+
+    expect($invoice->subtotal_minor)->toBe($preview['subtotal_minor'])
+        ->and($invoice->total_minor)->toBe($preview['total_minor']);
+});
+
+
 test('purchasing an individual Feature does not grant its parent Module or sibling Features', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('crm');
