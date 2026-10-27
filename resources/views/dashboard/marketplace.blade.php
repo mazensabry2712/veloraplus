@@ -14,6 +14,12 @@
         ];
     @endphp
 
+    @if (session('status'))
+        <div role="status" class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            {{ session('status') }}
+        </div>
+    @endif
+
     @if (session('marketplace_upgrade_invoice_id'))
         <section class="mb-6 rounded-xl border border-indigo-200 bg-indigo-50 p-5">
             <p class="font-semibold text-indigo-950">Your purchase invoice is ready</p>
