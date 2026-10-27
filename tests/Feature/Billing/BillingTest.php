@@ -404,7 +404,7 @@ test('subscription quotes add a shared billable dependency exactly once with an 
         ->and($subscription->total_minor)->toBe(11000)
         ->and($dependencyItem)->not->toBeNull()
         ->and($dependencyItem->metadata['commercial_origin'])->toBe('required_dependency')
-        ->and($dependencyItem->metadata['required_by'])->toContain('sales.orders', 'sales.reporting');
+        ->and($dependencyItem->metadata['required_by'])->toEqualCanonicalizing(['sales.orders', 'sales.reporting']);
 });
 
 test('included dependencies are granted without creating a second billable line', function () {
