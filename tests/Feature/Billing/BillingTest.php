@@ -316,6 +316,30 @@ test('refunds are separate financial records and never mutate invoice totals', f
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
 });
 
+
+test('refund idempotency keys reject retries with different amounts or reasons', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $feature]]);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = $invoice->payments()->where('status', PaymentStatus::Succeeded->value)->firstOrFail();
+
+    $service = app(RefundService::class);
+    $refund = $service->createPending($payment, 2000, 'customer request', 'refund-idempotency-1');
+
+    expect($service->createPending($payment, 2000, 'customer request', 'refund-idempotency-1')->getKey())
+        ->toBe($refund->getKey());
+
+    expect(fn () => $service->createPending($payment, 3000, 'customer request', 'refund-idempotency-1'))
+        ->toThrow(DomainException::class, 'different refund details');
+
+    expect(fn () => $service->createPending($payment, 2000, 'different reason', 'refund-idempotency-1'))
+        ->toThrow(DomainException::class, 'different refund details');
+});
+
 test('fully refunded payments become refunded without changing the invoice history', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('booking');
