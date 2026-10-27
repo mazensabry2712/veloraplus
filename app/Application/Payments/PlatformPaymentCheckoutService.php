@@ -2,6 +2,7 @@
 
 namespace App\Application\Payments;
 
+use App\Domain\Billing\InvoiceStatus;
 use App\Domain\Billing\PaymentStatus;
 use App\Domain\Payments\Contracts\CheckoutGateway;
 use App\Models\PlatformPayment;
@@ -38,7 +39,7 @@ final class PlatformPaymentCheckoutService
                 throw new DomainException('Platform payment invoice could not be found.');
             }
 
-            if ($invoice->status !== \\App\\Domain\\Billing\\InvoiceStatus::Open) {
+            if ($invoice->status !== InvoiceStatus::Open) {
                 throw new DomainException('Only an open invoice can create a checkout.');
             }
 
@@ -87,4 +88,5 @@ final class PlatformPaymentCheckoutService
 
             return $result;
         });
-    }}
+    }
+}
