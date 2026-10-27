@@ -83,9 +83,16 @@ final class PaymentService
             $providerEventId,
             $providerMetadata,
         ): PlatformPayment {
+            // Use invoice -> payment lock order consistently with checkout creation
+            // and invoice voiding to reduce deadlock risk during concurrent callbacks.
+            $paymentReference = PlatformPayment::query()->findOrFail($payment->getKey());
+            $invoice = PlatformInvoice::query()
+                ->lockForUpdate()
+                ->with('items')
+                ->findOrFail($paymentReference->invoice_id);
             $payment = PlatformPayment::query()
                 ->lockForUpdate()
-                ->findOrFail($payment->getKey());
+                ->findOrFail($paymentReference->getKey());
 
             if ($payment->status === PaymentStatus::Succeeded) {
                 return $payment;
@@ -94,11 +101,6 @@ final class PaymentService
             if ($payment->status !== PaymentStatus::Pending) {
                 throw new DomainException('Only a pending payment can succeed.');
             }
-
-            $invoice = PlatformInvoice::query()
-                ->lockForUpdate()
-                ->with('items')
-                ->findOrFail($payment->invoice_id);
 
             if ($invoice->status === InvoiceStatus::Paid) {
                 throw new DomainException('Invoice is already paid.');
