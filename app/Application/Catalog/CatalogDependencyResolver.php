@@ -143,6 +143,13 @@ final class CatalogDependencyResolver
             }
         }
 
+        foreach ($roots as $root) {
+            $item = $root['item'];
+            if (! $item instanceof Bundle && isset($coveredByBundle[$this->catalogKey($item)])) {
+                throw new DomainException("Catalog item {$item->key} is already covered by another selected Module or Bundle.");
+            }
+        }
+
         $edges = CatalogDependency::query()->with('dependency')->get();
         $adjacency = [];
         foreach ($edges as $edge) {
