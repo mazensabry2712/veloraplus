@@ -698,3 +698,40 @@ test('a stale open invoice cannot be voided after a payment marks it paid', func
         ->toThrow(DomainException::class, 'A paid invoice cannot be voided.')
         ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Paid);
 });
+
+test('concurrent checkout attempts reuse one pending payment for an invoice', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    $payments = app(\App\Application\Billing\PaymentService::class);
+    $first = $payments->createPending($invoice, 'kashier');
+    $second = $payments->createPending($invoice, 'kashier');
+
+    expect($second->getKey())->toBe($first->getKey())
+        ->and($invoice->payments()->where('status', PaymentStatus::Pending->value)->count())->toBe(1);
+});
+
+test('an invoice with a pending payment cannot be voided', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    app(\App\Application\Billing\PaymentService::class)->createPending($invoice);
+
+    expect(fn () => app(\App\Application\Billing\InvoiceService::class)->void($invoice, 'admin request'))
+        ->toThrow(DomainException::class, 'pending payment cannot be voided.')
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Open);
+});
