@@ -411,6 +411,11 @@ final class TenantPaymentManager
             throw new DomainException('Tenant context is required for Tenant Payment refunds.');
         }
 
+        $idempotencyKey = $idempotencyKey !== null ? trim($idempotencyKey) : null;
+        if ($idempotencyKey === '') {
+            $idempotencyKey = null;
+        }
+
         $tenant = $this->context->current();
         $shouldCallProvider = false;
 
