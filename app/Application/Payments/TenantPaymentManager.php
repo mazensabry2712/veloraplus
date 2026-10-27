@@ -302,6 +302,17 @@ final class TenantPaymentManager
 
             $status = strtoupper((string) ($event['status'] ?? ''));
 
+            // Late verified callbacks must never reverse a terminal tenant
+            // payment state. Persist the event as ignored so it is acknowledged.
+            if ($status === 'SUCCESS' && $locked->status === TenantPaymentStatus::Failed) {
+                $stored->update([
+                    'status' => 'ignored_terminal_conflict',
+                    'processed_at' => now(),
+                ]);
+
+                return ['duplicate' => false, 'status' => 'ignored_terminal_conflict'];
+            }
+
             if ($status === 'SUCCESS') {
                 $this->markSucceededLocked(
                     $locked,
