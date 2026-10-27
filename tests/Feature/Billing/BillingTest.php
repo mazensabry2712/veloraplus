@@ -811,6 +811,51 @@ test('an uncertain provider refund outcome remains pending and reserves the amou
             ->sum('amount_minor'))->toBe(5000);
 });
 
+
+test('an explicit provider refund rejection marks the refund failed and releases its reservation', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $feature]]);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = $invoice->payments()->where('status', PaymentStatus::Succeeded->value)->firstOrFail();
+    $payment->update([
+        'provider' => 'kashier',
+        'metadata' => ['checkout' => ['provider_order_id' => 'KASHIER-ORDER-REFUND-REJECTED']],
+    ]);
+
+    config([
+        'velora.payments.platform_provider' => 'kashier',
+        'velora.payments.kashier.mode' => 'test',
+        'velora.payments.kashier.secret_key' => 'test-secret',
+        'velora.payments.kashier.payment_api_key' => '11111',
+        'velora.payments.kashier.merchant_id' => 'MID-TEST',
+    ]);
+
+    \Illuminate\Support\Facades\Http::fake([
+        '*' => \Illuminate\Support\Facades\Http::response([
+            'response' => ['status' => 'FAILURE', 'transactionId' => 'REF-REJECTED'],
+        ], 200),
+    ]);
+
+    app(\App\Domain\Tenancy\TenantContext::class)->set($tenant);
+
+    $refund = app(\App\Application\Billing\PlatformBillingRefundManager::class)->request(
+        payment: $payment,
+        amountMinor: 5000,
+        reason: 'provider rejection test',
+        idempotencyKey: 'refund-rejected-1',
+    );
+
+    expect($refund->status)->toBe(RefundStatus::Failed)
+        ->and($refund->metadata['provider_response']['status'])->toBe('FAILURE')
+        ->and((int) $payment->refunds()
+            ->whereIn('status', [RefundStatus::Pending->value, RefundStatus::Succeeded->value])
+            ->sum('amount_minor'))->toBe(0);
+});
+
 test('zero-value subscriptions activate immediately and renew without a payment attempt', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('free-booking');
