@@ -92,6 +92,7 @@ test('marketplace quote preview is read-only and returns dependency-aware price 
     $dependency = marketplaceFeature($tenant, 'marketplace.preview.dependency.'.Str::lower(Str::random(6)), 1500);
 
     $subscription = activeMarketplaceSubscription($tenant, $base);
+    $subscription->update(['metadata' => ['tax_bps' => 1000]]);
     app(CatalogManager::class)->addDependency($extra, $dependency, 'billable');
     app(TenantContext::class)->set($tenant);
 
@@ -108,7 +109,8 @@ test('marketplace quote preview is read-only and returns dependency-aware price 
     expect($preview['selection']['catalog_key'])->toBe($extra->key)
         ->and($preview['selection']['quantity'])->toBe(2)
         ->and($preview['subtotal_minor'])->toBe(12000)
-        ->and($preview['total_minor'])->toBe(12000)
+        ->and($preview['tax_minor'])->toBe(1200)
+        ->and($preview['total_minor'])->toBe(13200)
         ->and($preview['lines'])->toHaveCount(2)
         ->and(collect($preview['lines'])->firstWhere('catalog_key', $dependency->key)['metadata']['commercial_origin'])
             ->toBe('required_dependency')
