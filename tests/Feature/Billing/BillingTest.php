@@ -524,6 +524,30 @@ test('upgrade preview is read-only and matches the invoice amount created for th
 
 
 
+
+test('repeated upgrade requests re-check locked subscription items and do not create duplicate invoices', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $base = billingFeature($module, 'booking.services');
+    $extra = billingFeature($module, 'booking.queue');
+    billingPrice($base, 5000);
+    billingPrice($extra, 3000);
+
+    $subscription = paidSubscription($tenant, [['item' => $base]]);
+    $service = app(SubscriptionService::class);
+
+    $invoice = $service->requestUpgrade($subscription, [['item' => $extra]]);
+    $itemsAfterFirstRequest = $subscription->fresh('items')->items->count();
+    $invoicesAfterFirstRequest = $subscription->invoices()->count();
+
+    expect(fn () => $service->requestUpgrade($subscription, [['item' => $extra]]))
+        ->toThrow(DomainException::class, "Catalog item {$extra->key} is already part of the subscription.")
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemsAfterFirstRequest)
+        ->and($subscription->invoices()->count())->toBe($invoicesAfterFirstRequest)
+        ->and($invoice->fresh()->status->value)->toBe('open');
+});
+
+
 test('commercial dependency resolution rejects inactive transitive requirements before billing', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('sales');
