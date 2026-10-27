@@ -36,6 +36,7 @@ Implementation must follow these documents:
 22. 22-VISUAL-IDENTITY.md
 23. 23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md
 24. 24-CATALOG-COMMERCE-DEPENDENCY-AUDIT.md
+25. 25-PRODUCT-VISION-OUTCOME-FIRST-PLATFORM.md
 
 ## Locked decisions
 
@@ -127,6 +128,10 @@ Phase 8 — Company Dashboard is in progress. The Dashboard Shell, Company Found
 
 SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND-PUBLIC-WEB-ARCHITECTURE.md. SEO-1 through SEO-4 are implemented and tested; SEO-5 production operations remain pending. The Public Booking transaction is complete in Phase 7.6. Custom Domain architecture is explicitly locked in doc/14-CUSTOM-DOMAIN-ARCHITECTURE.md; its infrastructure implementation remains a later cross-cutting delivery.
 
+## Product direction
+
+The approved strategic direction is defined in doc/25-PRODUCT-VISION-OUTCOME-FIRST-PLATFORM.md: an Outcome-First Modular Business Platform. The company selects outcomes, reviews recommended applications and capabilities, sees every required dependency and its cost, and expands one connected business system over time. This is a product contract; only implemented and tested capabilities may be sold.
+
 ## Commercial roadmap note
 
 The revenue strategy and rollout order are defined in `23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md`. This is a proposed roadmap, not a claim that all listed channels are implemented. The first commercial engineering priority is transparent, dependency-aware catalog quoting and subscription commerce; usage billing, partner marketplace, payment-related revenue, and AI monetization remain gated on their own implementation, operational, and legal requirements.
@@ -135,7 +140,7 @@ The revenue strategy and rollout order are defined in `23-REVENUE-MODEL-AND-COMM
 
 The revenue strategy and rollout order are defined in doc/23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md. This is a proposed roadmap, not a claim that all listed channels are implemented. The first commercial engineering priority is transparent, dependency-aware catalog quoting and subscription commerce; usage billing, partner marketplace, payment-related revenue, and AI monetization remain gated on their own implementation, operational, and legal requirements.
 
-The dependency commerce audit in doc/24-CATALOG-COMMERCE-DEPENDENCY-AUDIT.md identifies the gaps that must be addressed before dependency-aware self-serve purchase is advertised or enabled.
+The dependency commerce audit in doc/24-CATALOG-COMMERCE-DEPENDENCY-AUDIT.md identifies the gaps that must be addressed before dependency-aware self-serve purchase is advertised or enabled. Dependency edges now store a validated billing policy, but end-to-end quote/invoice/entitlement enforcement remains incomplete.
 
 ## Non-negotiable rules
 
