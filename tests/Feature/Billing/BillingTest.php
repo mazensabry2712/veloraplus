@@ -735,3 +735,54 @@ test('an invoice with a pending payment cannot be voided', function () {
         ->toThrow(DomainException::class, 'pending payment cannot be voided.')
         ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Open);
 });
+
+test('an uncertain provider refund outcome remains pending and reserves the amount', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $feature]]);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = $invoice->payments()
+        ->where('status', PaymentStatus::Succeeded->value)
+        ->firstOrFail();
+
+    $payment->update([
+        'provider' => 'kashier',
+        'metadata' => [
+            'checkout' => [
+                'provider_order_id' => 'KASHIER-ORDER-REFUND-TIMEOUT',
+            ],
+        ],
+    ]);
+
+    config([
+        'velora.payments.platform_provider' => 'kashier',
+        'velora.payments.kashier.mode' => 'test',
+        'velora.payments.kashier.secret_key' => 'test-secret',
+        'velora.payments.kashier.payment_api_key' => '11111',
+        'velora.payments.kashier.merchant_id' => 'MID-TEST',
+    ]);
+
+    \Illuminate\Support\Facades\Http::fake(function () {
+        throw new \Illuminate\Http\Client\ConnectionException('simulated provider timeout');
+    });
+
+    app(\App\Domain\Tenancy\TenantContext::class)->set($tenant);
+
+    expect(fn () => app(\App\Application\Billing\PlatformBillingRefundManager::class)->request(
+        payment: $payment,
+        amountMinor: 5000,
+        reason: 'timeout test',
+        idempotencyKey: 'refund-timeout-1',
+    ))->toThrow(\Illuminate\Http\Client\ConnectionException::class);
+
+    $refund = PlatformRefund::query()->where('idempotency_key', 'refund-timeout-1')->firstOrFail();
+
+    expect($refund->status)->toBe(RefundStatus::Pending)
+        ->and($refund->metadata['provider_outcome'])->toBe('unknown')
+        ->and((int) $payment->refunds()
+            ->whereIn('status', [RefundStatus::Pending->value, RefundStatus::Succeeded->value])
+            ->sum('amount_minor'))->toBe(5000);
+});
