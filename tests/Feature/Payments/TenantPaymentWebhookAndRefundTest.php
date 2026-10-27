@@ -632,3 +632,53 @@ test('an uncertain tenant refund outcome remains pending and reserves the amount
             ])
             ->sum('amount_minor'))->toBe(5000);
 });
+
+test('late tenant success callback cannot reverse a failed payment', function (): void {
+    $path = tenantFinancialDatabase();
+    $this->tenantFinancialDatabases = [$path];
+    migrateTenantFinancialDatabase($path);
+
+    $tenant = Tenant::factory()->create([
+        'database_name' => $path,
+        'database_status' => 'ready',
+        'status' => 'active',
+    ]);
+
+    createKashierAccount($tenant);
+    tenantFinancialContext($tenant, $path);
+
+    $merchantOrderId = $tenant->getKey().'.'.Str::ulid();
+    $payment = TenantPayment::query()->create([
+        'provider' => 'kashier',
+        'merchant_order_id' => $merchantOrderId,
+        'amount_minor' => 10000,
+        'currency' => 'EGP',
+        'status' => TenantPaymentStatus::Pending,
+    ]);
+
+    app(TenantContext::class)->clear();
+    app(TenantDatabaseManager::class)->disconnect();
+
+    $handler = app(KashierTenantWebhookHandler::class);
+    $send = function (string $status) use ($tenant, $merchantOrderId, $handler): array {
+        $payload = tenantWebhookPayload($tenant, status: $status, overrides: [
+            'merchantOrderId' => $merchantOrderId,
+            'transactionId' => 'TX-LATE-TENANT',
+            'orderId' => 'KASHIER-ORDER-LATE-TENANT',
+        ]);
+
+        return $handler->handle(
+            $payload,
+            ['X-Kashier-Signature' => tenantKashierSignature($payload['data'], 'TENANT-API')],
+            json_encode($payload, JSON_THROW_ON_ERROR),
+        );
+    };
+
+    expect($send('FAILURE')['status'])->toBe('FAILURE')
+        ->and($send('SUCCESS')['status'])->toBe('ignored_terminal_conflict');
+
+    tenantFinancialContext($tenant, $path);
+
+    expect($payment->fresh()->status)->toBe(TenantPaymentStatus::Failed)
+        ->and(TenantPaymentWebhookEvent::query()->count())->toBe(2);
+});
