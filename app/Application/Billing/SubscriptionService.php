@@ -143,11 +143,19 @@ final class SubscriptionService
         return $subscription->refresh();
     }
 
-    public function requestUpgrade(
+    /**
+     * Preview an upgrade using the exact commercial rules used by requestUpgrade().
+     *
+     * This method is read-only: it creates no subscription items, invoice, or payment.
+     *
+     * @param array<int, array{item: \\App\\Models\\Module|Feature|\\App\\Models\\Bundle, quantity?: int}> $items
+     * @return array<string, mixed>
+     */
+    public function previewUpgrade(
         Subscription $subscription,
         array $items,
         int $taxBps = 0,
-    ): PlatformInvoice {
+    ): array {
         if (! in_array($subscription->status, [
             SubscriptionStatus::Active,
             SubscriptionStatus::Grace,
@@ -184,6 +192,16 @@ final class SubscriptionService
                 throw new DomainException("Catalog item {$line['catalog_key']} is already part of the subscription.");
             }
         }
+
+        return $quote;
+    }
+
+    public function requestUpgrade(
+        Subscription $subscription,
+        array $items,
+        int $taxBps = 0,
+    ): PlatformInvoice {
+        $quote = $this->previewUpgrade($subscription, $items, $taxBps);
 
         $newItems = $subscription->getConnection()->transaction(function () use ($subscription, $quote): array {
             $created = [];
