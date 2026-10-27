@@ -35,6 +35,7 @@ Implementation must follow these documents:
 21. 21-BACKEND-COMPLETION-AUDIT.md
 22. 22-VISUAL-IDENTITY.md
 23. 23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md
+24. 24-CATALOG-COMMERCE-DEPENDENCY-AUDIT.md
 
 ## Locked decisions
 
@@ -129,6 +130,12 @@ SEO/Public Web is a locked cross-cutting capability documented in doc/19-SEO-AND
 ## Commercial roadmap note
 
 The revenue strategy and rollout order are defined in `23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md`. This is a proposed roadmap, not a claim that all listed channels are implemented. The first commercial engineering priority is transparent, dependency-aware catalog quoting and subscription commerce; usage billing, partner marketplace, payment-related revenue, and AI monetization remain gated on their own implementation, operational, and legal requirements.
+
+## Commercial roadmap note
+
+The revenue strategy and rollout order are defined in doc/23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md. This is a proposed roadmap, not a claim that all listed channels are implemented. The first commercial engineering priority is transparent, dependency-aware catalog quoting and subscription commerce; usage billing, partner marketplace, payment-related revenue, and AI monetization remain gated on their own implementation, operational, and legal requirements.
+
+The dependency commerce audit in doc/24-CATALOG-COMMERCE-DEPENDENCY-AUDIT.md identifies the gaps that must be addressed before dependency-aware self-serve purchase is advertised or enabled.
 
 ## Non-negotiable rules
 
