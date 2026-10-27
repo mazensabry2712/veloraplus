@@ -136,6 +136,12 @@ final class PlatformBillingRefundManager
             ]);
         }
 
+        if (in_array($status, ['FAILED', 'FAILURE', 'REJECTED', 'DECLINED', 'ERROR'], true)) {
+            return $this->refunds->markFailed($refund, 'Payment provider rejected the refund.', [
+                'provider_response' => $response,
+            ]);
+        }
+
         $refund->update([
             'metadata' => array_merge($refund->metadata ?? [], [
                 'provider_response' => $response,
