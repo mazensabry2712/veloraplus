@@ -3,6 +3,7 @@
 namespace App\Application\Catalog;
 
 use App\Application\Billing\PlatformBillingDashboardService;
+use App\Application\Billing\SubscriptionService;
 use App\Application\Entitlements\EntitlementService;
 use App\Domain\Billing\SubscriptionItemStatus;
 use App\Domain\Entitlements\EntitlementStatus;
@@ -22,6 +23,7 @@ final class ModuleMarketplaceService
         private readonly EntitlementService $entitlements,
         private readonly PlatformBillingDashboardService $billing,
         private readonly CatalogDependencyResolver $dependencies,
+        private readonly SubscriptionService $subscriptions,
     ) {
     }
 
@@ -71,6 +73,67 @@ final class ModuleMarketplaceService
                 ->get()
                 ->map(fn (Bundle $item) => $this->present($tenant, $subscription, $item))
                 ->values(),
+        ];
+    }
+
+    /**
+     * Return a read-only upgrade quote for a single Marketplace selection.
+     *
+     * @return array<string, mixed>
+     */
+    public function previewPurchase(
+        Tenant $tenant,
+        string $catalogType,
+        string $catalogKey,
+        int $quantity = 1,
+    ): array {
+        $this->assertCurrentTenant($tenant);
+
+        if ($quantity < 1 || $quantity > 1000) {
+            throw new DomainException('Marketplace quantity must be between 1 and 1000.');
+        }
+
+        $item = $this->findCatalogItem($catalogType, $catalogKey);
+
+        if ($item === null) {
+            throw new DomainException('The requested marketplace item was not found.');
+        }
+
+        $this->assertMarketplacePurchasable($item);
+
+        $subscription = Subscription::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->whereIn('status', ['active', 'grace'])
+            ->latest('starts_at')
+            ->first();
+
+        if ($subscription === null) {
+            throw new DomainException('An active or grace subscription is required to purchase a Marketplace item.');
+        }
+
+        $ownedState = $this->ownedState($tenant, $subscription, $item);
+
+        if ($ownedState !== null) {
+            throw new DomainException("Marketplace item {$item->key} is already {$ownedState}.");
+        }
+
+        $quote = $this->subscriptions->previewUpgrade($subscription, [[
+            'item' => $item,
+            'quantity' => $quantity,
+        ]]);
+
+        return [
+            ...$quote,
+            'selection' => [
+                'catalog_type' => $item->getMorphClass(),
+                'catalog_key' => $item->key,
+                'name' => $item->name,
+                'quantity' => $quantity,
+            ],
+            'billing_cycle' => $subscription->billing_cycle,
+            'current_subscription_id' => $subscription->getKey(),
+            'creates_invoice' => false,
+            'requires_payment' => ((int) ($quote['total_minor'] ?? 0)) > 0,
         ];
     }
 
