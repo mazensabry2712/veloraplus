@@ -610,7 +610,7 @@ test('an uncertain tenant refund outcome remains pending and reserves the amount
     ]);
 
     Http::fake(function () {
-        throw new \\Illuminate\\Http\\Client\\ConnectionException('simulated provider timeout');
+        throw new \Illuminate\\Http\\Client\\ConnectionException('simulated provider timeout');
     });
 
     expect(fn () => app(TenantPaymentManager::class)->refund(
@@ -618,7 +618,7 @@ test('an uncertain tenant refund outcome remains pending and reserves the amount
         5000,
         'timeout test',
         'refund-unknown-1',
-    ))->toThrow(\\Illuminate\\Http\\Client\\ConnectionException::class);
+    ))->toThrow(\Illuminate\\Http\\Client\\ConnectionException::class);
 
     $refund = TenantPaymentRefund::query()->where('idempotency_key', 'refund-unknown-1')->firstOrFail();
 
