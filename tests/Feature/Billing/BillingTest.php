@@ -676,3 +676,25 @@ test('failed initial invoice creation rolls back the pending subscription and it
         ->and(\App\Models\SubscriptionItem::query()->count())->toBe(0)
         ->and(PlatformInvoice::query()->where('tenant_id', $tenant->getKey())->count())->toBe(0);
 });
+
+test('a stale open invoice cannot be voided after a payment marks it paid', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+
+    // Keep this model stale to simulate an admin request racing with payment confirmation.
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    expect($invoice->status)->toBe(InvoiceStatus::Open);
+
+    $payment = app(\App\Application\Billing\PaymentService::class)->createPending($invoice);
+    app(\App\Application\Billing\PaymentService::class)->markSucceeded($payment);
+
+    expect(fn () => app(\App\Application\Billing\InvoiceService::class)->void($invoice, 'late cancellation'))
+        ->toThrow(DomainException::class, 'A paid invoice cannot be voided.')
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Paid);
+});
