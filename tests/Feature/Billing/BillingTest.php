@@ -534,7 +534,7 @@ test('commercial dependency resolution rejects inactive transitive requirements 
     billingPrice($orders, 5000);
     billingPrice($customers, 2000);
 
-    app(\\App\\Application\\Catalog\\CatalogManager::class)
+    app(\App\Application\Catalog\CatalogManager::class)
         ->addDependency($orders, $customers, 'billable');
 
     expect(fn () => app(SubscriptionService::class)->create($tenant, [
@@ -557,7 +557,7 @@ test('commercial dependency resolution refuses to silently undercharge a partial
         ['item' => $customers, 'quantity' => 1],
     ]);
 
-    app(\\App\\Application\\Catalog\\CatalogManager::class)
+    app(\App\Application\Catalog\CatalogManager::class)
         ->addDependency($orders, $customers, 'billable');
 
     expect(fn () => app(SubscriptionService::class)->previewUpgrade($subscription, [
