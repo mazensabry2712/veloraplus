@@ -523,6 +523,52 @@ test('upgrade preview is read-only and matches the invoice amount created for th
 });
 
 
+
+test('commercial dependency resolution rejects inactive transitive requirements before billing', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $customers = billingFeature($module, 'sales.customers');
+    $customers->update(['status' => 'retired']);
+
+    billingPrice($orders, 5000);
+    billingPrice($customers, 2000);
+
+    app(\\App\\Application\\Catalog\\CatalogManager::class)
+        ->addDependency($orders, $customers, 'billable');
+
+    expect(fn () => app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+    ], 'monthly', 0))->toThrow(DomainException::class, 'not active')
+        ->and(Subscription::query()->where('tenant_id', $tenant->getKey())->exists())->toBeFalse()
+        ->and(PlatformInvoice::query()->where('tenant_id', $tenant->getKey())->exists())->toBeFalse();
+});
+
+test('commercial dependency resolution refuses to silently undercharge a partially covered quantity', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $customers = billingFeature($module, 'sales.customers');
+    $orders = billingFeature($module, 'sales.orders');
+
+    billingPrice($customers, 2000);
+    billingPrice($orders, 5000);
+
+    $subscription = paidSubscription($tenant, [
+        ['item' => $customers, 'quantity' => 1],
+    ]);
+
+    app(\\App\\Application\\Catalog\\CatalogManager::class)
+        ->addDependency($orders, $customers, 'billable');
+
+    expect(fn () => app(SubscriptionService::class)->previewUpgrade($subscription, [
+        ['item' => $orders, 'quantity' => 2],
+    ]))->toThrow(DomainException::class, 'lower quantity');
+
+    expect($subscription->fresh('items')->items)->toHaveCount(1)
+        ->and($subscription->invoices()->count())->toBe(1);
+});
+
+
 test('purchasing an individual Feature does not grant its parent Module or sibling Features', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('crm');
