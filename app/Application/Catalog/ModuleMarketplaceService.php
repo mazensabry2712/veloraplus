@@ -186,14 +186,15 @@ final class ModuleMarketplaceService
 
     private function present(Tenant $tenant, ?Subscription $subscription, Module|Feature|Bundle $item): array
     {
-        $price = $subscription !== null
-            ? $this->prices->current(
-                $item,
-                $subscription->billing_cycle,
-                $tenant->default_currency,
-                $tenant->country_code,
-            )
-            : null;
+        // Prospective customers can browse the catalog and see monthly pricing
+        // before subscribing; existing customers see their current billing cycle.
+        $billingCycle = $subscription?->billing_cycle ?? 'monthly';
+        $price = $this->prices->current(
+            $item,
+            $billingCycle,
+            $tenant->default_currency,
+            $tenant->country_code,
+        );
 
         $state = $this->state($tenant, $subscription, $item, $price !== null);
 
@@ -206,7 +207,7 @@ final class ModuleMarketplaceService
             'state' => $state,
             'currency' => $price?->currency,
             'amount_minor' => $price?->amount_minor,
-            'billing_cycle' => $subscription?->billing_cycle,
+            'billing_cycle' => $billingCycle,
             'metadata' => $item->metadata,
         ];
     }
