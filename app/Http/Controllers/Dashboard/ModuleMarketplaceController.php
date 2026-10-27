@@ -84,6 +84,11 @@ final class ModuleMarketplaceController extends Controller
             return back()->withErrors(['marketplace' => $exception->getMessage()])->withInput();
         }
 
+        if ($invoice->total_minor === 0 || $invoice->status->value === 'paid') {
+            return to_route('dashboard.marketplace.index')
+                ->with('status', 'The free Marketplace selection has been activated successfully.');
+        }
+
         return to_route('dashboard.marketplace.index')
             ->with('status', 'Marketplace purchase invoice created successfully.')
             ->with('marketplace_upgrade_invoice_id', $invoice->getKey());
