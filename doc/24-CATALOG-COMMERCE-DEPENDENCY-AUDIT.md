@@ -26,11 +26,11 @@ A customer can select a Feature whose dependencies are resolved for authorizatio
 
 The system must compute a canonical commercial selection before quote creation and use that same selection to build invoice lines, subscription items, and the entitlement projection.
 
-### 2.2 Dependency billing policy is not explicit
+### 2.2 Dependency billing policy is not yet enforced end-to-end
 
-The dependency edge has metadata JSON, but the inspected resolver ignores its commercial meaning. The product must not guess whether a dependency is free, included in a parent item, or separately billable.
+The dependency edge now validates and stores a billing_policy value, but the inspected resolver and billing flow do not yet apply it. The product must not guess whether a dependency is free, included in a parent item, or separately billable.
 
-Proposed policy to approve in implementation:
+Stored policy contract (the billing integration is still required):
 - included: dependency is automatically selected/granted but does not add a separate price line because the parent price includes it.
 - billable: dependency is separately priced unless already covered by an active subscription item or bundle.
 - free: dependency is required and granted but has no charge; it must not carry a customer charge.
