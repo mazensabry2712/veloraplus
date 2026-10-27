@@ -131,6 +131,10 @@ final class CatalogDependencyResolver
                 $item->loadMissing('features');
                 foreach ($item->features as $feature) {
                     if ($feature->status === 'active') {
+                        $coveredByBundle[$this->catalogKey($feature)] = max(
+                            $coveredByBundle[$this->catalogKey($feature)] ?? 0,
+                            $quantity,
+                        );
                         $queue[] = ['item' => $feature, 'quantity' => $quantity, 'required_by' => $item->key];
                     }
                 }
@@ -187,20 +191,28 @@ final class CatalogDependencyResolver
 
                 if ($policy === 'billable'
                     && ! isset($rootKeys[$dependencyKey])
-                    && ! isset($coveredByBundle[$dependencyKey])
-                    && ($alreadyCovered[$dependencyKey] ?? 0) < $quantities[$dependencyKey]) {
-                    if ($dependency instanceof Feature && ! $dependency->is_individually_purchasable) {
-                        throw new DomainException("Required dependency {$dependency->key} is billable but not individually purchasable.");
-                    }
-                    if ($dependency instanceof Module && $dependency->is_core) {
-                        throw new DomainException('Core modules cannot be charged as catalog dependencies.');
+                    && ! isset($coveredByBundle[$dependencyKey])) {
+                    $coveredQuantity = (int) ($alreadyCovered[$dependencyKey] ?? 0);
+                    $requiredQuantity = (int) $quantities[$dependencyKey];
+
+                    if ($coveredQuantity > 0 && $coveredQuantity < $requiredQuantity) {
+                        throw new DomainException("Required dependency {$dependency->key} is already subscribed at a lower quantity; quantity upgrades must be purchased explicitly.");
                     }
 
-                    $billable[$dependencyKey] = [
-                        'item' => $dependency,
-                        'quantity' => $quantities[$dependencyKey],
-                        'commercial_origin' => 'required_dependency',
-                    ];
+                    if ($coveredQuantity === 0) {
+                        if ($dependency instanceof Feature && ! $dependency->is_individually_purchasable) {
+                            throw new DomainException("Required dependency {$dependency->key} is billable but not individually purchasable.");
+                        }
+                        if ($dependency instanceof Module && $dependency->is_core) {
+                            throw new DomainException('Core modules cannot be charged as catalog dependencies.');
+                        }
+
+                        $billable[$dependencyKey] = [
+                            'item' => $dependency,
+                            'quantity' => $requiredQuantity,
+                            'commercial_origin' => 'required_dependency',
+                        ];
+                    }
                 }
 
                 $queue[] = [
@@ -213,6 +225,10 @@ final class CatalogDependencyResolver
                     $dependency->loadMissing('features');
                     foreach ($dependency->features as $feature) {
                         if ($feature->status === 'active') {
+                            $coveredByBundle[$this->catalogKey($feature)] = max(
+                                $coveredByBundle[$this->catalogKey($feature)] ?? 0,
+                                (int) $current['quantity'],
+                            );
                             $queue[] = [
                                 'item' => $feature,
                                 'quantity' => (int) $current['quantity'],
@@ -225,10 +241,6 @@ final class CatalogDependencyResolver
         }
 
         foreach ($billable as $key => &$line) {
-            $line['quantity'] = max(
-                1,
-                $line['quantity'] - min($line['quantity'], (int) ($alreadyCovered[$key] ?? 0)),
-            );
             $line['required_by'] = $requiredBy[$key] ?? [];
         }
         unset($line);
