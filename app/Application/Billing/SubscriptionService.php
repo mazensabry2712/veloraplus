@@ -124,7 +124,15 @@ final class SubscriptionService
                 ]);
             }
 
-            return $subscription->fresh('items');
+            $subscription = $subscription->fresh('items');
+
+            // Keep the initial subscription and its first invoice atomic. If invoice
+            // creation fails, the subscription must not be left pending without an invoice.
+            if ($trialEndsAt === null) {
+                $this->invoices->createForSubscription($subscription, $subscription->items);
+            }
+
+            return $subscription;
         });
 
         if ($subscription->status === SubscriptionStatus::Trialing) {
@@ -133,10 +141,6 @@ final class SubscriptionService
                 'trial_ends_at' => $subscription->trial_ends_at?->toIso8601String(),
             ]);
         } else {
-            $this->invoices->createForSubscription(
-                $subscription,
-                $subscription->items,
-            );
             $this->audit->record($tenant, 'subscription.created_pending_payment', $subscription);
         }
 
