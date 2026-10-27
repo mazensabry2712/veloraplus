@@ -84,8 +84,8 @@ final class ModuleMarketplaceController extends Controller
             return back()->withErrors(['marketplace' => $exception->getMessage()])->withInput();
         }
 
-        return to_route('dashboard')
-            ->with('status', 'Marketplace purchase request created successfully.')
+        return to_route('dashboard.marketplace.index')
+            ->with('status', 'Marketplace purchase invoice created successfully.')
             ->with('marketplace_upgrade_invoice_id', $invoice->getKey());
     }
 }
