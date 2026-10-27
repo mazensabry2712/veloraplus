@@ -425,3 +425,21 @@ test('included dependencies are granted without creating a second billable line'
         ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'sales.orders'))->toBeTrue()
         ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'sales.customers'))->toBeTrue();
 });
+
+
+test('commercial selection rejects a feature already covered by a selected bundle', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.appointments');
+    $bundle = app(\App\Application\Catalog\CatalogManager::class)->createBundle([
+        'key' => 'booking-pro',
+        'name' => 'Booking Pro',
+        'status' => 'active',
+    ]);
+    app(\App\Application\Catalog\CatalogManager::class)->addFeatureToBundle($bundle, $feature);
+
+    expect(fn () => app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+        ['item' => $bundle],
+    ]))->toThrow(DomainException::class, 'already covered');
+});
