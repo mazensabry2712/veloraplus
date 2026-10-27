@@ -117,10 +117,14 @@ final class ModuleMarketplaceService
             throw new DomainException("Marketplace item {$item->key} is already {$ownedState}.");
         }
 
-        $quote = $this->subscriptions->previewUpgrade($subscription, [[
-            'item' => $item,
-            'quantity' => $quantity,
-        ]]);
+        $quote = $this->subscriptions->previewUpgrade(
+            $subscription,
+            [[
+                'item' => $item,
+                'quantity' => $quantity,
+            ]],
+            (int) ($subscription->metadata['tax_bps'] ?? 0),
+        );
 
         return [
             ...$quote,
