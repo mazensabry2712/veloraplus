@@ -626,3 +626,57 @@ test('viewer cannot create a platform billing checkout', function (): void {
         ->post('http://'.$tenant->domains()->firstOrFail()->domain.'/dashboard/billing/invoices/'.$invoice->getKey().'/checkout')
         ->assertForbidden();
 });
+
+
+test('owner can preview a marketplace purchase without creating billing records', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $owner = addBillingDashboardMember($tenant);
+    $subscription = paidBillingDashboardSubscription($tenant);
+    $feature = billingCatalogItem();
+    $host = $tenant->domains()->firstOrFail()->domain;
+
+    $itemCount = $subscription->fresh('items')->items->count();
+    $invoiceCount = $subscription->invoices()->count();
+
+    $this->actingAs($owner)
+        ->postJson('http://'.$host.'/dashboard/marketplace/preview', [
+            'catalog_type' => 'feature',
+            'catalog_key' => $feature->key,
+            'quantity' => 1,
+        ])
+        ->assertOk()
+        ->assertJsonPath('selection.catalog_key', $feature->key)
+        ->assertJsonPath('creates_invoice', false)
+        ->assertJsonPath('requires_payment', true);
+
+    expect($subscription->fresh('items')->items)->toHaveCount($itemCount)
+        ->and($subscription->invoices()->count())->toBe($invoiceCount);
+});
+
+test('viewer cannot preview or purchase marketplace items', function (): void {
+    $path = billingDashboardTenantDatabasePath();
+    $this->billingDashboardTenantDatabasePath = $path;
+
+    $tenant = createBillingDashboardTenant($path);
+    $viewer = addBillingDashboardMember($tenant, 'viewer');
+    paidBillingDashboardSubscription($tenant);
+    $feature = billingCatalogItem();
+    $host = $tenant->domains()->firstOrFail()->domain;
+
+    $payload = [
+        'catalog_type' => 'feature',
+        'catalog_key' => $feature->key,
+        'quantity' => 1,
+    ];
+
+    $this->actingAs($viewer)
+        ->postJson('http://'.$host.'/dashboard/marketplace/preview', $payload)
+        ->assertForbidden();
+
+    $this->actingAs($viewer)
+        ->post('http://'.$host.'/dashboard/marketplace/purchase', $payload)
+        ->assertForbidden();
+});
