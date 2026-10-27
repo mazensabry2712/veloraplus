@@ -81,6 +81,25 @@ test('marketplace overview identifies owned and available catalog items', functi
 });
 
 
+
+test('prospective customers can browse catalog prices before subscribing', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+    $feature = marketplaceFeature($tenant, 'marketplace.discovery.'.Str::lower(Str::random(6)), 2750);
+
+    app(TenantContext::class)->set($tenant);
+
+    $overview = app(ModuleMarketplaceService::class)->overview($tenant);
+    $row = $overview['features']->firstWhere('catalog_key', $feature->key);
+
+    expect($overview['subscription'])->toBeNull()
+        ->and($row['state'])->toBe('available')
+        ->and($row['amount_minor'])->toBe(2750)
+        ->and($row['billing_cycle'])->toBe('monthly');
+});
+
 test('marketplace quote preview is read-only and returns dependency-aware price lines', function (): void {
     $tenant = Tenant::factory()->create([
         'default_currency' => 'EGP',
