@@ -486,6 +486,59 @@ test('tenant refunds support idempotent partial and full refunds without platfor
 });
 
 
+
+test('an explicit tenant refund rejection marks the refund failed and releases its reservation', function (): void {
+    $path = tenantFinancialDatabase();
+    $this->tenantFinancialDatabases = [$path];
+    migrateTenantFinancialDatabase($path);
+
+    $tenant = Tenant::factory()->create([
+        'database_name' => $path,
+        'database_status' => 'ready',
+        'status' => 'active',
+    ]);
+
+    $account = createKashierAccount($tenant);
+    tenantFinancialContext($tenant, $path);
+
+    $payment = TenantPayment::query()->create([
+        'provider' => 'kashier',
+        'merchant_order_id' => $tenant->getKey().'.'.Str::ulid(),
+        'provider_payment_id' => 'TX-REFUND-REJECTED',
+        'provider_order_id' => 'KASHIER-REFUND-REJECTED',
+        'amount_minor' => 10000,
+        'currency' => 'EGP',
+        'status' => TenantPaymentStatus::Succeeded,
+        'metadata' => ['payment_provider_account_id' => $account->getKey()],
+    ]);
+
+    Http::fake([
+        'https://test-fep.kashier.io/v3/orders/KASHIER-REFUND-REJECTED' => Http::response([
+            'response' => [
+                'status' => 'FAILURE',
+                'transactionId' => 'REF-TENANT-REJECTED',
+            ],
+        ], 200),
+    ]);
+
+    $refund = app(TenantPaymentManager::class)->refund(
+        $payment,
+        4000,
+        'Provider rejection test',
+        'tenant-refund-rejected-1',
+    );
+
+    expect($refund->status)->toBe(TenantPaymentRefundStatus::Failed)
+        ->and($refund->metadata['provider_response']['status'])->toBe('FAILURE')
+        ->and((int) TenantPaymentRefund::query()
+            ->where('tenant_payment_id', $payment->getKey())
+            ->whereIn('status', [
+                TenantPaymentRefundStatus::Pending->value,
+                TenantPaymentRefundStatus::Succeeded->value,
+            ])
+            ->sum('amount_minor'))->toBe(0);
+});
+
 test('full tenant refund synchronizes an appointment to refunded', function (): void {
     $path = tenantFinancialDatabase();
     $this->tenantFinancialDatabases = [$path];
