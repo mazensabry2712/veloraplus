@@ -443,3 +443,48 @@ test('commercial selection rejects a feature already covered by a selected bundl
         ['item' => $bundle],
     ]))->toThrow(DomainException::class, 'already covered');
 });
+
+
+test('transitive billable dependencies are expanded once into the subscription quote', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $customers = billingFeature($module, 'sales.customers');
+    $contacts = billingFeature($module, 'sales.contacts');
+
+    billingPrice($orders, 5000);
+    billingPrice($customers, 2000);
+    billingPrice($contacts, 1000);
+
+    $catalog = app(\App\Application\Catalog\CatalogManager::class);
+    $catalog->addDependency($orders, $customers, 'billable');
+    $catalog->addDependency($customers, $contacts, 'billable');
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+    ], 'monthly', 0);
+
+    expect($subscription->fresh('items')->items)->toHaveCount(3)
+        ->and($subscription->total_minor)->toBe(8000)
+        ->and($subscription->invoices()->latest('issued_at')->firstOrFail()->items)->toHaveCount(3);
+});
+
+test('upgrade does not bill a billable dependency already covered by the subscription', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $existingFeature = billingFeature($module, 'sales.customers');
+    $newFeature = billingFeature($module, 'sales.orders');
+    billingPrice($existingFeature, 2000);
+    billingPrice($newFeature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $existingFeature]]);
+    app(\App\Application\Catalog\CatalogManager::class)->addDependency($newFeature, $existingFeature, 'billable');
+
+    $invoice = app(SubscriptionService::class)->requestUpgrade($subscription->fresh(), [
+        ['item' => $newFeature],
+    ]);
+
+    expect($invoice->total_minor)->toBe(5000)
+        ->and($invoice->items)->toHaveCount(1)
+        ->and($invoice->items->first()->catalog_key)->toBe('sales.orders');
+});
