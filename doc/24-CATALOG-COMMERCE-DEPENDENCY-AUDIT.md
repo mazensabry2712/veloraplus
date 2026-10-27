@@ -2,9 +2,9 @@
 
 ## Status
 
-**AUDIT FINDINGS — IMPLEMENTATION REQUIRED BEFORE DEPENDENCY-AWARE SELF-SERVE COMMERCE**
+**IMPLEMENTATION PARTIALLY VERIFIED — RELEASE GATES REMAIN**
 
-This audit describes the GitHub main snapshot inspected during the revenue-model review. It does not certify a local test run or a production deployment.
+This document tracks the current implementation on the revenue-model feature branch. It does not certify a merge to `main`, a production deployment, or readiness to enable live self-serve payments.
 
 ## 1. Existing implementation
 
@@ -14,8 +14,11 @@ This audit describes the GitHub main snapshot inspected during the revenue-model
 - The dependency resolver performs transitive graph traversal and deduplicates nodes by morph type and ID.
 - Entitlement grant/projection resolves dependencies and evaluates dependencies during access checks.
 - Subscription and subscription items are the financial source of truth; tenant entitlements are a rebuildable authorization projection.
-- Marketplace purchase still submits a root catalog selection through the existing billing upgrade flow.
-- Subscription creation and upgrade now call a server-side commercial resolver before PricingEngine, so dependencies explicitly marked billable can be added to the quote and persisted as subscription items. The resolver records commercial origin and the root selections that require each billable dependency.
+- Marketplace purchase submits a root catalog selection through the existing billing upgrade flow.
+- Subscription creation and upgrade use the server-side commercial resolver before PricingEngine, so billable dependencies are priced and persisted as subscription items with commercial origin and `required_by` metadata.
+- The tenant Marketplace page now lists apps, individually purchasable features, and bundles; prospective customers can browse monthly prices before subscribing.
+- The read-only quote UI shows priced lines, quantities, subtotal, discounts, tax, total, and separately priced required dependencies. Confirmation requires the current quote to match the selected item and quantity.
+- Zero-value initial subscriptions, upgrades, and renewals activate without creating a payment attempt.
 - Billing documents defer usage metering; per-seat and usage modes are catalog-ready labels, not a complete metering product.
 
 ## 2. Critical commercial gaps
@@ -24,11 +27,11 @@ This audit describes the GitHub main snapshot inspected during the revenue-model
 
 A customer can select a Feature whose dependencies are resolved for authorization, while the quote and subscription item list still contain only the requested item. This can produce a commercial mismatch between what is granted and what is billed.
 
-The resolver now expands billable dependency lines before quote creation and the same quote lines are used for invoice items and subscription items. Remaining work is to prove bundle overlap, ownership/quantity edge cases, cancellation/downgrade, and the feature-granular entitlement contract with tests before treating the whole commerce flow as release-ready.
+The resolver expands billable dependency lines before quote creation, and the same quote lines are used for invoice items and subscription items. Tests cover shared billable dependencies, existing coverage, read-only preview, and core entitlement boundaries. Bundle overlap, broader ownership/quantity edge cases, cancellation/downgrade, and the feature-granular entitlement contract still need release-level review.
 
 ### 2.2 Dependency billing policy is not yet enforced end-to-end
 
-The dependency edge now validates and stores a billing_policy value, and the subscription resolver applies it when expanding billable dependencies. The UI does not yet expose this policy as a customer-facing quote explanation, and bundle overlap/ownership edge cases still require regression coverage.
+The dependency edge validates and stores a `billing_policy` value, and the subscription resolver applies it when expanding billable dependencies. The quote UI identifies separately priced required dependencies. It does not yet provide a complete item-by-item explanation for included/free dependencies or bundle-covered capabilities; bundle overlap/ownership edge cases still require regression coverage.
 
 Stored policy contract (the billing integration is still required):
 - included: dependency is automatically selected/granted but does not add a separate price line because the parent price includes it.
@@ -122,13 +125,12 @@ Minimum regression coverage before launch:
 
 ## 6. Delivery order
 
-1. Complete the existing Phase 8.6 verification/release gate.
-2. Finish tests for the new dependency-aware resolver and resolve any unrelated CI failures separately.
-3. Agree and implement the Module-versus-Feature entitlement semantics consistently across UI, middleware, projector, and tests.
-4. Add bundle/ownership/cancellation/quantity edge-case coverage and customer-facing quote explanations.
-5. Complete the marketplace UI integration and server-side revalidation.
-6. Run the full test suite and CI; reconcile docs and release gates.
-7. Only then enable real self-serve commercial selection and advertise it.
+1. Complete the existing Phase 8.6 verification/release gate and reconcile the branch with `main`.
+2. Agree and implement the Module-versus-Feature entitlement semantics consistently across UI, middleware, projector, and tests.
+3. Add bundle/ownership/cancellation/quantity edge-case coverage and item-level included/free explanations.
+4. Complete operational reconciliation for uncertain provider outcomes and verify the production payment configuration.
+5. Run the full test suite and CI; reconcile docs and release gates.
+6. Only then merge, enable live self-serve commercial selection, or advertise it as production-ready.
 
 ## 7. Explicit non-goals for this increment
 
@@ -138,7 +140,7 @@ Minimum regression coverage before launch:
 - Do not change production subscriptions or customer data.
 - Do not activate new paid items without verified payment.
 
-## 5. Read-only upgrade quote preview
+## 7. Read-only upgrade quote preview and Marketplace UI
 
 The backend now exposes an authorized Marketplace preview endpoint:
 
@@ -149,5 +151,7 @@ The backend now exposes an authorized Marketplace preview endpoint:
 - Does not create subscription items, invoices, or payment attempts.
 - Uses `SubscriptionService::previewUpgrade()` as the shared quote boundary; the actual upgrade request calls the same method before creating pending subscription items.
 - Requires the current tenant context and billing-management authorization.
-- This is a backend contract only. The customer-facing quote UI remains unimplemented, and the endpoint does not mean the full purchase journey is ready to launch.
+- The tenant-facing Blade Marketplace consumes this endpoint and prevents confirmation if the selected item or quantity differs from the latest quote.
+- Prospective customers can browse monthly catalog prices without an active subscription, but they cannot preview/purchase until an active or grace subscription exists.
+- The outcome-guided recommendation journey, complete included/free/bundle coverage explanations, production payment readiness, and operational reconciliation remain unfinished release gates.
 
