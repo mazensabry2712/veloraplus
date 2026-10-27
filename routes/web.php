@@ -256,6 +256,9 @@ Route::middleware(['auth', 'tenant', 'tenant.member', 'noindex'])
     ->prefix('dashboard/marketplace')
     ->name('dashboard.marketplace.')
     ->group(function (): void {
+        Route::get('/', [ModuleMarketplaceController::class, 'index'])
+            ->name('index');
+
         Route::post('/preview', [ModuleMarketplaceController::class, 'preview'])
             ->name('preview');
 
