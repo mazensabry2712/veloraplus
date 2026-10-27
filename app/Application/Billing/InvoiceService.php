@@ -118,19 +118,29 @@ final class InvoiceService
 
     public function void(PlatformInvoice $invoice, string $reason): PlatformInvoice
     {
-        if ($invoice->status === InvoiceStatus::Paid) {
-            throw new DomainException('A paid invoice cannot be voided.');
-        }
+        return $invoice->getConnection()->transaction(function () use ($invoice, $reason): PlatformInvoice {
+            $invoice = PlatformInvoice::query()
+                ->lockForUpdate()
+                ->findOrFail($invoice->getKey());
 
-        $invoice->update([
-            'status' => InvoiceStatus::Void,
-            'voided_at' => CarbonImmutable::now(),
-            'metadata' => array_merge($invoice->metadata ?? [], ['void_reason' => $reason]),
-        ]);
+            if ($invoice->status === InvoiceStatus::Paid) {
+                throw new DomainException('A paid invoice cannot be voided.');
+            }
 
-        $this->audit->record($invoice->tenant, 'invoice.voided', $invoice, ['reason' => $reason]);
+            if ($invoice->status !== InvoiceStatus::Open) {
+                throw new DomainException('Only an open invoice can be voided.');
+            }
 
-        return $invoice->refresh();
+            $invoice->update([
+                'status' => InvoiceStatus::Void,
+                'voided_at' => CarbonImmutable::now(),
+                'metadata' => array_merge($invoice->metadata ?? [], ['void_reason' => $reason]),
+            ]);
+
+            $this->audit->record($invoice->tenant, 'invoice.voided', $invoice, ['reason' => $reason]);
+
+            return $invoice->refresh();
+        });
     }
 
     public function markPaid(PlatformInvoice $invoice, CarbonImmutable $paidAt): PlatformInvoice
