@@ -9,10 +9,38 @@ use App\Http\Requests\Dashboard\PurchaseMarketplaceItemRequest;
 use App\Models\Subscription;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
 final class ModuleMarketplaceController extends Controller
 {
+    public function preview(
+        PurchaseMarketplaceItemRequest $request,
+        ModuleMarketplaceService $marketplace,
+        TenantContext $context,
+    ): JsonResponse {
+        Gate::authorize('manage', Subscription::class);
+
+        $tenant = $context->current();
+
+        if ($tenant === null) {
+            return response()->json(['message' => 'Marketplace tenant context is required.'], 422);
+        }
+
+        try {
+            $data = $request->validated();
+
+            return response()->json($marketplace->previewPurchase(
+                tenant: $tenant,
+                catalogType: (string) $data['catalog_type'],
+                catalogKey: (string) $data['catalog_key'],
+                quantity: (int) $data['quantity'],
+            ));
+        } catch (DomainException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
     public function purchase(
         PurchaseMarketplaceItemRequest $request,
         ModuleMarketplaceService $marketplace,
