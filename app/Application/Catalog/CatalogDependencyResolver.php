@@ -268,7 +268,8 @@ final class CatalogDependencyResolver
     {
         return $item->getMorphClass().':'.$item->key;
     }
-\n    private function nodeKey(string $type, string|int $id): string
+
+    private function nodeKey(string $type, string|int $id): string
     {
         return "{$type}:{$id}";
     }
