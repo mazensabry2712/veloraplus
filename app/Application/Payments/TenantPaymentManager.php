@@ -434,6 +434,16 @@ final class TenantPaymentManager
                         throw new DomainException('Refund idempotency key was already used for another payment.');
                     }
 
+                    $normalizedReason = trim($reason) !== '' ? trim($reason) : null;
+
+                    if (
+                        (int) $existing->amount_minor !== $amountMinor
+                        || strtoupper((string) $existing->currency) !== strtoupper((string) $locked->currency)
+                        || $existing->reason !== $normalizedReason
+                    ) {
+                        throw new DomainException('Refund idempotency key was already used with different refund details.');
+                    }
+
                     return $existing;
                 }
             }
