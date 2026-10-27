@@ -534,7 +534,14 @@ final class TenantPaymentManager
                 ],
             ]);
         } catch (\Throwable $exception) {
-            $this->markRefundFailed($refund, 'Tenant provider refund failed.');
+            // Network failures can happen after the provider has accepted the
+            // refund. Keep it pending and reserved until reconciliation.
+            $refund->update([
+                'metadata' => array_merge($refund->metadata ?? [], [
+                    'provider_outcome' => 'unknown',
+                    'provider_error_class' => class_basename($exception),
+                ]),
+            ]);
 
             throw $exception;
         }
