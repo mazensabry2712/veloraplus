@@ -306,3 +306,37 @@ test('kashier webhook failure does not activate the payment', function () {
 
     expect($payment->status)->toBe(PaymentStatus::Failed);
 });
+
+test('conflicting payload for an already processed platform webhook is rejected', function () {
+    $payment = makePlatformPayment();
+    $payment->update(['provider' => 'kashier']);
+
+    $data = [
+        'amount' => '100.00',
+        'currency' => 'EGP',
+        'kashierOrderId' => 'KASHIER-ORDER-CONFLICT',
+        'merchantOrderId' => $payment->getKey(),
+        'status' => 'SUCCESS',
+        'transactionId' => 'TX-CONFLICT-1',
+        'signatureKeys' => ['transactionId', 'status', 'merchantOrderId', 'kashierOrderId', 'currency', 'amount'],
+    ];
+
+    $handler = app(KashierWebhookHandler::class);
+    $payload = ['event' => 'pay', 'data' => $data];
+    $raw = json_encode($payload, JSON_THROW_ON_ERROR);
+    $headers = ['X-Kashier-Signature' => kashierSignature($data)];
+
+    expect($handler->handle($payload, $headers, $raw)['duplicate'])->toBeFalse();
+
+    // Keep the provider event identity stable but alter a signed financial field.
+    $data['amount'] = '101.00';
+    $payload = ['event' => 'pay', 'data' => $data];
+    $raw = json_encode($payload, JSON_THROW_ON_ERROR);
+    $headers = ['X-Kashier-Signature' => kashierSignature($data)];
+
+    expect(fn () => $handler->handle($payload, $headers, $raw))
+        ->toThrow(DomainException::class, 'payload does not match the existing event');
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded)
+        ->and(WebhookEvent::query()->count())->toBe(1);
+});
