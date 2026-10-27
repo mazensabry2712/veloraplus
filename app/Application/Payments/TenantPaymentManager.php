@@ -581,6 +581,17 @@ final class TenantPaymentManager
             return $this->markRefundSucceeded($refund, $providerRefundId, $response);
         }
 
+        if (in_array($status, ['FAILED', 'FAILURE', 'REJECTED', 'DECLINED', 'ERROR'], true)) {
+            $failed = $this->markRefundFailed($refund, 'Payment provider rejected the refund.');
+            $failed->update([
+                'metadata' => array_merge($failed->metadata ?? [], [
+                    'provider_response' => $response,
+                ]),
+            ]);
+
+            return $failed->refresh();
+        }
+
         $refund->update([
             'metadata' => array_merge($refund->metadata ?? [], [
                 'provider_response' => $response,
