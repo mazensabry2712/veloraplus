@@ -3,6 +3,7 @@
 namespace App\Application\Billing;
 
 use App\Application\Catalog\CatalogDependencyResolver;
+use App\Domain\Billing\InvoiceStatus;
 use App\Domain\Billing\SubscriptionItemStatus;
 use App\Domain\Billing\SubscriptionStatus;
 use App\Models\Feature;
@@ -265,9 +266,14 @@ final class SubscriptionService
             return $invoice;
         });
 
-        $this->audit->record($subscription->tenant, 'subscription.upgrade_requested', $subscription, [
-            'invoice_id' => $invoice->getKey(),
-        ]);
+        $this->audit->record(
+            $subscription->tenant,
+            $invoice->status === InvoiceStatus::Paid
+                ? 'subscription.upgrade_activated_without_payment'
+                : 'subscription.upgrade_requested',
+            $subscription,
+            ['invoice_id' => $invoice->getKey()],
+        );
 
         return $invoice;
     }
@@ -400,7 +406,7 @@ final class SubscriptionService
                 return null;
             }
 
-                $invoice = $this->invoices->createForSubscription($subscription, $renewalItems, null, [
+            $invoice = $this->invoices->createForSubscription($subscription, $renewalItems, null, [
                 'type' => 'renewal',
             ]);
 
@@ -408,6 +414,7 @@ final class SubscriptionService
                 $paidAt = CarbonImmutable::now();
                 $this->invoices->markPaid($invoice, $paidAt);
                 $this->activateInvoiceItems($invoice->fresh('items'), $paidAt);
+                $subscription->refresh();
                 $this->audit->record($subscription->tenant, 'subscription.renewal_paid_without_payment', $subscription, [
                     'invoice_id' => $invoice->getKey(),
                 ]);
