@@ -137,3 +137,16 @@ Minimum regression coverage before launch:
 - Do not enable payment commissions, partner payouts, or AI usage charges.
 - Do not change production subscriptions or customer data.
 - Do not activate new paid items without verified payment.
+
+## 5. Read-only upgrade quote preview
+
+The backend now exposes an authorized Marketplace preview endpoint:
+
+- `POST /dashboard/marketplace/preview`
+- Uses the same catalog item validation, dependency expansion, subscription cycle, currency, and pricing engine as the upgrade request.
+- Returns quote totals and line metadata, including `commercial_origin` and `required_by` for required billable dependencies.
+- Does not create subscription items, invoices, or payment attempts.
+- Uses `SubscriptionService::previewUpgrade()` as the shared quote boundary; the actual upgrade request calls the same method before creating pending subscription items.
+- Requires the current tenant context and billing-management authorization.
+- This is a backend contract only. The customer-facing quote UI remains unimplemented, and the endpoint does not mean the full purchase journey is ready to launch.
+
