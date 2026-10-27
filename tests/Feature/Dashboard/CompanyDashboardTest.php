@@ -127,3 +127,29 @@ test('account without an active tenant membership cannot access the dashboard', 
         ->get('http://dashboard-tenant.velora.test/dashboard')
         ->assertForbidden();
 });
+
+test('active tenant member can browse the module marketplace', function (): void {
+    $path = dashboardTestTenantDatabasePath();
+    $this->dashboardTenantDatabasePath = $path;
+
+    $tenant = createDashboardTenant($path);
+    $member = PlatformAccount::factory()->create([
+        'name' => 'Marketplace Member',
+    ]);
+
+    TenantMembership::create([
+        'tenant_id' => $tenant->getKey(),
+        'account_id' => $member->getKey(),
+        'role_key' => 'owner',
+        'status' => 'active',
+        'joined_at' => now(),
+    ]);
+
+    $this->actingAs($member)
+        ->get('http://dashboard-tenant.velora.test/dashboard/marketplace')
+        ->assertOk()
+        ->assertSee('Module Marketplace')
+        ->assertSee('Grow by outcomes')
+        ->assertSee('Business apps')
+        ->assertSee('Preview is read-only');
+});
