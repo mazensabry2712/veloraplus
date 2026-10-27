@@ -80,6 +80,45 @@ test('marketplace overview identifies owned and available catalog items', functi
         ->and($availableRow['amount_minor'])->toBe(3000);
 });
 
+
+test('marketplace quote preview is read-only and returns dependency-aware price lines', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+
+    $base = marketplaceFeature($tenant, 'marketplace.preview.base.'.Str::lower(Str::random(6)));
+    $extra = marketplaceFeature($tenant, 'marketplace.preview.extra.'.Str::lower(Str::random(6)), 4500);
+    $dependency = marketplaceFeature($tenant, 'marketplace.preview.dependency.'.Str::lower(Str::random(6)), 1500);
+
+    $subscription = activeMarketplaceSubscription($tenant, $base);
+    app(CatalogManager::class)->addDependency($extra, $dependency, 'billable');
+    app(TenantContext::class)->set($tenant);
+
+    $itemCountBefore = $subscription->fresh('items')->items->count();
+    $invoiceCountBefore = $subscription->invoices()->count();
+
+    $preview = app(ModuleMarketplaceService::class)->previewPurchase(
+        tenant: $tenant,
+        catalogType: 'feature',
+        catalogKey: $extra->key,
+        quantity: 2,
+    );
+
+    expect($preview['selection']['catalog_key'])->toBe($extra->key)
+        ->and($preview['selection']['quantity'])->toBe(2)
+        ->and($preview['subtotal_minor'])->toBe(12000)
+        ->and($preview['total_minor'])->toBe(12000)
+        ->and($preview['lines'])->toHaveCount(2)
+        ->and(collect($preview['lines'])->firstWhere('catalog_key', $dependency->key)['metadata']['commercial_origin'])
+            ->toBe('required_dependency')
+        ->and($preview['creates_invoice'])->toBeFalse()
+        ->and($preview['requires_payment'])->toBeTrue()
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemCountBefore)
+        ->and($subscription->invoices()->count())->toBe($invoiceCountBefore);
+});
+
+
 test('marketplace purchase creates a pending upgrade invoice for an active subscription', function (): void {
     $tenant = Tenant::factory()->create([
         'default_currency' => 'EGP',
