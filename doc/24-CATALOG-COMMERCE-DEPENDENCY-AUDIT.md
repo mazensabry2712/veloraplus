@@ -140,7 +140,7 @@ Minimum regression coverage before launch:
 - Do not change production subscriptions or customer data.
 - Do not activate new paid items without verified payment.
 
-## 7. Read-only upgrade quote preview and Marketplace UI
+## 8. Read-only upgrade quote preview and Marketplace UI
 
 The backend now exposes an authorized Marketplace preview endpoint:
 
