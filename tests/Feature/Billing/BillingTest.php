@@ -272,10 +272,10 @@ test('period end creates one renewal invoice and repeated processing cannot dupl
     expect($renewalInvoice)->toBeInstanceOf(PlatformInvoice::class)
         ->and($subscription->fresh()->status)->toBe(SubscriptionStatus::PendingPayment)
         ->and($subscription->invoices()->count())->toBe($invoiceCount + 1)
-        ->and(app(\\App\\Application\\Entitlements\\EntitlementService::class)->hasFeature($tenant, 'booking.queue'))->toBeFalse();
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'booking.queue'))->toBeFalse();
 
     expect(fn () => app(SubscriptionService::class)->processPeriodEnd($subscription->fresh(), $periodEnd))
-        ->toThrow(\\DomainException::class)
+        ->toThrow(\DomainException::class)
         ->and($subscription->invoices()->count())->toBe($invoiceCount + 1);
 });
 
