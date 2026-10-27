@@ -4,6 +4,7 @@ namespace App\Application\Billing;
 
 use App\Domain\Billing\BillingMoney;
 use App\Domain\Billing\InvoiceStatus;
+use App\Domain\Billing\PaymentStatus;
 use App\Models\PlatformInvoice;
 use App\Models\PlatformInvoiceItem;
 use App\Models\Subscription;
@@ -129,6 +130,10 @@ final class InvoiceService
 
             if ($invoice->status !== InvoiceStatus::Open) {
                 throw new DomainException('Only an open invoice can be voided.');
+            }
+
+            if ($invoice->payments()->where('status', PaymentStatus::Pending->value)->exists()) {
+                throw new DomainException('An invoice with a pending payment cannot be voided.');
             }
 
             $invoice->update([
