@@ -640,7 +640,7 @@ test('failed initial invoice creation rolls back the pending subscription and it
     $feature = billingFeature($module, 'booking.queue');
     billingPrice($feature, 5000);
 
-    \\Illuminate\\Support\\Facades\\DB::listen(function (\\Illuminate\\Database\\Events\\QueryExecuted $query): void {
+    \Illuminate\Support\Facades\DB::listen(function (\Illuminate\Database\Events\QueryExecuted $query): void {
         if (str_starts_with(strtolower(ltrim($query->sql)), 'insert into "platform_invoices"')) {
             throw new RuntimeException('invoice creation failed');
         }
