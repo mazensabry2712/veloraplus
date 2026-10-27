@@ -189,7 +189,7 @@
                     <input type="hidden" name="catalog_type">
                     <input type="hidden" name="catalog_key">
                     <input type="hidden" name="quantity" value="1">
-                    <p class="max-w-2xl text-xs leading-5 text-slate-500">Confirming creates the upgrade invoice. Paid capabilities become available only after payment is verified.</p>
+                    <p id="quote-confirmation-note" class="max-w-2xl text-xs leading-5 text-slate-500">Confirming creates the upgrade invoice. Paid capabilities become available only after payment is verified.</p>
                     <button type="submit" id="confirm-marketplace-purchase" disabled
                             class="shrink-0 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300">
                         Confirm and create invoice
@@ -285,7 +285,18 @@
 
                     syncPurchaseFields();
                     output.hidden = false;
-                    if (confirmButton) confirmButton.disabled = false;
+                    if (confirmButton) {
+                        confirmButton.disabled = false;
+                        confirmButton.textContent = Number(quote.total_minor) === 0
+                            ? 'Activate free selection'
+                            : 'Confirm and create invoice';
+                    }
+                    const confirmationNote = document.getElementById('quote-confirmation-note');
+                    if (confirmationNote) {
+                        confirmationNote.textContent = Number(quote.total_minor) === 0
+                            ? 'This selection has no amount due. Confirming activates it immediately without a payment attempt.'
+                            : 'Confirming creates the upgrade invoice. Paid capabilities become available only after payment is verified.';
+                    }
                 } catch (exception) {
                     error.textContent = exception.message || 'The quote could not be calculated.';
                     error.hidden = false;
