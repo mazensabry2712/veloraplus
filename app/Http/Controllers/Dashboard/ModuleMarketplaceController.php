@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Application\Catalog\ModuleMarketplaceService;
+use App\Application\Dashboard\DashboardContextService;
 use App\Domain\Tenancy\TenantContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\PurchaseMarketplaceItemRequest;
@@ -18,6 +19,7 @@ final class ModuleMarketplaceController extends Controller
     public function index(
         ModuleMarketplaceService $marketplace,
         TenantContext $context,
+        DashboardContextService $dashboardContext,
     ): View|RedirectResponse {
         $tenant = $context->current();
 
@@ -28,6 +30,7 @@ final class ModuleMarketplaceController extends Controller
 
         return view('dashboard.marketplace', [
             'tenant' => $tenant,
+            'membership' => $dashboardContext->membership(),
             'catalog' => $marketplace->overview($tenant),
         ]);
     }
