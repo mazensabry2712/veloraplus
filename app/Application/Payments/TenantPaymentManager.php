@@ -582,14 +582,11 @@ final class TenantPaymentManager
         }
 
         if (in_array($status, ['FAILED', 'FAILURE', 'REJECTED', 'DECLINED', 'ERROR'], true)) {
-            $failed = $this->markRefundFailed($refund, 'Payment provider rejected the refund.');
-            $failed->update([
-                'metadata' => array_merge($failed->metadata ?? [], [
-                    'provider_response' => $response,
-                ]),
-            ]);
-
-            return $failed->refresh();
+            return $this->markRefundFailed(
+                $refund,
+                'Payment provider rejected the refund.',
+                ['provider_response' => $response],
+            );
         }
 
         $refund->update([
@@ -658,9 +655,12 @@ final class TenantPaymentManager
         });
     }
 
-    public function markRefundFailed(TenantPaymentRefund $refund, string $reason): TenantPaymentRefund
-    {
-        return DB::transaction(function () use ($refund, $reason): TenantPaymentRefund {
+    public function markRefundFailed(
+        TenantPaymentRefund $refund,
+        string $reason,
+        array $metadata = [],
+    ): TenantPaymentRefund {
+        return DB::transaction(function () use ($refund, $reason, $metadata): TenantPaymentRefund {
             $locked = TenantPaymentRefund::query()
                 ->lockForUpdate()
                 ->find($refund->getKey());
@@ -682,6 +682,7 @@ final class TenantPaymentManager
                 'failed_at' => now(),
                 'metadata' => array_merge($locked->metadata ?? [], [
                     'failure_reason' => $reason,
+                    ...$metadata,
                 ]),
             ]);
 
