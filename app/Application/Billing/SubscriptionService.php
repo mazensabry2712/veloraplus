@@ -2,6 +2,7 @@
 
 namespace App\Application\Billing;
 
+use App\Application\Catalog\CatalogDependencyResolver;
 use App\Domain\Billing\SubscriptionItemStatus;
 use App\Domain\Billing\SubscriptionStatus;
 use App\Models\Feature;
@@ -19,6 +20,7 @@ final class SubscriptionService
         private readonly InvoiceService $invoices,
         private readonly BillingEntitlementProjector $projector,
         private readonly BillingAuditLogger $audit,
+        private readonly CatalogDependencyResolver $commercialDependencies,
     ) {
     }
 
@@ -34,6 +36,8 @@ final class SubscriptionService
         if ($trialDays < 0 || $trialDays > 90) {
             throw new DomainException('Trial days must be between 0 and 90.');
         }
+
+        $items = $this->commercialDependencies->resolveBillableItems($items);
 
         $quote = $this->pricing->quote(
             $tenant,
