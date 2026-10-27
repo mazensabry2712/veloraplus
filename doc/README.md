@@ -134,10 +134,6 @@ The approved strategic direction is defined in doc/25-PRODUCT-VISION-OUTCOME-FIR
 
 ## Commercial roadmap note
 
-The revenue strategy and rollout order are defined in `23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md`. This is a proposed roadmap, not a claim that all listed channels are implemented. The first commercial engineering priority is transparent, dependency-aware catalog quoting and subscription commerce; usage billing, partner marketplace, payment-related revenue, and AI monetization remain gated on their own implementation, operational, and legal requirements.
-
-## Commercial roadmap note
-
 The revenue strategy and rollout order are defined in doc/23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md. This is a proposed roadmap, not a claim that all listed channels are implemented. The first commercial engineering priority is transparent, dependency-aware catalog quoting and subscription commerce; usage billing, partner marketplace, payment-related revenue, and AI monetization remain gated on their own implementation, operational, and legal requirements.
 
 The dependency commerce audit in doc/24-CATALOG-COMMERCE-DEPENDENCY-AUDIT.md identifies the gaps that must be addressed before dependency-aware self-serve purchase is advertised or enabled. Dependency edges now store a validated billing policy, but end-to-end quote/invoice/entitlement enforcement remains incomplete.
