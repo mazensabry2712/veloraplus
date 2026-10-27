@@ -581,3 +581,54 @@ test('tenant refunds reject amounts above the reserved refundable balance', func
         'Too much',
     ))->toThrow(DomainException::class);
 });
+
+test('an uncertain tenant refund outcome remains pending and reserves the amount', function (): void {
+    $path = tenantFinancialDatabase();
+    $this->tenantFinancialDatabases = [$path];
+    migrateTenantFinancialDatabase($path);
+
+    $tenant = Tenant::factory()->create([
+        'database_name' => $path,
+        'database_status' => 'ready',
+        'status' => 'active',
+    ]);
+
+    $account = createKashierAccount($tenant);
+    tenantFinancialContext($tenant, $path);
+
+    $payment = TenantPayment::query()->create([
+        'provider' => 'kashier',
+        'merchant_order_id' => $tenant->getKey().'.'.Str::ulid(),
+        'provider_payment_id' => 'TX-REFUND-UNKNOWN',
+        'provider_order_id' => 'KASHIER-ORDER-REFUND-UNKNOWN',
+        'amount_minor' => 10000,
+        'currency' => 'EGP',
+        'status' => TenantPaymentStatus::Succeeded,
+        'metadata' => [
+            'payment_provider_account_id' => $account->getKey(),
+        ],
+    ]);
+
+    Http::fake(function () {
+        throw new \\Illuminate\\Http\\Client\\ConnectionException('simulated provider timeout');
+    });
+
+    expect(fn () => app(TenantPaymentManager::class)->refund(
+        $payment,
+        5000,
+        'timeout test',
+        'refund-unknown-1',
+    ))->toThrow(\\Illuminate\\Http\\Client\\ConnectionException::class);
+
+    $refund = TenantPaymentRefund::query()->where('idempotency_key', 'refund-unknown-1')->firstOrFail();
+
+    expect($refund->status)->toBe(TenantPaymentRefundStatus::Pending)
+        ->and($refund->metadata['provider_outcome'])->toBe('unknown')
+        ->and((int) TenantPaymentRefund::query()
+            ->where('tenant_payment_id', $payment->getKey())
+            ->whereIn('status', [
+                TenantPaymentRefundStatus::Pending->value,
+                TenantPaymentRefundStatus::Succeeded->value,
+            ])
+            ->sum('amount_minor'))->toBe(5000);
+});
