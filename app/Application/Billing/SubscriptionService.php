@@ -129,7 +129,14 @@ final class SubscriptionService
             // Keep the initial subscription and its first invoice atomic. If invoice
             // creation fails, the subscription must not be left pending without an invoice.
             if ($trialEndsAt === null) {
-                $this->invoices->createForSubscription($subscription, $subscription->items);
+                $invoice = $this->invoices->createForSubscription($subscription, $subscription->items);
+
+                if ($invoice->total_minor === 0) {
+                    $paidAt = CarbonImmutable::now();
+                    $this->invoices->markPaid($invoice, $paidAt);
+                    $this->activateInvoiceItems($invoice->fresh('items'), $paidAt);
+                    $subscription = $subscription->fresh('items');
+                }
             }
 
             return $subscription;
@@ -140,8 +147,10 @@ final class SubscriptionService
             $this->audit->record($tenant, 'subscription.trial_started', $subscription, [
                 'trial_ends_at' => $subscription->trial_ends_at?->toIso8601String(),
             ]);
-        } else {
+        } elseif ($subscription->status === SubscriptionStatus::PendingPayment) {
             $this->audit->record($tenant, 'subscription.created_pending_payment', $subscription);
+        } else {
+            $this->audit->record($tenant, 'subscription.created_without_payment', $subscription);
         }
 
         return $subscription->refresh();
@@ -241,9 +250,19 @@ final class SubscriptionService
                 ]);
             }
 
-            return $this->invoices->createForSubscription($lockedSubscription, $newItems, null, [
+            $invoice = $this->invoices->createForSubscription($lockedSubscription, $newItems, null, [
                 'type' => 'upgrade',
             ]);
+
+            if ($invoice->total_minor === 0) {
+                $paidAt = CarbonImmutable::now();
+                $this->invoices->markPaid($invoice, $paidAt);
+                $this->activateInvoiceItems($invoice->fresh('items'), $paidAt);
+
+                return $invoice->fresh('items');
+            }
+
+            return $invoice;
         });
 
         $this->audit->record($subscription->tenant, 'subscription.upgrade_requested', $subscription, [
@@ -381,9 +400,20 @@ final class SubscriptionService
                 return null;
             }
 
-            $invoice = $this->invoices->createForSubscription($subscription, $renewalItems, null, [
+                $invoice = $this->invoices->createForSubscription($subscription, $renewalItems, null, [
                 'type' => 'renewal',
             ]);
+
+            if ($invoice->total_minor === 0) {
+                $paidAt = CarbonImmutable::now();
+                $this->invoices->markPaid($invoice, $paidAt);
+                $this->activateInvoiceItems($invoice->fresh('items'), $paidAt);
+                $this->audit->record($subscription->tenant, 'subscription.renewal_paid_without_payment', $subscription, [
+                    'invoice_id' => $invoice->getKey(),
+                ]);
+
+                return $invoice->fresh('items');
+            }
 
             $this->audit->record($subscription->tenant, 'subscription.renewal_pending_payment', $subscription, [
                 'invoice_id' => $invoice->getKey(),
