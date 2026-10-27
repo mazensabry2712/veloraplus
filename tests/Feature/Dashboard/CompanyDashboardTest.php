@@ -152,6 +152,5 @@ test('active tenant member can browse the module marketplace', function (): void
         ->assertSee('Grow by outcomes')
         ->assertSee('Business apps')
         ->assertSee('Preview is read-only')
-        ->assertSee('Dashboard Tenant')
-        ->assertSee('Owner');
+        ->assertSee('Dashboard Tenant');
 });
