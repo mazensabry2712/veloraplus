@@ -14,8 +14,8 @@ This audit describes the GitHub main snapshot inspected during the revenue-model
 - The dependency resolver performs transitive graph traversal and deduplicates nodes by morph type and ID.
 - Entitlement grant/projection resolves dependencies and evaluates dependencies during access checks.
 - Subscription and subscription items are the financial source of truth; tenant entitlements are a rebuildable authorization projection.
-- Marketplace purchase currently requests one root catalog item through the existing billing upgrade flow.
-- PricingEngine quotes only the items supplied to it. It does not itself expand dependency edges into priced lines.
+- Marketplace purchase still submits a root catalog selection through the existing billing upgrade flow.
+- Subscription creation and upgrade now call a server-side commercial resolver before PricingEngine, so dependencies explicitly marked billable can be added to the quote and persisted as subscription items. The resolver records commercial origin and the root selections that require each billable dependency.
 - Billing documents defer usage metering; per-seat and usage modes are catalog-ready labels, not a complete metering product.
 
 ## 2. Critical commercial gaps
@@ -24,11 +24,11 @@ This audit describes the GitHub main snapshot inspected during the revenue-model
 
 A customer can select a Feature whose dependencies are resolved for authorization, while the quote and subscription item list still contain only the requested item. This can produce a commercial mismatch between what is granted and what is billed.
 
-The system must compute a canonical commercial selection before quote creation and use that same selection to build invoice lines, subscription items, and the entitlement projection.
+The resolver now expands billable dependency lines before quote creation and the same quote lines are used for invoice items and subscription items. Remaining work is to prove bundle overlap, ownership/quantity edge cases, cancellation/downgrade, and the feature-granular entitlement contract with tests before treating the whole commerce flow as release-ready.
 
 ### 2.2 Dependency billing policy is not yet enforced end-to-end
 
-The dependency edge now validates and stores a billing_policy value, but the inspected resolver and billing flow do not yet apply it. The product must not guess whether a dependency is free, included in a parent item, or separately billable.
+The dependency edge now validates and stores a billing_policy value, and the subscription resolver applies it when expanding billable dependencies. The UI does not yet expose this policy as a customer-facing quote explanation, and bundle overlap/ownership edge cases still require regression coverage.
 
 Stored policy contract (the billing integration is still required):
 - included: dependency is automatically selected/granted but does not add a separate price line because the parent price includes it.
@@ -66,7 +66,7 @@ No overlap should create duplicate subscription items or unexpected charges.
 
 ## 3. Canonical commercial resolution contract
 
-A future server-side resolver should accept only trusted catalog identifiers and quantities. It should return a normalized, deterministic selection containing at least:
+The current server-side resolver accepts trusted catalog model instances and quantities. It should return a normalized, deterministic selection containing at least:
 
 - requested root items;
 - transitive required dependencies;
@@ -123,13 +123,12 @@ Minimum regression coverage before launch:
 ## 6. Delivery order
 
 1. Complete the existing Phase 8.6 verification/release gate.
-2. Agree and encode the dependency billing policy and Module purchase semantics.
-3. Implement a pure/domain-level canonical commercial resolver and focused tests.
-4. Integrate quote and subscription upgrade/create paths.
-5. Integrate marketplace preview and server-side revalidation.
-6. Add bundle/ownership/cancellation edge cases.
-7. Run the full test suite and CI; reconcile docs and release gates.
-8. Only then enable real self-serve commercial selection and advertise it.
+2. Finish tests for the new dependency-aware resolver and resolve any unrelated CI failures separately.
+3. Agree and implement the Module-versus-Feature entitlement semantics consistently across UI, middleware, projector, and tests.
+4. Add bundle/ownership/cancellation/quantity edge-case coverage and customer-facing quote explanations.
+5. Complete the marketplace UI integration and server-side revalidation.
+6. Run the full test suite and CI; reconcile docs and release gates.
+7. Only then enable real self-serve commercial selection and advertise it.
 
 ## 7. Explicit non-goals for this increment
 
