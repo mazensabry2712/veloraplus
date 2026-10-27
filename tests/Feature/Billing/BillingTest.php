@@ -786,3 +786,54 @@ test('an uncertain provider refund outcome remains pending and reserves the amou
             ->whereIn('status', [RefundStatus::Pending->value, RefundStatus::Succeeded->value])
             ->sum('amount_minor'))->toBe(5000);
 });
+
+test('zero-value subscriptions activate immediately and renew without a payment attempt', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('free-booking');
+    $feature = billingFeature($module, 'free-booking.services');
+    billingPrice($feature, 0);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    expect($subscription->status)->toBe(SubscriptionStatus::Active)
+        ->and($invoice->status)->toBe(InvoiceStatus::Paid)
+        ->and($invoice->total_minor)->toBe(0)
+        ->and($invoice->payments()->count())->toBe(0)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'free-booking.services'))->toBeTrue();
+
+    expect(fn () => app(\App\Application\Billing\PaymentService::class)->createPending($invoice))
+        ->toThrow(DomainException::class, 'Zero-value invoices do not require a payment attempt.');
+
+    $periodEnd = $subscription->fresh()->current_period_end;
+    $renewal = app(SubscriptionService::class)->processPeriodEnd($subscription->fresh(), $periodEnd);
+
+    expect($renewal)->toBeInstanceOf(PlatformInvoice::class)
+        ->and($renewal->status)->toBe(InvoiceStatus::Paid)
+        ->and($renewal->total_minor)->toBe(0)
+        ->and($subscription->fresh()->status)->toBe(SubscriptionStatus::Active)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'free-booking.services'))->toBeTrue();
+});
+
+test('zero-value subscription upgrades activate without creating a payment attempt', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $base = billingFeature($module, 'booking.services');
+    $freeExtra = billingFeature($module, 'booking.free-reports');
+    billingPrice($base, 5000);
+    billingPrice($freeExtra, 0);
+
+    $subscription = paidSubscription($tenant, [['item' => $base]]);
+    $invoice = app(SubscriptionService::class)->requestUpgrade($subscription, [
+        ['item' => $freeExtra],
+    ]);
+    $extraItem = $subscription->fresh('items')->items->firstWhere('catalog_key', 'booking.free-reports');
+
+    expect($invoice->status)->toBe(InvoiceStatus::Paid)
+        ->and($invoice->total_minor)->toBe(0)
+        ->and($invoice->payments()->count())->toBe(0)
+        ->and($extraItem->status)->toBe(SubscriptionItemStatus::Active)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'booking.free-reports'))->toBeTrue();
+});
