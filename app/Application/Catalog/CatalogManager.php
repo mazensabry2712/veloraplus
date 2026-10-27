@@ -109,9 +109,12 @@ final class CatalogManager
         return $bundle->refresh();
     }
 
-    public function addDependency(Module|Feature $dependent, Module|Feature $dependency): CatalogDependency
-    {
-        return $this->dependencies->add($dependent, $dependency);
+    public function addDependency(
+        Module|Feature $dependent,
+        Module|Feature $dependency,
+        string $billingPolicy = 'included',
+    ): CatalogDependency {
+        return $this->dependencies->add($dependent, $dependency, $billingPolicy);
     }
 
     public function addModuleToBundle(Bundle $bundle, Module $module): void
