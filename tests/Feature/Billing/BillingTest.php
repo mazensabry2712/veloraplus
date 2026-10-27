@@ -257,6 +257,28 @@ test('downgrade is scheduled for period end and preserves access until then', fu
         ))->toBeFalse();
 });
 
+test('period end creates one renewal invoice and repeated processing cannot duplicate it', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $feature]]);
+    $periodEnd = $subscription->fresh()->current_period_end;
+    $invoiceCount = $subscription->invoices()->count();
+
+    $renewalInvoice = app(SubscriptionService::class)->processPeriodEnd($subscription, $periodEnd);
+
+    expect($renewalInvoice)->toBeInstanceOf(PlatformInvoice::class)
+        ->and($subscription->fresh()->status)->toBe(SubscriptionStatus::PendingPayment)
+        ->and($subscription->invoices()->count())->toBe($invoiceCount + 1)
+        ->and(app(\\App\\Application\\Entitlements\\EntitlementService::class)->hasFeature($tenant, 'booking.queue'))->toBeFalse();
+
+    expect(fn () => app(SubscriptionService::class)->processPeriodEnd($subscription->fresh(), $periodEnd))
+        ->toThrow(\\DomainException::class)
+        ->and($subscription->invoices()->count())->toBe($invoiceCount + 1);
+});
+
 test('cancellation keeps access until the period ends then closes the subscription', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('booking');
