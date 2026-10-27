@@ -65,6 +65,10 @@ final class KashierWebhookHandler
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            if ((string) $stored->payload_hash !== $payloadHash) {
+                throw new DomainException('Kashier webhook payload does not match the existing event.');
+            }
+
             if ($stored->processed_at !== null) {
                 return ['duplicate' => true, 'status' => 'processed'];
             }
