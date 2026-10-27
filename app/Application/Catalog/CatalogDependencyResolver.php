@@ -2,9 +2,11 @@
 
 namespace App\Application\Catalog;
 
+use App\Models\Bundle;
 use App\Models\CatalogDependency;
 use App\Models\Feature;
 use App\Models\Module;
+use DomainException;
 use Illuminate\Support\Collection;
 
 final class CatalogDependencyResolver
