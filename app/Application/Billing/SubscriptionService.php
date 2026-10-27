@@ -152,10 +152,18 @@ final class SubscriptionService
         }
 
         $subscription->loadMissing('items');
-        $existing = $subscription->items
-            ->whereIn('status', [SubscriptionItemStatus::Active, SubscriptionItemStatus::Pending])
+        $existingItems = $subscription->items
+            ->whereIn('status', [SubscriptionItemStatus::Active, SubscriptionItemStatus::Pending]);
+
+        $existing = $existingItems
             ->mapWithKeys(fn (SubscriptionItem $item) => [$item->catalog_type.':'.$item->catalog_key => true])
             ->all();
+        $coveredQuantities = $existingItems
+            ->groupBy(fn (SubscriptionItem $item) => $item->catalog_type.':'.$item->catalog_key)
+            ->map(fn ($items) => (int) $items->sum('quantity'))
+            ->all();
+
+        $items = $this->commercialDependencies->resolveBillableItems($items, $coveredQuantities);
 
         $quote = $this->pricing->quote(
             $subscription->tenant,
