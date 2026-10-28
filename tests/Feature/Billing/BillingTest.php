@@ -257,6 +257,28 @@ test('downgrade is scheduled for period end and preserves access until then', fu
         ))->toBeFalse();
 });
 
+
+test('downgrade cannot remove a dependency required by another active subscription item', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('downgrade-dependency');
+    $root = billingFeature($module, 'downgrade.root');
+    $dependency = billingFeature($module, 'downgrade.dependency');
+    billingPrice($root, 5000);
+    billingPrice($dependency, 2000);
+    app(\App\Application\Catalog\CatalogManager::class)->addDependency($root, $dependency, 'billable');
+
+    $subscription = paidSubscription($tenant, [['item' => $root]]);
+    $dependencyItem = $subscription->fresh('items')->items->firstWhere('catalog_key', $dependency->key);
+
+    expect($dependencyItem)->not->toBeNull()
+        ->and(fn () => app(SubscriptionService::class)->scheduleDowngrade(
+            $subscription->fresh(),
+            $dependencyItem->fresh(),
+        ))->toThrow(DomainException::class, 'required by another active or pending subscription item');
+
+    expect($dependencyItem->fresh()->status)->toBe(SubscriptionItemStatus::Active);
+});
+
 test('period end creates one renewal invoice and repeated processing cannot duplicate it', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('booking');
