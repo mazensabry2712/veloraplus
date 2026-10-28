@@ -155,8 +155,11 @@ final class ModuleMarketplaceService
         $lines = array_map(static fn (array $line): array => [
             'catalog_type' => $line['catalog_type'] ?? null,
             'catalog_key' => $line['catalog_key'] ?? null,
+            'catalog_price_id' => $line['catalog_price_id'] ?? null,
             'quantity' => $line['quantity'] ?? null,
             'unit_amount_minor' => $line['unit_amount_minor'] ?? null,
+            'discount_minor' => $line['discount_minor'] ?? null,
+            'tax_minor' => $line['tax_minor'] ?? null,
             'line_total_minor' => $line['line_total_minor'] ?? null,
             'metadata' => $line['metadata'] ?? [],
         ], $preview['lines'] ?? []);
