@@ -9,6 +9,7 @@ use App\Domain\Billing\SubscriptionItemStatus;
 use App\Domain\Entitlements\EntitlementStatus;
 use App\Domain\Tenancy\TenantContext;
 use App\Models\Bundle;
+use App\Models\CatalogDependency;
 use App\Models\Feature;
 use App\Models\Module;
 use App\Models\Subscription;
@@ -140,6 +141,7 @@ final class ModuleMarketplaceService
             'requires_payment' => ((int) ($quote['total_minor'] ?? 0)) > 0,
         ];
 
+        $preview['dependency_explanations'] = $this->dependencyExplanations($item, $quote['lines']);
         $preview['confirmation_token'] = $this->confirmationToken($preview);
 
         return $preview;
@@ -180,6 +182,7 @@ final class ModuleMarketplaceService
             'tax_minor' => $preview['tax_minor'] ?? null,
             'total_minor' => $preview['total_minor'] ?? null,
             'lines' => $lines,
+            'dependency_explanations' => $preview['dependency_explanations'] ?? [],
         ];
 
         return hash_hmac(
@@ -247,6 +250,7 @@ final class ModuleMarketplaceService
                 'current_subscription_id' => $lockedSubscription->getKey(),
                 'creates_invoice' => false,
                 'requires_payment' => ((int) ($quote['total_minor'] ?? 0)) > 0,
+                'dependency_explanations' => $this->dependencyExplanations($item, $quote['lines']),
             ];
 
             if (! hash_equals($this->confirmationToken($currentPreview), $quoteToken)) {
@@ -390,6 +394,134 @@ final class ModuleMarketplaceService
         if (! $this->dependenciesAvailable($item)) {
             throw new DomainException('The requested Marketplace item has unavailable dependencies.');
         }
+    }
+
+    /**
+     * Explain transitive catalog dependencies without implying a charge
+     * unless the actual quote contains a separately priced dependency line.
+     *
+     * @param array<int, array<string, mixed>> $quoteLines
+     * @return array<int, array<string, mixed>>
+     */
+    private function dependencyExplanations(Module|Feature|Bundle $item, array $quoteLines): array
+    {
+        $roots = [];
+
+        if ($item instanceof Bundle) {
+            $item->loadMissing(['modules.features', 'features.module']);
+            foreach ($item->modules as $module) {
+                $roots[] = $module;
+                foreach ($module->features as $feature) {
+                    if ($feature->status === 'active') {
+                        $roots[] = $feature;
+                    }
+                }
+            }
+            foreach ($item->features as $feature) {
+                $roots[] = $feature;
+            }
+        } elseif ($item instanceof Module) {
+            $item->loadMissing('features');
+            $roots[] = $item;
+            foreach ($item->features as $feature) {
+                if ($feature->status === 'active') {
+                    $roots[] = $feature;
+                }
+            }
+        } else {
+            $roots[] = $item;
+        }
+
+        $adjacency = [];
+        foreach (CatalogDependency::query()->with('dependency')->get() as $edge) {
+            if (! $edge->dependency instanceof Module && ! $edge->dependency instanceof Feature) {
+                continue;
+            }
+
+            $adjacency[$edge->dependent_type.':'.$edge->dependent_id][] = $edge;
+        }
+
+        $billableLineKeys = [];
+        foreach ($quoteLines as $line) {
+            if (($line['metadata']['commercial_origin'] ?? 'direct') === 'required_dependency') {
+                $billableLineKeys[($line['catalog_type'] ?? '').':'.($line['catalog_key'] ?? '')] = true;
+            }
+        }
+
+        $queue = $roots;
+        $visited = [];
+        $summary = [];
+
+        while ($queue !== []) {
+            /** @var Module|Feature $dependent */
+            $dependent = array_shift($queue);
+            $dependentNodeKey = $dependent->getMorphClass().':'.$dependent->getKey();
+
+            if (isset($visited[$dependentNodeKey])) {
+                continue;
+            }
+            $visited[$dependentNodeKey] = true;
+
+            if ($dependent instanceof Module) {
+                $dependent->loadMissing('features');
+                foreach ($dependent->features as $feature) {
+                    if ($feature->status === 'active') {
+                        $queue[] = $feature;
+                    }
+                }
+            }
+
+            foreach ($adjacency[$dependentNodeKey] ?? [] as $edge) {
+                $dependency = $edge->dependency;
+                if (! $dependency instanceof Module && ! $dependency instanceof Feature) {
+                    continue;
+                }
+
+                $policy = strtolower((string) ($edge->metadata['billing_policy'] ?? 'included'));
+                if (! in_array($policy, ['included', 'billable', 'free'], true)) {
+                    throw new DomainException("Catalog dependency for {$dependent->key} has an invalid billing policy.");
+                }
+
+                $key = $dependency->getMorphClass().':'.$dependency->key;
+                $currentPolicy = $summary[$key]['billing_policy'] ?? null;
+                $effectivePolicy = match (true) {
+                    $currentPolicy === 'billable' || $policy === 'billable' => 'billable',
+                    $currentPolicy === 'included' || $policy === 'included' => 'included',
+                    default => 'free',
+                };
+
+                $summary[$key] = [
+                    'catalog_type' => $dependency->getMorphClass(),
+                    'catalog_key' => $dependency->key,
+                    'name' => $dependency->name,
+                    'billing_policy' => $effectivePolicy,
+                    'required_by' => array_values(array_unique([
+                        ...($summary[$key]['required_by'] ?? []),
+                        $dependent->key,
+                    ])),
+                ];
+
+                $queue[] = $dependency;
+            }
+        }
+
+        foreach ($summary as $key => &$dependency) {
+            $dependency['treatment'] = match ($dependency['billing_policy']) {
+                'free' => 'free',
+                'included' => 'included',
+                default => isset($billableLineKeys[$key])
+                    ? 'billed_separately'
+                    : 'covered_without_additional_charge',
+            };
+        }
+        unset($dependency);
+
+        usort($summary, static fn (array $left, array $right): int => strcasecmp(
+            (string) $left['name'],
+            (string) $right['name'],
+        ));
+
+        return array_values($summary);
     }
 
     private function dependenciesAvailable(Module|Feature|Bundle $item): bool
