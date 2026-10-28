@@ -75,6 +75,21 @@ final class ModuleMarketplaceController extends Controller
         try {
             $data = $request->validated();
 
+            if (! isset($data['quote_token']) || $data['quote_token'] === '') {
+                throw new DomainException('Preview the current quote before confirming your Marketplace purchase.');
+            }
+
+            $currentQuote = $marketplace->previewPurchase(
+                tenant: $tenant,
+                catalogType: (string) $data['catalog_type'],
+                catalogKey: (string) $data['catalog_key'],
+                quantity: (int) $data['quantity'],
+            );
+
+            if (! hash_equals((string) $currentQuote['confirmation_token'], (string) $data['quote_token'])) {
+                throw new DomainException('The Marketplace price or required items have changed. Review the refreshed quote before confirming.');
+            }
+
             $invoice = $marketplace->requestPurchase(
                 tenant: $tenant,
                 catalogType: (string) $data['catalog_type'],
