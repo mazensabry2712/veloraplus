@@ -120,7 +120,7 @@ final class CatalogDependencyResolver
 
                 foreach (array_keys($bundleMembers) as $memberKey) {
                     if (isset($rootKeys[$memberKey]) || isset($coveredByBundle[$memberKey])) {
-                        throw new DomainException("Bundle {$item->key} overlaps another selected Module, Feature, or Bundle.");
+                        throw new DomainException("Bundle {$item->key} overlaps another selected Module, Feature, or Bundle; a selected item is already covered.");
                     }
                 }
 
