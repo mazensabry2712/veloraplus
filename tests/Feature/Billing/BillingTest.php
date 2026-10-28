@@ -491,6 +491,35 @@ test('commercial selection rejects a feature already covered by a selected bundl
 });
 
 
+test('commercial selection rejects bundles that overlap on a shared feature', function (): void {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('overlap');
+    $feature = billingFeature($module, 'overlap.shared');
+
+    $catalog = app(\App\Application\Catalog\CatalogManager::class);
+    $first = $catalog->createBundle([
+        'key' => 'overlap.first',
+        'name' => 'First Bundle',
+        'status' => 'active',
+    ]);
+    $second = $catalog->createBundle([
+        'key' => 'overlap.second',
+        'name' => 'Second Bundle',
+        'status' => 'active',
+    ]);
+
+    $catalog->addFeatureToBundle($first, $feature);
+    $catalog->addFeatureToBundle($second, $feature);
+
+    expect(fn () => app(SubscriptionService::class)->create($tenant, [
+        ['item' => $first],
+        ['item' => $second],
+    ], 'monthly', 0))->toThrow(
+        DomainException::class,
+        'overlaps another selected Module, Feature, or Bundle',
+    );
+});
+
 test('transitive billable dependencies are expanded once into the subscription quote', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('sales');
