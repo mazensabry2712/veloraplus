@@ -188,6 +188,7 @@
             </dl>
 
             <p id="quote-dependency-note" class="mt-4 text-sm text-slate-600"></p>
+            <div id="quote-dependency-details" class="mt-3 space-y-2"></div>
 
             @can('billing.manage')
                 <form id="marketplace-purchase-form" method="POST" action="{{ route('dashboard.marketplace.purchase') }}" class="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
@@ -293,6 +294,28 @@
                     document.getElementById('quote-dependency-note').textContent = dependencies.length
                         ? 'Required dependencies are included in this quote as separate transparent line items. Shared dependencies are charged only once.'
                         : 'No additional billable dependencies were added to this selection.';
+
+                    const dependencyDetails = document.getElementById('quote-dependency-details');
+                    dependencyDetails.replaceChildren();
+                    const treatmentLabels = {
+                        billed_separately: 'Billed as a separate line in this quote.',
+                        included: 'Included by the catalog dependency policy; no separate charge.',
+                        free: 'Free dependency; no separate charge.',
+                        covered_without_additional_charge: 'Covered by the selected app/bundle or your current subscription; no separate charge.',
+                    };
+                    (quote.dependency_explanations || []).forEach(dependency => {
+                        const card = document.createElement('div');
+                        card.className = 'rounded-lg border border-slate-200 bg-slate-50 px-3 py-2';
+                        const title = document.createElement('p');
+                        title.className = 'text-sm font-medium text-slate-800';
+                        title.textContent = dependency.name + ' (' + dependency.catalog_key + ')';
+                        const detail = document.createElement('p');
+                        detail.className = 'mt-1 text-xs leading-5 text-slate-600';
+                        detail.textContent = (treatmentLabels[dependency.treatment] || 'Required dependency.') +
+                            (dependency.required_by?.length ? ' Required by: ' + dependency.required_by.join(', ') + '.' : '');
+                        card.append(title, detail);
+                        dependencyDetails.appendChild(card);
+                    });
 
                     syncPurchaseFields();
                     if (purchaseForm?.elements.quote_token) {
