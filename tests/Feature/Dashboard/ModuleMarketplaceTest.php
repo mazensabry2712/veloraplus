@@ -216,6 +216,29 @@ test('marketplace purchase rejects a stale quote inside the locked upgrade trans
         ->and($subscription->fresh('items')->items)->toHaveCount($itemCount);
 });
 
+test('marketplace purchase requires a quote token before writing invoice or subscription items', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+
+    $base = marketplaceFeature($tenant, 'marketplace.no-token.base.'.Str::lower(Str::random(6)));
+    $extra = marketplaceFeature($tenant, 'marketplace.no-token.extra.'.Str::lower(Str::random(6)));
+    $subscription = activeMarketplaceSubscription($tenant, $base);
+    app(TenantContext::class)->set($tenant);
+    $invoiceCount = $subscription->invoices()->count();
+    $itemCount = $subscription->fresh('items')->items->count();
+
+    expect(fn () => app(ModuleMarketplaceService::class)->requestPurchase(
+        tenant: $tenant,
+        catalogType: 'feature',
+        catalogKey: $extra->key,
+    ))->toThrow(DomainException::class, 'Preview the current quote');
+
+    expect($subscription->invoices()->count())->toBe($invoiceCount)
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemCount);
+});
+
 test('marketplace purchase creates a pending upgrade invoice for an active subscription', function (): void {
     $tenant = Tenant::factory()->create([
         'default_currency' => 'EGP',
