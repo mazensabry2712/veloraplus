@@ -116,7 +116,7 @@ final class PlatformBillingDashboardService
         ];
     }
 
-    public function requestUpgrade(Subscription $subscription, array $items, $quoteValidator = null): PlatformInvoice
+    public function requestUpgrade(Subscription $subscription, array $items, ?\Closure $quoteValidator = null): PlatformInvoice
     {
         $tenant = $this->tenantContext->current();
 
