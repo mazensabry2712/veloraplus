@@ -235,6 +235,7 @@ final class SubscriptionService
         Subscription $subscription,
         array $items,
         int $taxBps = 0,
+        ?\\Closure $quoteValidator = null,
     ): PlatformInvoice {
         // Lock and re-quote inside the transaction so concurrent requests cannot
         // both pass the "not already subscribed" check using stale item state.
@@ -242,6 +243,7 @@ final class SubscriptionService
             $subscription,
             $items,
             $taxBps,
+            $quoteValidator,
         ): PlatformInvoice {
             $lockedSubscription = Subscription::query()
                 ->whereKey($subscription->getKey())
@@ -249,6 +251,11 @@ final class SubscriptionService
                 ->firstOrFail();
 
             $quote = $this->previewUpgrade($lockedSubscription, $items, $taxBps);
+
+            if ($quoteValidator !== null) {
+                $quoteValidator($lockedSubscription, $quote);
+            }
+
             $newItems = [];
 
             foreach ($quote['lines'] as $line) {
