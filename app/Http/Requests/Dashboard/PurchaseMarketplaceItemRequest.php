@@ -32,6 +32,7 @@ final class PurchaseMarketplaceItemRequest extends FormRequest
                 'regex:/^[a-z0-9][a-z0-9._-]*$/',
             ],
             'quantity' => ['required', 'integer', 'min:1', 'max:1000'],
+            'quote_token' => ['nullable', 'string', 'size:64', 'regex:/^[a-f0-9]{64}$/'],
         ];
     }
 }
