@@ -235,7 +235,7 @@ final class SubscriptionService
         Subscription $subscription,
         array $items,
         int $taxBps = 0,
-        ?\\Closure $quoteValidator = null,
+        ?\Closure $quoteValidator = null,
     ): PlatformInvoice {
         // Lock and re-quote inside the transaction so concurrent requests cannot
         // both pass the "not already subscribed" check using stale item state.
