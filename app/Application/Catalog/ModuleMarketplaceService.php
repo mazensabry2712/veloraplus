@@ -226,9 +226,15 @@ final class ModuleMarketplaceService
             throw new DomainException("Marketplace item {$item->key} is already {$ownedState}.");
         }
 
-        $quoteValidator = null;
+        if ($quoteToken === null || $quoteToken === '') {
+            throw new DomainException('Preview the current quote before confirming your Marketplace purchase.');
+        }
 
-        if ($quoteToken !== null && $quoteToken !== '') {
+        $quoteValidator = function (Subscription $lockedSubscription, array $quote) use (
+            $item,
+            $quantity,
+            $quoteToken,
+        ): void {
             $quoteValidator = function (Subscription $lockedSubscription, array $quote) use (
                 $item,
                 $quantity,
@@ -251,8 +257,7 @@ final class ModuleMarketplaceService
                 if (! hash_equals($this->confirmationToken($currentPreview), $quoteToken)) {
                     throw new DomainException('The Marketplace price or required items changed. Review the refreshed quote before confirming.');
                 }
-            };
-        }
+        };
 
         return $this->billing->requestUpgrade($subscription, [[
             'catalog_type' => $item->getMorphClass(),
