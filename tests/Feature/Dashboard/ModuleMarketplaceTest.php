@@ -109,10 +109,14 @@ test('marketplace quote preview is read-only and returns dependency-aware price 
     $base = marketplaceFeature($tenant, 'marketplace.preview.base.'.Str::lower(Str::random(6)));
     $extra = marketplaceFeature($tenant, 'marketplace.preview.extra.'.Str::lower(Str::random(6)), 4500);
     $dependency = marketplaceFeature($tenant, 'marketplace.preview.dependency.'.Str::lower(Str::random(6)), 1500);
+    $included = marketplaceFeature($tenant, 'marketplace.preview.included.'.Str::lower(Str::random(6)), 1000);
+    $free = marketplaceFeature($tenant, 'marketplace.preview.free.'.Str::lower(Str::random(6)), 500);
 
     $subscription = activeMarketplaceSubscription($tenant, $base);
     $subscription->update(['metadata' => ['tax_bps' => 1000]]);
     app(CatalogManager::class)->addDependency($extra, $dependency, 'billable');
+    app(CatalogManager::class)->addDependency($extra, $included, 'included');
+    app(CatalogManager::class)->addDependency($extra, $free, 'free');
     app(TenantContext::class)->set($tenant);
 
     $itemCountBefore = $subscription->fresh('items')->items->count();
@@ -133,6 +137,12 @@ test('marketplace quote preview is read-only and returns dependency-aware price 
         ->and($preview['lines'])->toHaveCount(2)
         ->and(collect($preview['lines'])->firstWhere('catalog_key', $dependency->key)['metadata']['commercial_origin'])
             ->toBe('required_dependency')
+        ->and(collect($preview['dependency_explanations'])->firstWhere('catalog_key', $dependency->key)['treatment'])
+            ->toBe('billed_separately')
+        ->and(collect($preview['dependency_explanations'])->firstWhere('catalog_key', $included->key)['treatment'])
+            ->toBe('included')
+        ->and(collect($preview['dependency_explanations'])->firstWhere('catalog_key', $free->key)['treatment'])
+            ->toBe('free')
         ->and($preview['creates_invoice'])->toBeFalse()
         ->and($preview['requires_payment'])->toBeTrue()
         ->and($subscription->fresh('items')->items)->toHaveCount($itemCountBefore)
