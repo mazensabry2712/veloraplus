@@ -126,7 +126,7 @@ final class ModuleMarketplaceService
             (int) ($subscription->metadata['tax_bps'] ?? 0),
         );
 
-        return [
+        $preview = [
             ...$quote,
             'selection' => [
                 'catalog_type' => $item->getMorphClass(),
@@ -139,6 +139,45 @@ final class ModuleMarketplaceService
             'creates_invoice' => false,
             'requires_payment' => ((int) ($quote['total_minor'] ?? 0)) > 0,
         ];
+
+        $preview['confirmation_token'] = $this->confirmationToken($preview);
+
+        return $preview;
+    }
+
+    /**
+     * Bind a user confirmation to the exact quote shown in the browser.
+     *
+     * @param array<string, mixed> $preview
+     */
+    private function confirmationToken(array $preview): string
+    {
+        $lines = array_map(static fn (array $line): array => [
+            'catalog_type' => $line['catalog_type'] ?? null,
+            'catalog_key' => $line['catalog_key'] ?? null,
+            'quantity' => $line['quantity'] ?? null,
+            'unit_amount_minor' => $line['unit_amount_minor'] ?? null,
+            'line_total_minor' => $line['line_total_minor'] ?? null,
+            'metadata' => $line['metadata'] ?? [],
+        ], $preview['lines'] ?? []);
+
+        $fingerprint = [
+            'selection' => $preview['selection'],
+            'subscription_id' => $preview['current_subscription_id'],
+            'billing_cycle' => $preview['billing_cycle'],
+            'currency' => $preview['currency'] ?? null,
+            'subtotal_minor' => $preview['subtotal_minor'] ?? null,
+            'discount_minor' => $preview['discount_minor'] ?? null,
+            'tax_minor' => $preview['tax_minor'] ?? null,
+            'total_minor' => $preview['total_minor'] ?? null,
+            'lines' => $lines,
+        ];
+
+        return hash_hmac(
+            'sha256',
+            json_encode($fingerprint, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES),
+            (string) config('app.key'),
+        );
     }
 
     public function requestPurchase(
