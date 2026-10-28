@@ -713,10 +713,10 @@ test('late tenant success callback cannot reverse a failed payment', function ()
     app(TenantDatabaseManager::class)->disconnect();
 
     $handler = app(KashierTenantWebhookHandler::class);
-    $send = function (string $status) use ($tenant, $merchantOrderId, $handler): array {
+    $send = function (string $status, string $transactionId = 'TX-LATE-TENANT') use ($tenant, $merchantOrderId, $handler): array {
         $payload = tenantWebhookPayload($tenant, status: $status, overrides: [
             'merchantOrderId' => $merchantOrderId,
-            'transactionId' => 'TX-LATE-TENANT',
+            'transactionId' => $transactionId,
             'orderId' => 'KASHIER-ORDER-LATE-TENANT',
         ]);
 
@@ -734,4 +734,14 @@ test('late tenant success callback cannot reverse a failed payment', function ()
 
     expect($payment->fresh()->status)->toBe(TenantPaymentStatus::Failed)
         ->and(TenantPaymentWebhookEvent::query()->count())->toBe(2);
+
+    $payment->update(['status' => TenantPaymentStatus::Cancelled]);
+    app(TenantContext::class)->clear();
+    app(TenantDatabaseManager::class)->disconnect();
+
+    expect($send('SUCCESS', 'TX-LATE-CANCELLED')['status'])->toBe('ignored_terminal_conflict');
+
+    tenantFinancialContext($tenant, $path);
+    expect($payment->fresh()->status)->toBe(TenantPaymentStatus::Cancelled)
+        ->and(TenantPaymentWebhookEvent::query()->count())->toBe(3);
 });
