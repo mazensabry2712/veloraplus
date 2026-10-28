@@ -38,17 +38,6 @@ final class SubscriptionService
             throw new DomainException('Trial days must be between 0 and 90.');
         }
 
-        $items = $this->commercialDependencies->resolveBillableItems($items);
-
-        $quote = $this->pricing->quote(
-            $tenant,
-            $billingCycle,
-            $items,
-            $currency,
-            $countryCode,
-            $taxBps,
-        );
-
         $now = CarbonImmutable::now();
         $trialEndsAt = $trialDays > 0 ? $now->addDays($trialDays) : null;
         $periodStart = $now;
@@ -64,10 +53,27 @@ final class SubscriptionService
             $billingCycle,
             $trialDays,
             $taxBps,
+            $items,
+            $currency,
+            $countryCode,
         ): Subscription {
             $tenant = Tenant::query()
                 ->lockForUpdate()
                 ->findOrFail($tenant->getKey());
+
+            // Resolve dependencies and calculate prices inside the same
+            // transaction that persists the subscription and first invoice.
+            // This prevents a catalog price/dependency change between quoting
+            // and persistence from silently changing the commercial snapshot.
+            $resolvedItems = $this->commercialDependencies->resolveBillableItems($items);
+            $quote = $this->pricing->quote(
+                $tenant,
+                $billingCycle,
+                $resolvedItems,
+                $currency,
+                $countryCode,
+                $taxBps,
+            );
 
             $existing = Subscription::query()
                 ->where('tenant_id', $tenant->getKey())
