@@ -153,6 +153,7 @@ final class ModuleMarketplaceService
     private function confirmationToken(array $preview): string
     {
         $lines = array_map(static fn (array $line): array => [
+            'description' => $line['description'] ?? null,
             'catalog_type' => $line['catalog_type'] ?? null,
             'catalog_key' => $line['catalog_key'] ?? null,
             'catalog_price_id' => $line['catalog_price_id'] ?? null,
