@@ -151,7 +151,7 @@ The backend now exposes an authorized Marketplace preview endpoint:
 - Does not create subscription items, invoices, or payment attempts.
 - Uses `SubscriptionService::previewUpgrade()` as the shared quote boundary; the actual upgrade request calls the same method before creating pending subscription items.
 - Requires the current tenant context and billing-management authorization.
-- The tenant-facing Blade Marketplace consumes this endpoint and prevents confirmation if the selected item or quantity differs from the latest quote.
+- The tenant-facing Blade Marketplace consumes this endpoint, signs the displayed quote with a server-side HMAC confirmation token, and recomputes the quote before purchase. A changed price, subscription, tax, discount, or dependency line invalidates the prior confirmation; volatile quote timestamps are excluded from the token.
 - Prospective customers can browse monthly catalog prices without an active subscription, but they cannot preview/purchase until an active or grace subscription exists.
 - The outcome-guided recommendation journey, complete included/free/bundle coverage explanations, production payment readiness, and operational reconciliation remain unfinished release gates.
 
