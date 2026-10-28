@@ -544,6 +544,40 @@ test('transitive billable dependencies are expanded once into the subscription q
         ->and($subscription->invoices()->latest('issued_at')->firstOrFail()->items)->toHaveCount(3);
 });
 
+
+test('shared transitive billable dependencies retain every root in their provenance', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $reporting = billingFeature($module, 'sales.reporting');
+    $customers = billingFeature($module, 'sales.customers');
+    $contacts = billingFeature($module, 'sales.contacts');
+
+    billingPrice($orders, 5000);
+    billingPrice($reporting, 4000);
+    billingPrice($customers, 2000);
+    billingPrice($contacts, 1000);
+
+    $catalog = app(\App\Application\Catalog\CatalogManager::class);
+    $catalog->addDependency($orders, $customers, 'billable');
+    $catalog->addDependency($reporting, $customers, 'billable');
+    $catalog->addDependency($customers, $contacts, 'billable');
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+        ['item' => $reporting],
+    ], 'monthly', 0);
+
+    $items = $subscription->fresh('items')->items;
+    $customersItem = $items->firstWhere('catalog_key', 'sales.customers');
+    $contactsItem = $items->firstWhere('catalog_key', 'sales.contacts');
+
+    expect($items)->toHaveCount(4)
+        ->and($subscription->total_minor)->toBe(12000)
+        ->and($customersItem->metadata['required_by'])->toEqualCanonicalizing(['sales.orders', 'sales.reporting'])
+        ->and($contactsItem->metadata['required_by'])->toEqualCanonicalizing(['sales.orders', 'sales.reporting']);
+});
+
 test('upgrade does not bill a billable dependency already covered by the subscription', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('sales');
