@@ -140,6 +140,35 @@ test('marketplace quote preview is read-only and returns dependency-aware price 
 });
 
 
+test('marketplace quote confirmation token changes when the quoted price changes', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+
+    $base = marketplaceFeature($tenant, 'marketplace.token.base.'.Str::lower(Str::random(6)));
+    $extra = marketplaceFeature($tenant, 'marketplace.token.extra.'.Str::lower(Str::random(6)), 3500);
+    activeMarketplaceSubscription($tenant, $base);
+    app(TenantContext::class)->set($tenant);
+
+    $marketplace = app(ModuleMarketplaceService::class);
+    $first = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+
+    CatalogPrice::query()
+        ->where('priceable_type', $extra->getMorphClass())
+        ->where('priceable_id', $extra->getKey())
+        ->where('billing_cycle', 'monthly')
+        ->where('currency', 'EGP')
+        ->update(['amount_minor' => 4200]);
+
+    $second = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+
+    expect($first['confirmation_token'])->toMatch('/^[a-f0-9]{64}$/')
+        ->and($second['confirmation_token'])->toMatch('/^[a-f0-9]{64}$/')
+        ->and($second['confirmation_token'])->not->toBe($first['confirmation_token'])
+        ->and($second['total_minor'])->toBeGreaterThan($first['total_minor']);
+});
+
 test('marketplace purchase creates a pending upgrade invoice for an active subscription', function (): void {
     $tenant = Tenant::factory()->create([
         'default_currency' => 'EGP',
