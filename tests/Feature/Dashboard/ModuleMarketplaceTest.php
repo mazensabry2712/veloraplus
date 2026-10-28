@@ -218,10 +218,15 @@ test('marketplace purchase creates a pending upgrade invoice for an active subsc
     $subscription = activeMarketplaceSubscription($tenant, $base);
     app(TenantContext::class)->set($tenant);
 
-    $invoice = app(ModuleMarketplaceService::class)->requestPurchase(
+    $marketplace = app(ModuleMarketplaceService::class);
+    $quote = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+
+    $invoice = $marketplace->requestPurchase(
         tenant: $tenant,
         catalogType: 'feature',
         catalogKey: $extra->key,
+        quantity: 1,
+        quoteToken: $quote['confirmation_token'],
     );
 
     $pending = $subscription->fresh('items')->items->firstWhere('catalog_key', $extra->key);
