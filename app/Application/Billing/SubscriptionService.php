@@ -303,36 +303,114 @@ final class SubscriptionService
         Subscription $subscription,
         SubscriptionItem $item,
     ): SubscriptionItem {
-        if ($item->subscription_id !== $subscription->getKey()) {
-            throw new DomainException('Subscription item does not belong to the subscription.');
-        }
+        $scheduledItem = $subscription->getConnection()->transaction(function () use (
+            $subscription,
+            $item,
+        ): SubscriptionItem {
+            $lockedSubscription = Subscription::query()
+                ->lockForUpdate()
+                ->with('items')
+                ->findOrFail($subscription->getKey());
 
-        if ($subscription->status !== SubscriptionStatus::Active) {
-            throw new DomainException('Only an active subscription can schedule a downgrade.');
-        }
+            $lockedItem = SubscriptionItem::query()
+                ->where('subscription_id', $lockedSubscription->getKey())
+                ->lockForUpdate()
+                ->findOrFail($item->getKey());
 
-        if ($item->status !== SubscriptionItemStatus::Active) {
-            throw new DomainException('Only an active subscription item can be scheduled for removal.');
-        }
-
-        if ($item->catalog_type === 'feature') {
-            $feature = Feature::query()->where('key', $item->catalog_key)->first();
-            if ($feature?->is_required) {
-                throw new DomainException('Required Features cannot be removed independently.');
+            if ($lockedItem->subscription_id !== $lockedSubscription->getKey()) {
+                throw new DomainException('Subscription item does not belong to the subscription.');
             }
+
+            if ($lockedSubscription->status !== SubscriptionStatus::Active) {
+                throw new DomainException('Only an active subscription can schedule a downgrade.');
+            }
+
+            if ($lockedItem->status !== SubscriptionItemStatus::Active) {
+                throw new DomainException('Only an active subscription item can be scheduled for removal.');
+            }
+
+            if ($lockedItem->catalog_type === 'feature') {
+                $feature = Feature::query()->where('key', $lockedItem->catalog_key)->first();
+                if ($feature?->is_required) {
+                    throw new DomainException('Required Features cannot be removed independently.');
+                }
+            }
+
+            foreach ($lockedSubscription->items as $otherItem) {
+                if (
+                    $otherItem->getKey() === $lockedItem->getKey()
+                    || ! in_array($otherItem->status, [
+                        SubscriptionItemStatus::Active,
+                        SubscriptionItemStatus::Pending,
+                    ], true)
+                ) {
+                    continue;
+                }
+
+                foreach ($this->dependencyRootsFor($otherItem) as $root) {
+                    foreach ($this->commercialDependencies->resolve([$root]) as $dependency) {
+                        if (
+                            ! $dependency->is($root)
+                            && $dependency->getMorphClass() === $lockedItem->catalog_type
+                            && $dependency->key === $lockedItem->catalog_key
+                        ) {
+                            throw new DomainException(
+                                "Catalog item {$lockedItem->catalog_key} is required by another active or pending subscription item."
+                            );
+                        }
+                    }
+                }
+            }
+
+            $lockedItem->update([
+                'status' => SubscriptionItemStatus::Scheduled,
+                'ends_at' => $lockedSubscription->current_period_end,
+            ]);
+
+            return $lockedItem->refresh();
+        });
+
+        $refreshedSubscription = $subscription->fresh('items');
+        $this->projector->project($refreshedSubscription);
+        $this->audit->record($subscription->tenant, 'subscription.item_downgrade_scheduled', $scheduledItem, [
+            'ends_at' => $scheduledItem->ends_at?->toIso8601String(),
+        ]);
+
+        return $scheduledItem->refresh();
+    }
+
+    /**
+     * @return array<int, Module|Feature>
+     */
+    private function dependencyRootsFor(SubscriptionItem $item): array
+    {
+        return match ($item->catalog_type) {
+            'module' => array_values(array_filter([
+                Module::query()->where('key', $item->catalog_key)->first(),
+            ])),
+            'feature' => array_values(array_filter([
+                Feature::query()->where('key', $item->catalog_key)->first(),
+            ])),
+            'bundle' => $this->bundleDependencyRoots($item->catalog_key),
+            default => [],
+        };
+    }
+
+    /**
+     * @return array<int, Module|Feature>
+     */
+    private function bundleDependencyRoots(string $bundleKey): array
+    {
+        $bundle = Bundle::query()
+            ->with(['modules', 'features'])
+            ->where('key', $bundleKey)
+            ->first();
+
+        if ($bundle === null) {
+            return [];
         }
 
-        $item->update([
-            'status' => SubscriptionItemStatus::Scheduled,
-            'ends_at' => $subscription->current_period_end,
-        ]);
-
-        $this->projector->project($subscription->fresh('items'));
-        $this->audit->record($subscription->tenant, 'subscription.item_downgrade_scheduled', $item, [
-            'ends_at' => $item->ends_at?->toIso8601String(),
-        ]);
-
-        return $item->refresh();
+        return [...$bundle->modules->all(), ...$bundle->features->all()];
     }
 
     public function cancelAtPeriodEnd(Subscription $subscription): Subscription
