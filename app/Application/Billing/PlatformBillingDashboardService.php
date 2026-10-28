@@ -116,7 +116,7 @@ final class PlatformBillingDashboardService
         ];
     }
 
-    public function requestUpgrade(Subscription $subscription, array $items): PlatformInvoice
+    public function requestUpgrade(Subscription $subscription, array $items, ?\Closure $quoteValidator = null): PlatformInvoice
     {
         $tenant = $this->tenantContext->current();
 
@@ -155,6 +155,7 @@ final class PlatformBillingDashboardService
             $subscription,
             $resolvedItems,
             (int) ($subscription->metadata['tax_bps'] ?? 0),
+            $quoteValidator,
         );
     }
 

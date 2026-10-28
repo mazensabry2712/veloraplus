@@ -486,6 +486,59 @@ test('tenant refunds support idempotent partial and full refunds without platfor
 });
 
 
+
+test('an explicit tenant refund rejection marks the refund failed and releases its reservation', function (): void {
+    $path = tenantFinancialDatabase();
+    $this->tenantFinancialDatabases = [$path];
+    migrateTenantFinancialDatabase($path);
+
+    $tenant = Tenant::factory()->create([
+        'database_name' => $path,
+        'database_status' => 'ready',
+        'status' => 'active',
+    ]);
+
+    $account = createKashierAccount($tenant);
+    tenantFinancialContext($tenant, $path);
+
+    $payment = TenantPayment::query()->create([
+        'provider' => 'kashier',
+        'merchant_order_id' => $tenant->getKey().'.'.Str::ulid(),
+        'provider_payment_id' => 'TX-REFUND-REJECTED',
+        'provider_order_id' => 'KASHIER-REFUND-REJECTED',
+        'amount_minor' => 10000,
+        'currency' => 'EGP',
+        'status' => TenantPaymentStatus::Succeeded,
+        'metadata' => ['payment_provider_account_id' => $account->getKey()],
+    ]);
+
+    Http::fake([
+        'https://test-fep.kashier.io/v3/orders/KASHIER-REFUND-REJECTED' => Http::response([
+            'response' => [
+                'status' => 'FAILURE',
+                'transactionId' => 'REF-TENANT-REJECTED',
+            ],
+        ], 200),
+    ]);
+
+    $refund = app(TenantPaymentManager::class)->refund(
+        $payment,
+        4000,
+        'Provider rejection test',
+        'tenant-refund-rejected-1',
+    );
+
+    expect($refund->status)->toBe(TenantPaymentRefundStatus::Failed)
+        ->and($refund->metadata['provider_response']['status'])->toBe('FAILURE')
+        ->and((int) TenantPaymentRefund::query()
+            ->where('tenant_payment_id', $payment->getKey())
+            ->whereIn('status', [
+                TenantPaymentRefundStatus::Pending->value,
+                TenantPaymentRefundStatus::Succeeded->value,
+            ])
+            ->sum('amount_minor'))->toBe(0);
+});
+
 test('full tenant refund synchronizes an appointment to refunded', function (): void {
     $path = tenantFinancialDatabase();
     $this->tenantFinancialDatabases = [$path];
@@ -580,4 +633,115 @@ test('tenant refunds reject amounts above the reserved refundable balance', func
         3000,
         'Too much',
     ))->toThrow(DomainException::class);
+});
+
+test('an uncertain tenant refund outcome remains pending and reserves the amount', function (): void {
+    $path = tenantFinancialDatabase();
+    $this->tenantFinancialDatabases = [$path];
+    migrateTenantFinancialDatabase($path);
+
+    $tenant = Tenant::factory()->create([
+        'database_name' => $path,
+        'database_status' => 'ready',
+        'status' => 'active',
+    ]);
+
+    $account = createKashierAccount($tenant);
+    tenantFinancialContext($tenant, $path);
+
+    $payment = TenantPayment::query()->create([
+        'provider' => 'kashier',
+        'merchant_order_id' => $tenant->getKey().'.'.Str::ulid(),
+        'provider_payment_id' => 'TX-REFUND-UNKNOWN',
+        'provider_order_id' => 'KASHIER-ORDER-REFUND-UNKNOWN',
+        'amount_minor' => 10000,
+        'currency' => 'EGP',
+        'status' => TenantPaymentStatus::Succeeded,
+        'metadata' => [
+            'payment_provider_account_id' => $account->getKey(),
+        ],
+    ]);
+
+    Http::fake(function () {
+        throw new \Illuminate\Http\Client\ConnectionException('simulated provider timeout');
+    });
+
+    expect(fn () => app(TenantPaymentManager::class)->refund(
+        $payment,
+        5000,
+        'timeout test',
+        'refund-unknown-1',
+    ))->toThrow(\Illuminate\Http\Client\ConnectionException::class);
+
+    $refund = TenantPaymentRefund::query()->where('idempotency_key', 'refund-unknown-1')->firstOrFail();
+
+    expect($refund->status)->toBe(TenantPaymentRefundStatus::Pending)
+        ->and($refund->metadata['provider_outcome'])->toBe('unknown')
+        ->and((int) TenantPaymentRefund::query()
+            ->where('tenant_payment_id', $payment->getKey())
+            ->whereIn('status', [
+                TenantPaymentRefundStatus::Pending->value,
+                TenantPaymentRefundStatus::Succeeded->value,
+            ])
+            ->sum('amount_minor'))->toBe(5000);
+});
+
+test('late tenant success callback cannot reverse a failed payment', function (): void {
+    $path = tenantFinancialDatabase();
+    $this->tenantFinancialDatabases = [$path];
+    migrateTenantFinancialDatabase($path);
+
+    $tenant = Tenant::factory()->create([
+        'database_name' => $path,
+        'database_status' => 'ready',
+        'status' => 'active',
+    ]);
+
+    createKashierAccount($tenant);
+    tenantFinancialContext($tenant, $path);
+
+    $merchantOrderId = $tenant->getKey().'.'.Str::ulid();
+    $payment = TenantPayment::query()->create([
+        'provider' => 'kashier',
+        'merchant_order_id' => $merchantOrderId,
+        'amount_minor' => 10000,
+        'currency' => 'EGP',
+        'status' => TenantPaymentStatus::Pending,
+    ]);
+
+    app(TenantContext::class)->clear();
+    app(TenantDatabaseManager::class)->disconnect();
+
+    $handler = app(KashierTenantWebhookHandler::class);
+    $send = function (string $status, string $transactionId = 'TX-LATE-TENANT') use ($tenant, $merchantOrderId, $handler): array {
+        $payload = tenantWebhookPayload($tenant, status: $status, overrides: [
+            'merchantOrderId' => $merchantOrderId,
+            'transactionId' => $transactionId,
+            'orderId' => 'KASHIER-ORDER-LATE-TENANT',
+        ]);
+
+        return $handler->handle(
+            $payload,
+            ['X-Kashier-Signature' => tenantKashierSignature($payload['data'], 'TENANT-API')],
+            json_encode($payload, JSON_THROW_ON_ERROR),
+        );
+    };
+
+    expect($send('FAILURE')['status'])->toBe('FAILURE')
+        ->and($send('SUCCESS')['status'])->toBe('ignored_terminal_conflict');
+
+    tenantFinancialContext($tenant, $path);
+
+    expect($payment->fresh()->status)->toBe(TenantPaymentStatus::Failed)
+        ->and(TenantPaymentWebhookEvent::query()->count())->toBe(2);
+
+    $payment->update(['status' => TenantPaymentStatus::Cancelled]);
+    app(TenantContext::class)->clear();
+    app(TenantDatabaseManager::class)->disconnect();
+
+    expect($send('SUCCESS', 'TX-LATE-CANCELLED')['status'])->toBe('ignored_terminal_conflict');
+
+    tenantFinancialContext($tenant, $path);
+    expect($payment->fresh()->status)->toBe(TenantPaymentStatus::Cancelled)
+        ->and(TenantPaymentWebhookEvent::query()->count())->toBe(3);
 });

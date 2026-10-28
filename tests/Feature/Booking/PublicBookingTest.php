@@ -128,6 +128,11 @@ function publicBookingContext(Tenant $tenant, string $path): void
     app(TenantDatabaseManager::class)->connect($tenant);
 }
 
+function publicBookingFutureSlot(): string
+{
+    return now()->addWeeks(4)->startOfWeek()->setTime(10, 0)->format('Y-m-d\\TH:i');
+}
+
 function publicBookingFixtures(bool $free = false, int $staffCount = 1): array
 {
     $location = App\Models\Location::factory()->create([
@@ -211,7 +216,7 @@ test('free public booking creates a confirmed paid appointment without a payment
         'https://public-clinic.velora.test/book/free-consultation',
         [
             'staff_id' => $fixtures['staff'][0]->getKey(),
-            'starts_at' => '2026-09-21T10:00',
+            'starts_at' => publicBookingFutureSlot(),
             'customer_name' => 'Public Customer',
             'customer_phone' => '+201000000000',
             'customer_email' => 'public@example.test',
@@ -262,7 +267,7 @@ test('paid public booking redirects to Tenant checkout and stores a pending paym
         'https://public-clinic.velora.test/book/paid-consultation',
         [
             'staff_id' => $fixtures['staff'][0]->getKey(),
-            'starts_at' => '2026-09-21T10:00',
+            'starts_at' => publicBookingFutureSlot(),
             'customer_name' => 'Paid Customer',
             'customer_phone' => '+201100000000',
             'customer_email' => 'paid@example.test',
@@ -311,7 +316,7 @@ test('repeating the same public booking idempotency key does not create another 
 
     $payload = [
         'staff_id' => $fixtures['staff'][0]->getKey(),
-        'starts_at' => '2026-09-21T10:00',
+        'starts_at' => publicBookingFutureSlot(),
         'customer_name' => 'Retry Customer',
         'customer_phone' => '+201200000000',
         'customer_email' => 'retry@example.test',
@@ -351,7 +356,7 @@ test('public paid booking is rejected before creating tenant data when merchant 
     $response = $this->from('https://public-clinic.velora.test/book/paid-consultation')
         ->post('https://public-clinic.velora.test/book/paid-consultation', [
             'staff_id' => $fixtures['staff'][0]->getKey(),
-            'starts_at' => '2026-09-21T10:00',
+            'starts_at' => publicBookingFutureSlot(),
             'customer_name' => 'No Payment',
             'customer_phone' => '+201300000000',
             'idempotency_key' => 'public-no-payment',
@@ -379,7 +384,7 @@ test('public booking requires staff selection when a service has multiple staff 
 
     $response = $this->from('https://public-clinic.velora.test/book/paid-consultation')
         ->post('https://public-clinic.velora.test/book/paid-consultation', [
-            'starts_at' => '2026-09-21T10:00',
+            'starts_at' => publicBookingFutureSlot(),
             'customer_name' => 'Needs Staff',
             'customer_phone' => '+201400000000',
             'idempotency_key' => 'public-no-staff',
@@ -408,7 +413,7 @@ test('public booking uses the appointment final availability lock and rejects a 
         customer: $customer,
         staff: $fixtures['staff'][0],
         service: $fixtures['service'],
-        startsAt: '2026-09-21T10:00:00+03:00',
+        startsAt: publicBookingFutureSlot().':00',
         attributes: ['idempotency_key' => 'existing-public-conflict'],
     );
 
@@ -418,7 +423,7 @@ test('public booking uses the appointment final availability lock and rejects a 
     $response = $this->from('https://public-clinic.velora.test/book/paid-consultation')
         ->post('https://public-clinic.velora.test/book/paid-consultation', [
             'staff_id' => $fixtures['staff'][0]->getKey(),
-            'starts_at' => '2026-09-21T10:00',
+            'starts_at' => publicBookingFutureSlot(),
             'customer_name' => 'Conflicting Customer',
             'customer_phone' => '+201600000000',
             'idempotency_key' => 'public-conflict',

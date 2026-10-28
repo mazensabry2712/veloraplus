@@ -172,3 +172,20 @@ test('catalog manager can change module feature and bundle lifecycle statuses', 
         ->and($feature->fresh()->status)->toBe('coming_soon')
         ->and($bundle->fresh()->status)->toBe('active');
 });
+
+
+test('catalog dependencies require an explicit valid billing policy and default to included', function () {
+    $manager = app(CatalogManager::class);
+    $module = $manager->createModule(['key' => 'sales', 'name' => 'Sales', 'status' => 'active']);
+    $base = $manager->createFeature($module, ['key' => 'sales.orders', 'name' => 'Orders', 'status' => 'active']);
+    $dependency = $manager->createFeature($module, ['key' => 'sales.customers', 'name' => 'Customers', 'status' => 'active']);
+    $reporting = $manager->createFeature($module, ['key' => 'sales.reporting', 'name' => 'Reporting', 'status' => 'active']);
+
+    $included = $manager->addDependency($base, $dependency);
+    $billable = $manager->addDependency($reporting, $dependency, 'billable');
+
+    expect($included->metadata['billing_policy'])->toBe('included')
+        ->and($billable->metadata['billing_policy'])->toBe('billable')
+        ->and(fn () => $manager->addDependency($reporting, $base, 'surprise'))
+        ->toThrow(DomainException::class);
+});

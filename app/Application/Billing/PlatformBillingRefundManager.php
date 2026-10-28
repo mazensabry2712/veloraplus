@@ -47,6 +47,16 @@ final class PlatformBillingRefundManager
                     throw new DomainException('Refund idempotency key was already used for another payment.');
                 }
 
+                $normalizedReason = trim($reason) !== '' ? trim($reason) : null;
+
+                if (
+                    (int) $existing->amount_minor !== $amountMinor
+                    || strtoupper((string) $existing->currency) !== strtoupper((string) $payment->currency)
+                    || $existing->reason !== $normalizedReason
+                ) {
+                    throw new DomainException('Refund idempotency key was already used with different refund details.');
+                }
+
                 return $existing;
             }
         }
@@ -102,7 +112,15 @@ final class PlatformBillingRefundManager
                 'merchant_order_id' => $payment->getKey(),
             ]);
         } catch (\Throwable $exception) {
-            $this->refunds->markFailed($refund, 'Platform provider refund failed.');
+            // A timeout or transport error does not prove the provider rejected
+            // the refund. Keep the amount reserved until reconciliation confirms
+            // whether the provider completed it.
+            $refund->update([
+                'metadata' => array_merge($refund->metadata ?? [], [
+                    'provider_outcome' => 'unknown',
+                    'provider_error_class' => class_basename($exception),
+                ]),
+            ]);
 
             throw $exception;
         }
@@ -114,6 +132,12 @@ final class PlatformBillingRefundManager
 
         if (in_array($status, ['SUCCESS', 'SUCCEEDED', 'COMPLETED'], true)) {
             return $this->refunds->markSucceeded($refund, $providerRefundId, [
+                'provider_response' => $response,
+            ]);
+        }
+
+        if (in_array($status, ['FAILED', 'FAILURE', 'REJECTED', 'DECLINED', 'ERROR'], true)) {
+            return $this->refunds->markFailed($refund, 'Payment provider rejected the refund.', [
                 'provider_response' => $response,
             ]);
         }

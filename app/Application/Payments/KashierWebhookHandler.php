@@ -3,6 +3,7 @@
 namespace App\Application\Payments;
 
 use App\Application\Billing\PaymentService;
+use App\Domain\Billing\PaymentStatus;
 use App\Domain\Payments\Contracts\PlatformPaymentGateway;
 use App\Domain\Payments\Contracts\WebhookGateway;
 use App\Models\PlatformPayment;
@@ -58,12 +59,16 @@ final class KashierWebhookHandler
             ]);
         });
 
-        return DB::connection('central')->transaction(function () use ($event, $eventId): array {
+        return DB::connection('central')->transaction(function () use ($event, $eventId, $payloadHash): array {
             $stored = WebhookEvent::query()
                 ->where('provider', 'kashier')
                 ->where('provider_event_id', $eventId)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            if ((string) $stored->payload_hash !== $payloadHash) {
+                throw new DomainException('Kashier webhook payload does not match the existing event.');
+            }
 
             if ($stored->processed_at !== null) {
                 return ['duplicate' => true, 'status' => 'processed'];
@@ -95,6 +100,21 @@ final class KashierWebhookHandler
             }
 
             $status = strtoupper((string) ($event['status'] ?? ''));
+
+            // A verified but contradictory late notification must not reverse a
+            // terminal payment state or cause the provider to retry forever.
+            $terminalConflict = ($status === 'SUCCESS'
+                    && ! in_array($payment->status, [PaymentStatus::Pending, PaymentStatus::Succeeded], true))
+                || ($status === 'FAILURE' && $payment->status !== PaymentStatus::Pending);
+
+            if ($terminalConflict) {
+                $stored->update([
+                    'status' => 'ignored_terminal_conflict',
+                    'processed_at' => CarbonImmutable::now(),
+                ]);
+
+                return ['duplicate' => false, 'status' => 'ignored_terminal_conflict'];
+            }
 
             if ($status === 'SUCCESS') {
                 $this->assertAmountMatches(

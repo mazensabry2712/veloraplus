@@ -257,6 +257,50 @@ test('downgrade is scheduled for period end and preserves access until then', fu
         ))->toBeFalse();
 });
 
+
+test('downgrade cannot remove a dependency required by another active subscription item', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('downgrade-dependency');
+    $root = billingFeature($module, 'downgrade.root');
+    $dependency = billingFeature($module, 'downgrade.dependency');
+    billingPrice($root, 5000);
+    billingPrice($dependency, 2000);
+    app(\App\Application\Catalog\CatalogManager::class)->addDependency($root, $dependency, 'billable');
+
+    $subscription = paidSubscription($tenant, [['item' => $root]]);
+    $dependencyItem = $subscription->fresh('items')->items->firstWhere('catalog_key', $dependency->key);
+
+    expect($dependencyItem)->not->toBeNull()
+        ->and(fn () => app(SubscriptionService::class)->scheduleDowngrade(
+            $subscription->fresh(),
+            $dependencyItem->fresh(),
+        ))->toThrow(DomainException::class, 'required by another active or pending subscription item');
+
+    expect($dependencyItem->fresh()->status)->toBe(SubscriptionItemStatus::Active);
+});
+
+test('period end creates one renewal invoice and repeated processing cannot duplicate it', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $feature]]);
+    $periodEnd = $subscription->fresh()->current_period_end;
+    $invoiceCount = $subscription->invoices()->count();
+
+    $renewalInvoice = app(SubscriptionService::class)->processPeriodEnd($subscription, $periodEnd);
+
+    expect($renewalInvoice)->toBeInstanceOf(PlatformInvoice::class)
+        ->and($subscription->fresh()->status)->toBe(SubscriptionStatus::PendingPayment)
+        ->and($subscription->invoices()->count())->toBe($invoiceCount + 1)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'booking.queue'))->toBeFalse();
+
+    expect(fn () => app(SubscriptionService::class)->processPeriodEnd($subscription->fresh(), $periodEnd))
+        ->toThrow(\DomainException::class)
+        ->and($subscription->invoices()->count())->toBe($invoiceCount + 1);
+});
+
 test('cancellation keeps access until the period ends then closes the subscription', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('booking');
@@ -292,6 +336,30 @@ test('refunds are separate financial records and never mutate invoice totals', f
     expect($refund->fresh()->status)->toBe(RefundStatus::Succeeded)
         ->and($invoice->fresh()->total_minor)->toBe(5000)
         ->and($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
+});
+
+
+test('refund idempotency keys reject retries with different amounts or reasons', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $feature]]);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = $invoice->payments()->where('status', PaymentStatus::Succeeded->value)->firstOrFail();
+
+    $service = app(RefundService::class);
+    $refund = $service->createPending($payment, 2000, 'customer request', 'refund-idempotency-1');
+
+    expect($service->createPending($payment, 2000, 'customer request', 'refund-idempotency-1')->getKey())
+        ->toBe($refund->getKey());
+
+    expect(fn () => $service->createPending($payment, 3000, 'customer request', 'refund-idempotency-1'))
+        ->toThrow(DomainException::class, 'different refund details');
+
+    expect(fn () => $service->createPending($payment, 2000, 'different reason', 'refund-idempotency-1'))
+        ->toThrow(DomainException::class, 'different refund details');
 });
 
 test('fully refunded payments become refunded without changing the invoice history', function () {
@@ -374,4 +442,612 @@ test('a tenant cannot have two open subscriptions', function () {
         'monthly',
         0,
     ))->toThrow(DomainException::class);
+});
+
+
+test('subscription quotes add a shared billable dependency exactly once with an explanation', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $customers = billingFeature($module, 'sales.customers');
+    $reporting = billingFeature($module, 'sales.reporting');
+
+    billingPrice($orders, 5000);
+    billingPrice($reporting, 4000);
+    billingPrice($customers, 2000);
+
+    $catalog = app(\App\Application\Catalog\CatalogManager::class);
+    $catalog->addDependency($orders, $customers, 'billable');
+    $catalog->addDependency($reporting, $customers, 'billable');
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+        ['item' => $reporting],
+    ], 'monthly', 0);
+
+    $items = $subscription->fresh('items')->items;
+    $dependencyItem = $items->firstWhere('catalog_key', 'sales.customers');
+
+    expect($items)->toHaveCount(3)
+        ->and($subscription->total_minor)->toBe(11000)
+        ->and($dependencyItem)->not->toBeNull()
+        ->and($dependencyItem->metadata['commercial_origin'])->toBe('required_dependency')
+        ->and($dependencyItem->metadata['required_by'])->toEqualCanonicalizing(['sales.orders', 'sales.reporting']);
+});
+
+test('included dependencies are granted without creating a second billable line', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $customers = billingFeature($module, 'sales.customers');
+    billingPrice($orders, 5000);
+    billingPrice($customers, 2000);
+
+    app(\App\Application\Catalog\CatalogManager::class)->addDependency($orders, $customers, 'included');
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+    ]);
+
+    expect($subscription->fresh('items')->items)->toHaveCount(1)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'sales.orders'))->toBeTrue()
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'sales.customers'))->toBeTrue();
+});
+
+
+test('commercial selection rejects a feature already covered by a selected bundle', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.appointments');
+    $bundle = app(\App\Application\Catalog\CatalogManager::class)->createBundle([
+        'key' => 'booking-pro',
+        'name' => 'Booking Pro',
+        'status' => 'active',
+    ]);
+    app(\App\Application\Catalog\CatalogManager::class)->addFeatureToBundle($bundle, $feature);
+
+    expect(fn () => app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+        ['item' => $bundle],
+    ]))->toThrow(DomainException::class, 'already covered');
+});
+
+
+test('commercial selection rejects bundles that overlap on a shared feature', function (): void {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('overlap');
+    $feature = billingFeature($module, 'overlap.shared');
+
+    $catalog = app(\App\Application\Catalog\CatalogManager::class);
+    $first = $catalog->createBundle([
+        'key' => 'overlap.first',
+        'name' => 'First Bundle',
+        'status' => 'active',
+    ]);
+    $second = $catalog->createBundle([
+        'key' => 'overlap.second',
+        'name' => 'Second Bundle',
+        'status' => 'active',
+    ]);
+
+    $catalog->addFeatureToBundle($first, $feature);
+    $catalog->addFeatureToBundle($second, $feature);
+
+    expect(fn () => app(SubscriptionService::class)->create($tenant, [
+        ['item' => $first],
+        ['item' => $second],
+    ], 'monthly', 0))->toThrow(
+        DomainException::class,
+        'overlaps another selected Module, Feature, or Bundle',
+    );
+});
+
+test('transitive billable dependencies are expanded once into the subscription quote', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $customers = billingFeature($module, 'sales.customers');
+    $contacts = billingFeature($module, 'sales.contacts');
+
+    billingPrice($orders, 5000);
+    billingPrice($customers, 2000);
+    billingPrice($contacts, 1000);
+
+    $catalog = app(\App\Application\Catalog\CatalogManager::class);
+    $catalog->addDependency($orders, $customers, 'billable');
+    $catalog->addDependency($customers, $contacts, 'billable');
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+    ], 'monthly', 0);
+
+    expect($subscription->fresh('items')->items)->toHaveCount(3)
+        ->and($subscription->total_minor)->toBe(8000)
+        ->and($subscription->invoices()->latest('issued_at')->firstOrFail()->items)->toHaveCount(3);
+});
+
+
+test('shared transitive billable dependencies retain every root in their provenance', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $reporting = billingFeature($module, 'sales.reporting');
+    $customers = billingFeature($module, 'sales.customers');
+    $contacts = billingFeature($module, 'sales.contacts');
+
+    billingPrice($orders, 5000);
+    billingPrice($reporting, 4000);
+    billingPrice($customers, 2000);
+    billingPrice($contacts, 1000);
+
+    $catalog = app(\App\Application\Catalog\CatalogManager::class);
+    $catalog->addDependency($orders, $customers, 'billable');
+    $catalog->addDependency($reporting, $customers, 'billable');
+    $catalog->addDependency($customers, $contacts, 'billable');
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+        ['item' => $reporting],
+    ], 'monthly', 0);
+
+    $items = $subscription->fresh('items')->items;
+    $customersItem = $items->firstWhere('catalog_key', 'sales.customers');
+    $contactsItem = $items->firstWhere('catalog_key', 'sales.contacts');
+
+    expect($items)->toHaveCount(4)
+        ->and($subscription->total_minor)->toBe(12000)
+        ->and($customersItem->metadata['required_by'])->toEqualCanonicalizing(['sales.orders', 'sales.reporting'])
+        ->and($contactsItem->metadata['required_by'])->toEqualCanonicalizing(['sales.orders', 'sales.reporting']);
+});
+
+
+test('upgrade service rejects features already covered by an active module or bundle', function () {
+    $moduleTenant = Tenant::factory()->create();
+    $module = billingModule('coverage-module');
+    $moduleFeature = billingFeature($module, 'coverage.module.feature');
+    billingPrice($module, 8000);
+    billingPrice($moduleFeature, 3000);
+    $moduleSubscription = paidSubscription($moduleTenant, [['item' => $module]]);
+
+    expect(fn () => app(SubscriptionService::class)->requestUpgrade(
+        $moduleSubscription->fresh(),
+        [['item' => $moduleFeature]],
+    ))->toThrow(DomainException::class, 'already part of the subscription');
+
+    $bundleTenant = Tenant::factory()->create();
+    $bundleModule = billingModule('coverage-bundle-module');
+    $bundleFeature = billingFeature($bundleModule, 'coverage.bundle.feature');
+    $bundle = app(\App\Application\Catalog\CatalogManager::class)->createBundle([
+        'key' => 'coverage.bundle',
+        'name' => 'Coverage Bundle',
+        'status' => 'active',
+    ]);
+    app(\App\Application\Catalog\CatalogManager::class)->addModuleToBundle($bundle, $bundleModule);
+    billingPrice($bundle, 9000);
+    billingPrice($bundleFeature, 3000);
+    $bundleSubscription = paidSubscription($bundleTenant, [['item' => $bundle]]);
+
+    expect(fn () => app(SubscriptionService::class)->requestUpgrade(
+        $bundleSubscription->fresh(),
+        [['item' => $bundleFeature]],
+    ))->toThrow(DomainException::class, 'already part of the subscription');
+
+    $dependencyTenant = Tenant::factory()->create();
+    $dependencyModule = billingModule('coverage-dependency-module');
+    $root = billingFeature($dependencyModule, 'coverage.dependency.root');
+    $dependency = billingFeature($dependencyModule, 'coverage.dependency.required');
+    billingPrice($root, 5000);
+    billingPrice($dependency, 2000);
+    app(\App\Application\Catalog\CatalogManager::class)->addDependency($root, $dependency, 'included');
+    $dependencySubscription = paidSubscription($dependencyTenant, [['item' => $root]]);
+
+    expect(fn () => app(SubscriptionService::class)->requestUpgrade(
+        $dependencySubscription->fresh(),
+        [['item' => $dependency]],
+    ))->toThrow(DomainException::class, 'already part of the subscription');
+});
+
+test('upgrade does not bill a billable dependency already covered by the subscription', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $existingFeature = billingFeature($module, 'sales.customers');
+    $newFeature = billingFeature($module, 'sales.orders');
+    billingPrice($existingFeature, 2000);
+    billingPrice($newFeature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $existingFeature]]);
+    app(\App\Application\Catalog\CatalogManager::class)->addDependency($newFeature, $existingFeature, 'billable');
+
+    $invoice = app(SubscriptionService::class)->requestUpgrade($subscription->fresh(), [
+        ['item' => $newFeature],
+    ]);
+
+    expect($invoice->total_minor)->toBe(5000)
+        ->and($invoice->items)->toHaveCount(1)
+        ->and($invoice->items->first()->catalog_key)->toBe('sales.orders');
+});
+
+
+
+test('upgrade preview is read-only and matches the invoice amount created for the same selection', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $base = billingFeature($module, 'booking.services');
+    $extra = billingFeature($module, 'booking.queue');
+    billingPrice($base, 5000);
+    billingPrice($extra, 3000);
+
+    $subscription = paidSubscription($tenant, [['item' => $base]]);
+    $subscription->load('items');
+    $itemCountBefore = $subscription->items->count();
+    $invoiceCountBefore = $subscription->invoices()->count();
+
+    $preview = app(SubscriptionService::class)->previewUpgrade($subscription, [
+        ['item' => $extra, 'quantity' => 2],
+    ]);
+
+    expect($preview['subtotal_minor'])->toBe(6000)
+        ->and($preview['total_minor'])->toBe(6000)
+        ->and($preview['lines'])->toHaveCount(1)
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemCountBefore)
+        ->and($subscription->invoices()->count())->toBe($invoiceCountBefore);
+
+    $invoice = app(SubscriptionService::class)->requestUpgrade($subscription->fresh(), [
+        ['item' => $extra, 'quantity' => 2],
+    ]);
+
+    expect($invoice->subtotal_minor)->toBe($preview['subtotal_minor'])
+        ->and($invoice->total_minor)->toBe($preview['total_minor']);
+});
+
+
+
+
+test('repeated upgrade requests re-check locked subscription items and do not create duplicate invoices', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $base = billingFeature($module, 'booking.services');
+    $extra = billingFeature($module, 'booking.queue');
+    billingPrice($base, 5000);
+    billingPrice($extra, 3000);
+
+    $subscription = paidSubscription($tenant, [['item' => $base]]);
+    $service = app(SubscriptionService::class);
+
+    $invoice = $service->requestUpgrade($subscription, [['item' => $extra]]);
+    $itemsAfterFirstRequest = $subscription->fresh('items')->items->count();
+    $invoicesAfterFirstRequest = $subscription->invoices()->count();
+
+    expect(fn () => $service->requestUpgrade($subscription, [['item' => $extra]]))
+        ->toThrow(DomainException::class, "Catalog item {$extra->key} is already part of the subscription.")
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemsAfterFirstRequest)
+        ->and($subscription->invoices()->count())->toBe($invoicesAfterFirstRequest)
+        ->and($invoice->fresh()->status->value)->toBe('open');
+});
+
+
+test('commercial dependency resolution rejects inactive transitive requirements before billing', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $orders = billingFeature($module, 'sales.orders');
+    $customers = billingFeature($module, 'sales.customers');
+    $customers->update(['status' => 'retired']);
+
+    billingPrice($orders, 5000);
+    billingPrice($customers, 2000);
+
+    app(\App\Application\Catalog\CatalogManager::class)
+        ->addDependency($orders, $customers, 'billable');
+
+    expect(fn () => app(SubscriptionService::class)->create($tenant, [
+        ['item' => $orders],
+    ], 'monthly', 0))->toThrow(DomainException::class, 'not active')
+        ->and(Subscription::query()->where('tenant_id', $tenant->getKey())->exists())->toBeFalse()
+        ->and(PlatformInvoice::query()->where('tenant_id', $tenant->getKey())->exists())->toBeFalse();
+});
+
+test('commercial dependency resolution refuses to silently undercharge a partially covered quantity', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('sales');
+    $customers = billingFeature($module, 'sales.customers');
+    $orders = billingFeature($module, 'sales.orders');
+
+    billingPrice($customers, 2000);
+    billingPrice($orders, 5000);
+
+    $subscription = paidSubscription($tenant, [
+        ['item' => $customers, 'quantity' => 1],
+    ]);
+
+    app(\App\Application\Catalog\CatalogManager::class)
+        ->addDependency($orders, $customers, 'billable');
+
+    expect(fn () => app(SubscriptionService::class)->previewUpgrade($subscription, [
+        ['item' => $orders, 'quantity' => 2],
+    ]))->toThrow(DomainException::class, 'lower quantity');
+
+    expect($subscription->fresh('items')->items)->toHaveCount(1)
+        ->and($subscription->invoices()->count())->toBe(1);
+});
+
+
+test('purchasing an individual Feature does not grant its parent Module or sibling Features', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('crm');
+    $contacts = billingFeature($module, 'crm.contacts');
+    $leads = billingFeature($module, 'crm.leads');
+    billingPrice($contacts, 5000);
+
+    paidSubscription($tenant, [['item' => $contacts]]);
+
+    $entitlements = app(\App\Application\Entitlements\EntitlementService::class);
+
+    expect($entitlements->hasFeature($tenant, 'crm.contacts'))->toBeTrue()
+        ->and($entitlements->hasModule($tenant, 'crm'))->toBeFalse()
+        ->and($entitlements->hasFeature($tenant, 'crm.leads'))->toBeFalse();
+});
+
+test('purchasing a Module grants its active Features but not inactive Features', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $services = billingFeature($module, 'booking.services');
+    $appointments = billingFeature($module, 'booking.appointments');
+    $retired = \App\Models\Feature::factory()->create([
+        'module_id' => $module->getKey(),
+        'key' => 'booking.legacy',
+        'name' => 'booking.legacy',
+        'status' => 'retired',
+        'is_individually_purchasable' => false,
+    ]);
+    billingPrice($module, 12000);
+
+    paidSubscription($tenant, [['item' => $module]]);
+
+    $entitlements = app(\App\Application\Entitlements\EntitlementService::class);
+
+    expect($entitlements->hasModule($tenant, 'booking'))->toBeTrue()
+        ->and($entitlements->hasFeature($tenant, 'booking.services'))->toBeTrue()
+        ->and($entitlements->hasFeature($tenant, 'booking.appointments'))->toBeTrue()
+        ->and($entitlements->hasFeature($tenant, 'booking.legacy'))->toBeFalse();
+});
+
+
+test('failed initial invoice creation rolls back the pending subscription and its items', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    \Illuminate\Support\Facades\DB::listen(function (\Illuminate\Database\Events\QueryExecuted $query): void {
+        if (str_starts_with(strtolower(ltrim($query->sql)), 'insert into "platform_invoices"')) {
+            throw new RuntimeException('invoice creation failed');
+        }
+    });
+
+    expect(fn () => app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0))->toThrow(RuntimeException::class, 'invoice creation failed');
+
+    expect(Subscription::query()->where('tenant_id', $tenant->getKey())->count())->toBe(0)
+        ->and(\App\Models\SubscriptionItem::query()->count())->toBe(0)
+        ->and(PlatformInvoice::query()->where('tenant_id', $tenant->getKey())->count())->toBe(0);
+});
+
+test('a stale open invoice cannot be voided after a payment marks it paid', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+
+    // Keep this model stale to simulate an admin request racing with payment confirmation.
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    expect($invoice->status)->toBe(InvoiceStatus::Open);
+
+    $payment = app(\App\Application\Billing\PaymentService::class)->createPending($invoice);
+    app(\App\Application\Billing\PaymentService::class)->markSucceeded($payment);
+
+    expect(fn () => app(\App\Application\Billing\InvoiceService::class)->void($invoice, 'late cancellation'))
+        ->toThrow(DomainException::class, 'A paid invoice cannot be voided.')
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Paid);
+});
+
+test('concurrent checkout attempts reuse one pending payment for an invoice', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    $payments = app(\App\Application\Billing\PaymentService::class);
+    $first = $payments->createPending($invoice, 'kashier');
+    $second = $payments->createPending($invoice, 'kashier');
+
+    expect($second->getKey())->toBe($first->getKey())
+        ->and($invoice->payments()->where('status', PaymentStatus::Pending->value)->count())->toBe(1);
+});
+
+test('an invoice with a pending payment cannot be voided', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    app(\App\Application\Billing\PaymentService::class)->createPending($invoice);
+
+    expect(fn () => app(\App\Application\Billing\InvoiceService::class)->void($invoice, 'admin request'))
+        ->toThrow(DomainException::class, 'pending payment cannot be voided.')
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Open);
+});
+
+test('an uncertain provider refund outcome remains pending and reserves the amount', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $feature]]);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = $invoice->payments()
+        ->where('status', PaymentStatus::Succeeded->value)
+        ->firstOrFail();
+
+    $payment->update([
+        'provider' => 'kashier',
+        'metadata' => [
+            'checkout' => [
+                'provider_order_id' => 'KASHIER-ORDER-REFUND-TIMEOUT',
+            ],
+        ],
+    ]);
+
+    config([
+        'velora.payments.platform_provider' => 'kashier',
+        'velora.payments.kashier.mode' => 'test',
+        'velora.payments.kashier.secret_key' => 'test-secret',
+        'velora.payments.kashier.payment_api_key' => '11111',
+        'velora.payments.kashier.merchant_id' => 'MID-TEST',
+    ]);
+
+    \Illuminate\Support\Facades\Http::fake(function () {
+        throw new \Illuminate\Http\Client\ConnectionException('simulated provider timeout');
+    });
+
+    app(\App\Domain\Tenancy\TenantContext::class)->set($tenant);
+
+    expect(fn () => app(\App\Application\Billing\PlatformBillingRefundManager::class)->request(
+        payment: $payment,
+        amountMinor: 5000,
+        reason: 'timeout test',
+        idempotencyKey: 'refund-timeout-1',
+    ))->toThrow(\Illuminate\Http\Client\ConnectionException::class);
+
+    $refund = PlatformRefund::query()->where('idempotency_key', 'refund-timeout-1')->firstOrFail();
+
+    expect($refund->status)->toBe(RefundStatus::Pending)
+        ->and($refund->metadata['provider_outcome'])->toBe('unknown')
+        ->and((int) $payment->refunds()
+            ->whereIn('status', [RefundStatus::Pending->value, RefundStatus::Succeeded->value])
+            ->sum('amount_minor'))->toBe(5000);
+});
+
+
+test('an explicit provider refund rejection marks the refund failed and releases its reservation', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $feature = billingFeature($module, 'booking.queue');
+    billingPrice($feature, 5000);
+
+    $subscription = paidSubscription($tenant, [['item' => $feature]]);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+    $payment = $invoice->payments()->where('status', PaymentStatus::Succeeded->value)->firstOrFail();
+    $payment->update([
+        'provider' => 'kashier',
+        'metadata' => ['checkout' => ['provider_order_id' => 'KASHIER-ORDER-REFUND-REJECTED']],
+    ]);
+
+    config([
+        'velora.payments.platform_provider' => 'kashier',
+        'velora.payments.kashier.mode' => 'test',
+        'velora.payments.kashier.secret_key' => 'test-secret',
+        'velora.payments.kashier.payment_api_key' => '11111',
+        'velora.payments.kashier.merchant_id' => 'MID-TEST',
+    ]);
+
+    \Illuminate\Support\Facades\Http::fake([
+        '*' => \Illuminate\Support\Facades\Http::response([
+            'response' => ['status' => 'FAILURE', 'transactionId' => 'REF-REJECTED'],
+        ], 200),
+    ]);
+
+    app(\App\Domain\Tenancy\TenantContext::class)->set($tenant);
+
+    $refund = app(\App\Application\Billing\PlatformBillingRefundManager::class)->request(
+        payment: $payment,
+        amountMinor: 5000,
+        reason: 'provider rejection test',
+        idempotencyKey: 'refund-rejected-1',
+    );
+
+    expect($refund->status)->toBe(RefundStatus::Failed)
+        ->and($refund->metadata['provider_response']['status'])->toBe('FAILURE')
+        ->and((int) $payment->refunds()
+            ->whereIn('status', [RefundStatus::Pending->value, RefundStatus::Succeeded->value])
+            ->sum('amount_minor'))->toBe(0);
+});
+
+test('zero-value subscriptions activate immediately and renew without a payment attempt', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('free-booking');
+    $feature = billingFeature($module, 'free-booking.services');
+    billingPrice($feature, 0);
+
+    $subscription = app(SubscriptionService::class)->create($tenant, [
+        ['item' => $feature],
+    ], 'monthly', 0);
+    $invoice = $subscription->invoices()->latest('issued_at')->firstOrFail();
+
+    expect($subscription->status)->toBe(SubscriptionStatus::Active)
+        ->and($invoice->status)->toBe(InvoiceStatus::Paid)
+        ->and($invoice->total_minor)->toBe(0)
+        ->and($invoice->payments()->count())->toBe(0)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'free-booking.services'))->toBeTrue();
+
+    $openZeroInvoice = PlatformInvoice::query()->create([
+        'tenant_id' => $tenant->getKey(),
+        'subscription_id' => $subscription->getKey(),
+        'number' => 'ZERO-'.str()->upper(str()->random(12)),
+        'status' => InvoiceStatus::Open,
+        'currency' => 'EGP',
+        'subtotal_minor' => 0,
+        'discount_minor' => 0,
+        'tax_minor' => 0,
+        'total_minor' => 0,
+        'issued_at' => now(),
+    ]);
+
+    expect(fn () => app(\App\Application\Billing\PaymentService::class)->createPending($openZeroInvoice))
+        ->toThrow(DomainException::class, 'Zero-value invoices do not require a payment attempt.');
+
+    $periodEnd = $subscription->fresh()->current_period_end;
+    $renewal = app(SubscriptionService::class)->processPeriodEnd($subscription->fresh(), $periodEnd);
+
+    expect($renewal)->toBeInstanceOf(PlatformInvoice::class)
+        ->and($renewal->status)->toBe(InvoiceStatus::Paid)
+        ->and($renewal->total_minor)->toBe(0)
+        ->and($subscription->fresh()->status)->toBe(SubscriptionStatus::Active)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'free-booking.services'))->toBeTrue();
+});
+
+test('zero-value subscription upgrades activate without creating a payment attempt', function () {
+    $tenant = Tenant::factory()->create();
+    $module = billingModule('booking');
+    $base = billingFeature($module, 'booking.services');
+    $freeExtra = billingFeature($module, 'booking.free-reports');
+    billingPrice($base, 5000);
+    billingPrice($freeExtra, 0);
+
+    $subscription = paidSubscription($tenant, [['item' => $base]]);
+    $invoice = app(SubscriptionService::class)->requestUpgrade($subscription, [
+        ['item' => $freeExtra],
+    ]);
+    $extraItem = $subscription->fresh('items')->items->firstWhere('catalog_key', 'booking.free-reports');
+
+    expect($invoice->status)->toBe(InvoiceStatus::Paid)
+        ->and($invoice->total_minor)->toBe(0)
+        ->and($invoice->payments()->count())->toBe(0)
+        ->and($extraItem->status)->toBe(SubscriptionItemStatus::Active)
+        ->and(app(\App\Application\Entitlements\EntitlementService::class)->hasFeature($tenant, 'booking.free-reports'))->toBeTrue();
 });

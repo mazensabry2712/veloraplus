@@ -254,10 +254,10 @@ test('duplicate verified webhook is acknowledged without charging again', functi
     $payload = ['event' => 'pay', 'data' => $data];
     $raw = json_encode($payload, JSON_THROW_ON_ERROR);
     $headers = ['X-Kashier-Signature' => kashierSignature($data)];
-    $handler = app(KashierWebhookHandler::class);
 
-    expect($handler->handle($payload, $headers, $raw)['duplicate'])->toBeFalse()
-        ->and($handler->handle($payload, $headers, $raw)['duplicate'])->toBeTrue();
+    $this->postJson('/webhooks/kashier/platform', $payload, $headers)->assertOk();
+    // Duplicate deliveries must be acknowledged with 2xx so the provider stops retrying.
+    $this->postJson('/webhooks/kashier/platform', $payload, $headers)->assertOk();
 
     $payment->refresh();
 
@@ -305,4 +305,73 @@ test('kashier webhook failure does not activate the payment', function () {
     $payment->refresh();
 
     expect($payment->status)->toBe(PaymentStatus::Failed);
+});
+
+test('conflicting payload for an already processed platform webhook is rejected', function () {
+    $payment = makePlatformPayment();
+    $payment->update(['provider' => 'kashier']);
+
+    $data = [
+        'amount' => '100.00',
+        'currency' => 'EGP',
+        'kashierOrderId' => 'KASHIER-ORDER-CONFLICT',
+        'merchantOrderId' => $payment->getKey(),
+        'status' => 'SUCCESS',
+        'transactionId' => 'TX-CONFLICT-1',
+        'signatureKeys' => ['transactionId', 'status', 'merchantOrderId', 'kashierOrderId', 'currency', 'amount'],
+    ];
+
+    $handler = app(KashierWebhookHandler::class);
+    $payload = ['event' => 'pay', 'data' => $data];
+    $raw = json_encode($payload, JSON_THROW_ON_ERROR);
+    $headers = ['X-Kashier-Signature' => kashierSignature($data)];
+
+    expect($handler->handle($payload, $headers, $raw)['duplicate'])->toBeFalse();
+
+    // Keep the provider event identity stable but alter a signed financial field.
+    $data['amount'] = '101.00';
+    $payload = ['event' => 'pay', 'data' => $data];
+    $raw = json_encode($payload, JSON_THROW_ON_ERROR);
+    $headers = ['X-Kashier-Signature' => kashierSignature($data)];
+
+    expect(fn () => $handler->handle($payload, $headers, $raw))
+        ->toThrow(DomainException::class, 'payload does not match the existing event');
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded)
+        ->and(WebhookEvent::query()->count())->toBe(1);
+});
+
+test('late contradictory platform webhooks are acknowledged without reversing terminal payments', function () {
+    $handler = app(KashierWebhookHandler::class);
+
+    $send = function (PlatformPayment $payment, string $status, string $transactionId) use ($handler): array {
+        $data = [
+            'amount' => number_format($payment->amount_minor / 100, 2, '.', ''),
+            'currency' => $payment->currency,
+            'kashierOrderId' => 'KASHIER-ORDER-LATE-'.$payment->getKey(),
+            'merchantOrderId' => $payment->getKey(),
+            'status' => $status,
+            'transactionId' => $transactionId,
+            'signatureKeys' => ['transactionId', 'status', 'merchantOrderId', 'kashierOrderId', 'currency', 'amount'],
+        ];
+        $payload = ['event' => 'pay', 'data' => $data];
+
+        return $handler->handle(
+            $payload,
+            ['X-Kashier-Signature' => kashierSignature($data)],
+            json_encode($payload, JSON_THROW_ON_ERROR),
+        );
+    };
+
+    $paid = makePlatformPayment();
+    $paid->update(['provider' => 'kashier']);
+    expect($send($paid, 'SUCCESS', 'TX-LATE-PAID')['status'])->toBe('SUCCESS');
+    expect($send($paid, 'FAILURE', 'TX-LATE-PAID')['status'])->toBe('ignored_terminal_conflict');
+    expect($paid->fresh()->status)->toBe(PaymentStatus::Succeeded);
+
+    $failed = makePlatformPayment();
+    $failed->update(['provider' => 'kashier']);
+    expect($send($failed, 'FAILURE', 'TX-LATE-FAILED')['status'])->toBe('FAILURE');
+    expect($send($failed, 'SUCCESS', 'TX-LATE-FAILED')['status'])->toBe('ignored_terminal_conflict');
+    expect($failed->fresh()->status)->toBe(PaymentStatus::Failed);
 });

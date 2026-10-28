@@ -40,9 +40,11 @@
             <div class="px-3 pt-5 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
                 Platform
             </div>
-            @foreach (['Subscription', 'Module Marketplace'] as $item)
-                <span class="block rounded-lg px-3 py-2 text-sm text-slate-400">{{ $item }} <span class="text-xs">(next)</span></span>
-            @endforeach
+            <span class="block rounded-lg px-3 py-2 text-sm text-slate-400">Subscription <span class="text-xs">(next)</span></span>
+            <a href="{{ route('dashboard.marketplace.index') }}"
+               class="block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('dashboard.marketplace.*') ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100' }}">
+                Module Marketplace
+            </a>
 
             <a href="{{ route('dashboard.usage') }}"
                class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">

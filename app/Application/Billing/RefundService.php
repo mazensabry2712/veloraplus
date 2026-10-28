@@ -50,6 +50,16 @@ final class RefundService
                         throw new DomainException('Refund idempotency key was already used for another payment.');
                     }
 
+                    $normalizedReason = $reason !== null && trim($reason) !== '' ? trim($reason) : null;
+
+                    if (
+                        (int) $existing->amount_minor !== $amountMinor
+                        || strtoupper((string) $existing->currency) !== strtoupper((string) $payment->currency)
+                        || $existing->reason !== $normalizedReason
+                    ) {
+                        throw new DomainException('Refund idempotency key was already used with different refund details.');
+                    }
+
                     return $existing;
                 }
             } else {

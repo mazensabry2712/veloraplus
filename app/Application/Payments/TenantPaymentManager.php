@@ -302,6 +302,21 @@ final class TenantPaymentManager
 
             $status = strtoupper((string) ($event['status'] ?? ''));
 
+            // Late verified callbacks must never reverse a terminal tenant
+            // payment state (failed, cancelled, or refunded). Persist the event
+            // as ignored so it is acknowledged without endless provider retries.
+            if (
+                $status === 'SUCCESS'
+                && ! in_array($locked->status, [TenantPaymentStatus::Pending, TenantPaymentStatus::Succeeded], true)
+            ) {
+                $stored->update([
+                    'status' => 'ignored_terminal_conflict',
+                    'processed_at' => now(),
+                ]);
+
+                return ['duplicate' => false, 'status' => 'ignored_terminal_conflict'];
+            }
+
             if ($status === 'SUCCESS') {
                 $this->markSucceededLocked(
                     $locked,
@@ -400,6 +415,11 @@ final class TenantPaymentManager
             throw new DomainException('Tenant context is required for Tenant Payment refunds.');
         }
 
+        $idempotencyKey = $idempotencyKey !== null ? trim($idempotencyKey) : null;
+        if ($idempotencyKey === '') {
+            $idempotencyKey = null;
+        }
+
         $tenant = $this->context->current();
         $shouldCallProvider = false;
 
@@ -421,6 +441,16 @@ final class TenantPaymentManager
                 if ($existing !== null) {
                     if ((string) $existing->tenant_payment_id !== (string) $locked->getKey()) {
                         throw new DomainException('Refund idempotency key was already used for another payment.');
+                    }
+
+                    $normalizedReason = trim($reason) !== '' ? trim($reason) : null;
+
+                    if (
+                        (int) $existing->amount_minor !== $amountMinor
+                        || strtoupper((string) $existing->currency) !== strtoupper((string) $locked->currency)
+                        || $existing->reason !== $normalizedReason
+                    ) {
+                        throw new DomainException('Refund idempotency key was already used with different refund details.');
                     }
 
                     return $existing;
@@ -534,7 +564,14 @@ final class TenantPaymentManager
                 ],
             ]);
         } catch (\Throwable $exception) {
-            $this->markRefundFailed($refund, 'Tenant provider refund failed.');
+            // Network failures can happen after the provider has accepted the
+            // refund. Keep it pending and reserved until reconciliation.
+            $refund->update([
+                'metadata' => array_merge($refund->metadata ?? [], [
+                    'provider_outcome' => 'unknown',
+                    'provider_error_class' => class_basename($exception),
+                ]),
+            ]);
 
             throw $exception;
         }
@@ -546,6 +583,14 @@ final class TenantPaymentManager
 
         if (in_array($status, ['SUCCESS', 'SUCCEEDED', 'COMPLETED'], true)) {
             return $this->markRefundSucceeded($refund, $providerRefundId, $response);
+        }
+
+        if (in_array($status, ['FAILED', 'FAILURE', 'REJECTED', 'DECLINED', 'ERROR'], true)) {
+            return $this->markRefundFailed(
+                $refund,
+                'Payment provider rejected the refund.',
+                ['provider_response' => $response],
+            );
         }
 
         $refund->update([
@@ -614,9 +659,12 @@ final class TenantPaymentManager
         });
     }
 
-    public function markRefundFailed(TenantPaymentRefund $refund, string $reason): TenantPaymentRefund
-    {
-        return DB::transaction(function () use ($refund, $reason): TenantPaymentRefund {
+    public function markRefundFailed(
+        TenantPaymentRefund $refund,
+        string $reason,
+        array $metadata = [],
+    ): TenantPaymentRefund {
+        return DB::transaction(function () use ($refund, $reason, $metadata): TenantPaymentRefund {
             $locked = TenantPaymentRefund::query()
                 ->lockForUpdate()
                 ->find($refund->getKey());
@@ -638,6 +686,7 @@ final class TenantPaymentManager
                 'failed_at' => now(),
                 'metadata' => array_merge($locked->metadata ?? [], [
                     'failure_reason' => $reason,
+                    ...$metadata,
                 ]),
             ]);
 

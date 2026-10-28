@@ -9,8 +9,17 @@ use DomainException;
 
 final class CatalogDependencyManager
 {
-    public function add(Module|Feature $dependent, Module|Feature $dependency): CatalogDependency
+    public function add(
+        Module|Feature $dependent,
+        Module|Feature $dependency,
+        string $billingPolicy = 'included',
+    ): CatalogDependency
     {
+        $billingPolicy = strtolower(trim($billingPolicy));
+
+        if (! in_array($billingPolicy, ['included', 'billable', 'free'], true)) {
+            throw new DomainException('Dependency billing policy must be included, billable, or free.');
+        }
         if ($dependent->getKey() === $dependency->getKey()
             && $dependent->getMorphClass() === $dependency->getMorphClass()) {
             throw new DomainException('A catalog item cannot depend on itself.');
@@ -34,6 +43,7 @@ final class CatalogDependencyManager
             'dependent_id' => $dependent->getKey(),
             'dependency_type' => $dependency->getMorphClass(),
             'dependency_id' => $dependency->getKey(),
+            'metadata' => ['billing_policy' => $billingPolicy],
         ]);
     }
 

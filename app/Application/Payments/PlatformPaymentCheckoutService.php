@@ -2,6 +2,7 @@
 
 namespace App\Application\Payments;
 
+use App\Domain\Billing\InvoiceStatus;
 use App\Domain\Billing\PaymentStatus;
 use App\Domain\Payments\Contracts\CheckoutGateway;
 use App\Models\PlatformPayment;
@@ -20,61 +21,72 @@ final class PlatformPaymentCheckoutService
      */
     public function create(PlatformPayment $payment, array $customer = []): array
     {
-        $payment = PlatformPayment::query()->with('invoice')->findOrFail($payment->getKey());
+        // Serialize checkout creation per payment. Without the row lock, two
+        // simultaneous requests can create two provider sessions for one invoice.
+        return $payment->getConnection()->transaction(function () use ($payment, $customer): array {
+            $payment = PlatformPayment::query()
+                ->with('invoice')
+                ->lockForUpdate()
+                ->findOrFail($payment->getKey());
 
-        if ($payment->status !== PaymentStatus::Pending) {
-            throw new DomainException('Only a pending platform payment can create a checkout.');
-        }
+            if ($payment->status !== PaymentStatus::Pending) {
+                throw new DomainException('Only a pending platform payment can create a checkout.');
+            }
 
-        $invoice = $payment->invoice;
+            $invoice = $payment->invoice;
 
-        if ($invoice === null) {
-            throw new DomainException('Platform payment invoice could not be found.');
-        }
+            if ($invoice === null) {
+                throw new DomainException('Platform payment invoice could not be found.');
+            }
 
-        $existingCheckout = $payment->metadata['checkout'] ?? null;
+            if ($invoice->status !== InvoiceStatus::Open) {
+                throw new DomainException('Only an open invoice can create a checkout.');
+            }
 
-        if (is_array($existingCheckout) && is_string($existingCheckout['checkout_url'] ?? null) && $existingCheckout['checkout_url'] !== '') {
-            return [
-                'provider' => $existingCheckout['provider'] ?? $payment->provider,
-                'session_id' => $existingCheckout['session_id'] ?? null,
-                'checkout_url' => $existingCheckout['checkout_url'],
-                'merchant_order_id' => $existingCheckout['merchant_order_id'] ?? $payment->getKey(),
-                'provider_payment_id' => $existingCheckout['provider_payment_id'] ?? null,
-                'provider_order_id' => $existingCheckout['provider_order_id'] ?? null,
-                'status' => 'REUSED',
-            ];
-        }
+            $existingCheckout = $payment->metadata['checkout'] ?? null;
 
-        $provider = strtolower((string) config('velora.payments.platform_provider'));
-        $gateway = $this->gateways->platform($provider);
+            if (is_array($existingCheckout) && is_string($existingCheckout['checkout_url'] ?? null) && $existingCheckout['checkout_url'] !== '') {
+                return [
+                    'provider' => $existingCheckout['provider'] ?? $payment->provider,
+                    'session_id' => $existingCheckout['session_id'] ?? null,
+                    'checkout_url' => $existingCheckout['checkout_url'],
+                    'merchant_order_id' => $existingCheckout['merchant_order_id'] ?? $payment->getKey(),
+                    'provider_payment_id' => $existingCheckout['provider_payment_id'] ?? null,
+                    'provider_order_id' => $existingCheckout['provider_order_id'] ?? null,
+                    'status' => 'REUSED',
+                ];
+            }
 
-        if (! $gateway instanceof CheckoutGateway) {
-            throw new DomainException("Payment provider [{$provider}] does not support checkout.");
-        }
+            $provider = strtolower((string) config('velora.payments.platform_provider'));
+            $gateway = $this->gateways->platform($provider);
 
-        $result = $gateway->createCheckout([
-            'merchant_order_id' => $payment->getKey(),
-            'amount_minor' => $payment->amount_minor,
-            'currency' => $payment->currency,
-            'customer' => $customer,
-            'description' => 'VeloraPlus subscription '.$invoice->number,
-        ]);
+            if (! $gateway instanceof CheckoutGateway) {
+                throw new DomainException("Payment provider [{$provider}] does not support checkout.");
+            }
 
-        $payment->update([
-            'provider' => $provider,
-            'metadata' => array_merge($payment->metadata ?? [], [
-                'checkout' => [
-                    'provider' => $provider,
-                    'session_id' => $result['session_id'] ?? null,
-                    'checkout_url' => $result['checkout_url'] ?? null,
-                    'merchant_order_id' => $result['merchant_order_id'] ?? $payment->getKey(),
-                    'provider_payment_id' => $result['provider_payment_id'] ?? null,
-                    'provider_order_id' => $result['provider_order_id'] ?? null,
-                ],
-            ]),
-        ]);
+            $result = $gateway->createCheckout([
+                'merchant_order_id' => $payment->getKey(),
+                'amount_minor' => $payment->amount_minor,
+                'currency' => $payment->currency,
+                'customer' => $customer,
+                'description' => 'VeloraPlus subscription '.$invoice->number,
+            ]);
 
-        return $result;
+            $payment->update([
+                'provider' => $provider,
+                'metadata' => array_merge($payment->metadata ?? [], [
+                    'checkout' => [
+                        'provider' => $provider,
+                        'session_id' => $result['session_id'] ?? null,
+                        'checkout_url' => $result['checkout_url'] ?? null,
+                        'merchant_order_id' => $result['merchant_order_id'] ?? $payment->getKey(),
+                        'provider_payment_id' => $result['provider_payment_id'] ?? null,
+                        'provider_order_id' => $result['provider_order_id'] ?? null,
+                    ],
+                ]),
+            ]);
+
+            return $result;
+        });
     }
 }

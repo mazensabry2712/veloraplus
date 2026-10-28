@@ -138,6 +138,8 @@ final class PricingEngine
                     'bundle_discount_bps' => $item instanceof Bundle ? (int) $item->discount_bps : 0,
                     'tax_bps' => $taxBps,
                     'priced_at' => $at->toIso8601String(),
+                    'commercial_origin' => (string) ($input['commercial_origin'] ?? 'direct'),
+                    'required_by' => array_values(array_unique((array) ($input['required_by'] ?? []))),
                 ],
             ];
         }

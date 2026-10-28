@@ -24,8 +24,8 @@ final class KashierWebhookController
             return response()->json(['message' => $exception->getMessage()], 422);
         }
 
-        return $result['duplicate']
-            ? response()->json([], 409)
-            : response()->json([], 200);
+        // A verified duplicate has already been applied. A 2xx response is
+        // required to acknowledge delivery and stop provider retry loops.
+        return response()->json([], 200);
     }
 }

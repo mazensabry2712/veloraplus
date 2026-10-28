@@ -3,11 +3,13 @@
 namespace App\Application\Catalog;
 
 use App\Application\Billing\PlatformBillingDashboardService;
+use App\Application\Billing\SubscriptionService;
 use App\Application\Entitlements\EntitlementService;
 use App\Domain\Billing\SubscriptionItemStatus;
 use App\Domain\Entitlements\EntitlementStatus;
 use App\Domain\Tenancy\TenantContext;
 use App\Models\Bundle;
+use App\Models\CatalogDependency;
 use App\Models\Feature;
 use App\Models\Module;
 use App\Models\Subscription;
@@ -22,6 +24,7 @@ final class ModuleMarketplaceService
         private readonly EntitlementService $entitlements,
         private readonly PlatformBillingDashboardService $billing,
         private readonly CatalogDependencyResolver $dependencies,
+        private readonly SubscriptionService $subscriptions,
     ) {
     }
 
@@ -74,11 +77,127 @@ final class ModuleMarketplaceService
         ];
     }
 
+    /**
+     * Return a read-only upgrade quote for a single Marketplace selection.
+     *
+     * @return array<string, mixed>
+     */
+    public function previewPurchase(
+        Tenant $tenant,
+        string $catalogType,
+        string $catalogKey,
+        int $quantity = 1,
+    ): array {
+        $this->assertCurrentTenant($tenant);
+
+        if ($quantity < 1 || $quantity > 1000) {
+            throw new DomainException('Marketplace quantity must be between 1 and 1000.');
+        }
+
+        $item = $this->findCatalogItem($catalogType, $catalogKey);
+
+        if ($item === null) {
+            throw new DomainException('The requested marketplace item was not found.');
+        }
+
+        $this->assertMarketplacePurchasable($item);
+
+        $subscription = Subscription::query()
+            ->where('tenant_id', $tenant->getKey())
+            ->whereIn('status', ['active', 'grace'])
+            ->latest('starts_at')
+            ->first();
+
+        if ($subscription === null) {
+            throw new DomainException('An active or grace subscription is required to purchase a Marketplace item.');
+        }
+
+        $ownedState = $this->ownedState($tenant, $subscription, $item);
+
+        if ($ownedState !== null) {
+            throw new DomainException("Marketplace item {$item->key} is already {$ownedState}.");
+        }
+
+        $quote = $this->subscriptions->previewUpgrade(
+            $subscription,
+            [[
+                'item' => $item,
+                'quantity' => $quantity,
+            ]],
+            (int) ($subscription->metadata['tax_bps'] ?? 0),
+        );
+
+        $preview = [
+            ...$quote,
+            'selection' => [
+                'catalog_type' => $item->getMorphClass(),
+                'catalog_key' => $item->key,
+                'name' => $item->name,
+                'quantity' => $quantity,
+            ],
+            'billing_cycle' => $subscription->billing_cycle,
+            'current_subscription_id' => $subscription->getKey(),
+            'creates_invoice' => false,
+            'requires_payment' => ((int) ($quote['total_minor'] ?? 0)) > 0,
+        ];
+
+        $preview['dependency_explanations'] = $this->dependencyExplanations($item, $quote['lines']);
+        $preview['confirmation_token'] = $this->confirmationToken($preview);
+
+        return $preview;
+    }
+
+    /**
+     * Bind a user confirmation to the exact quote shown in the browser.
+     *
+     * @param array<string, mixed> $preview
+     */
+    private function confirmationToken(array $preview): string
+    {
+        $lines = array_map(static fn (array $line): array => [
+            'description' => $line['description'] ?? null,
+            'catalog_type' => $line['catalog_type'] ?? null,
+            'catalog_key' => $line['catalog_key'] ?? null,
+            'catalog_price_id' => $line['catalog_price_id'] ?? null,
+            'quantity' => $line['quantity'] ?? null,
+            'unit_amount_minor' => $line['unit_amount_minor'] ?? null,
+            'discount_minor' => $line['discount_minor'] ?? null,
+            'tax_minor' => $line['tax_minor'] ?? null,
+            'line_total_minor' => $line['line_total_minor'] ?? null,
+            'metadata' => [
+                'bundle_discount_bps' => $line['metadata']['bundle_discount_bps'] ?? 0,
+                'tax_bps' => $line['metadata']['tax_bps'] ?? 0,
+                'commercial_origin' => $line['metadata']['commercial_origin'] ?? 'direct',
+                'required_by' => array_values((array) ($line['metadata']['required_by'] ?? [])),
+            ],
+        ], $preview['lines'] ?? []);
+
+        $fingerprint = [
+            'selection' => $preview['selection'],
+            'subscription_id' => $preview['current_subscription_id'],
+            'billing_cycle' => $preview['billing_cycle'],
+            'currency' => $preview['currency'] ?? null,
+            'subtotal_minor' => $preview['subtotal_minor'] ?? null,
+            'discount_minor' => $preview['discount_minor'] ?? null,
+            'tax_minor' => $preview['tax_minor'] ?? null,
+            'total_minor' => $preview['total_minor'] ?? null,
+            'lines' => $lines,
+            'dependency_explanations' => $preview['dependency_explanations'] ?? [],
+        ];
+
+        return hash_hmac(
+            'sha256',
+            json_encode($fingerprint, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES),
+            (string) config('app.key'),
+        );
+    }
+
     public function requestPurchase(
         Tenant $tenant,
         string $catalogType,
         string $catalogKey,
         int $quantity = 1,
+        ?string $quoteToken = null,
     ) {
         $this->assertCurrentTenant($tenant);
 
@@ -110,23 +229,53 @@ final class ModuleMarketplaceService
             throw new DomainException("Marketplace item {$item->key} is already {$ownedState}.");
         }
 
+        if ($quoteToken === null || $quoteToken === '') {
+            throw new DomainException('Preview the current quote before confirming your Marketplace purchase.');
+        }
+
+        $quoteValidator = function (Subscription $lockedSubscription, array $quote) use (
+            $item,
+            $quantity,
+            $quoteToken,
+        ): void {
+            $currentPreview = [
+                ...$quote,
+                'selection' => [
+                    'catalog_type' => $item->getMorphClass(),
+                    'catalog_key' => $item->key,
+                    'name' => $item->name,
+                    'quantity' => $quantity,
+                ],
+                'billing_cycle' => $lockedSubscription->billing_cycle,
+                'current_subscription_id' => $lockedSubscription->getKey(),
+                'creates_invoice' => false,
+                'requires_payment' => ((int) ($quote['total_minor'] ?? 0)) > 0,
+                'dependency_explanations' => $this->dependencyExplanations($item, $quote['lines']),
+            ];
+
+            if (! hash_equals($this->confirmationToken($currentPreview), $quoteToken)) {
+                throw new DomainException('The Marketplace price or required items changed. Review the refreshed quote before confirming.');
+            }
+        };
+
         return $this->billing->requestUpgrade($subscription, [[
             'catalog_type' => $item->getMorphClass(),
             'catalog_key' => $item->key,
             'quantity' => $quantity,
-        ]]);
+        ]], $quoteValidator);
     }
 
     private function present(Tenant $tenant, ?Subscription $subscription, Module|Feature|Bundle $item): array
     {
-        $price = $subscription !== null
-            ? $this->prices->current(
-                $item,
-                $subscription->billing_cycle,
-                $tenant->default_currency,
-                $tenant->country_code,
-            )
-            : null;
+        // Prospective customers can browse the catalog and see monthly pricing
+        // before subscribing; existing customers see their current billing cycle.
+        $billingCycle = $subscription?->billing_cycle ?? 'monthly';
+        $price = $this->prices->current(
+            $item,
+            $billingCycle,
+            $tenant->default_currency,
+            $tenant->country_code,
+        );
 
         $state = $this->state($tenant, $subscription, $item, $price !== null);
 
@@ -139,7 +288,7 @@ final class ModuleMarketplaceService
             'state' => $state,
             'currency' => $price?->currency,
             'amount_minor' => $price?->amount_minor,
-            'billing_cycle' => $subscription?->billing_cycle,
+            'billing_cycle' => $billingCycle,
             'metadata' => $item->metadata,
         ];
     }
@@ -245,6 +394,134 @@ final class ModuleMarketplaceService
         if (! $this->dependenciesAvailable($item)) {
             throw new DomainException('The requested Marketplace item has unavailable dependencies.');
         }
+    }
+
+    /**
+     * Explain transitive catalog dependencies without implying a charge
+     * unless the actual quote contains a separately priced dependency line.
+     *
+     * @param array<int, array<string, mixed>> $quoteLines
+     * @return array<int, array<string, mixed>>
+     */
+    private function dependencyExplanations(Module|Feature|Bundle $item, array $quoteLines): array
+    {
+        $roots = [];
+
+        if ($item instanceof Bundle) {
+            $item->loadMissing(['modules.features', 'features.module']);
+            foreach ($item->modules as $module) {
+                $roots[] = $module;
+                foreach ($module->features as $feature) {
+                    if ($feature->status === 'active') {
+                        $roots[] = $feature;
+                    }
+                }
+            }
+            foreach ($item->features as $feature) {
+                $roots[] = $feature;
+            }
+        } elseif ($item instanceof Module) {
+            $item->loadMissing('features');
+            $roots[] = $item;
+            foreach ($item->features as $feature) {
+                if ($feature->status === 'active') {
+                    $roots[] = $feature;
+                }
+            }
+        } else {
+            $roots[] = $item;
+        }
+
+        $adjacency = [];
+        foreach (CatalogDependency::query()->with('dependency')->get() as $edge) {
+            if (! $edge->dependency instanceof Module && ! $edge->dependency instanceof Feature) {
+                continue;
+            }
+
+            $adjacency[$edge->dependent_type.':'.$edge->dependent_id][] = $edge;
+        }
+
+        $billableLineKeys = [];
+        foreach ($quoteLines as $line) {
+            if (($line['metadata']['commercial_origin'] ?? 'direct') === 'required_dependency') {
+                $billableLineKeys[($line['catalog_type'] ?? '').':'.($line['catalog_key'] ?? '')] = true;
+            }
+        }
+
+        $queue = $roots;
+        $visited = [];
+        $summary = [];
+
+        while ($queue !== []) {
+            /** @var Module|Feature $dependent */
+            $dependent = array_shift($queue);
+            $dependentNodeKey = $dependent->getMorphClass().':'.$dependent->getKey();
+
+            if (isset($visited[$dependentNodeKey])) {
+                continue;
+            }
+            $visited[$dependentNodeKey] = true;
+
+            if ($dependent instanceof Module) {
+                $dependent->loadMissing('features');
+                foreach ($dependent->features as $feature) {
+                    if ($feature->status === 'active') {
+                        $queue[] = $feature;
+                    }
+                }
+            }
+
+            foreach ($adjacency[$dependentNodeKey] ?? [] as $edge) {
+                $dependency = $edge->dependency;
+                if (! $dependency instanceof Module && ! $dependency instanceof Feature) {
+                    continue;
+                }
+
+                $policy = strtolower((string) ($edge->metadata['billing_policy'] ?? 'included'));
+                if (! in_array($policy, ['included', 'billable', 'free'], true)) {
+                    throw new DomainException("Catalog dependency for {$dependent->key} has an invalid billing policy.");
+                }
+
+                $key = $dependency->getMorphClass().':'.$dependency->key;
+                $currentPolicy = $summary[$key]['billing_policy'] ?? null;
+                $effectivePolicy = match (true) {
+                    $currentPolicy === 'billable' || $policy === 'billable' => 'billable',
+                    $currentPolicy === 'included' || $policy === 'included' => 'included',
+                    default => 'free',
+                };
+
+                $summary[$key] = [
+                    'catalog_type' => $dependency->getMorphClass(),
+                    'catalog_key' => $dependency->key,
+                    'name' => $dependency->name,
+                    'billing_policy' => $effectivePolicy,
+                    'required_by' => array_values(array_unique([
+                        ...($summary[$key]['required_by'] ?? []),
+                        $dependent->key,
+                    ])),
+                ];
+
+                $queue[] = $dependency;
+            }
+        }
+
+        foreach ($summary as $key => &$dependency) {
+            $dependency['treatment'] = match ($dependency['billing_policy']) {
+                'free' => 'free',
+                'included' => 'included',
+                default => isset($billableLineKeys[$key])
+                    ? 'billed_separately'
+                    : 'covered_without_additional_charge',
+            };
+        }
+        unset($dependency);
+
+        usort($summary, static fn (array $left, array $right): int => strcasecmp(
+            (string) $left['name'],
+            (string) $right['name'],
+        ));
+
+        return array_values($summary);
     }
 
     private function dependenciesAvailable(Module|Feature|Bundle $item): bool

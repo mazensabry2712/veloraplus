@@ -25,21 +25,46 @@ final class PaymentService
         ?string $providerPaymentId = null,
         ?string $providerEventId = null,
     ): PlatformPayment {
-        if ($invoice->status !== InvoiceStatus::Open) {
-            throw new DomainException('Only open invoices can receive payment attempts.');
-        }
+        return $invoice->getConnection()->transaction(function () use (
+            $invoice,
+            $provider,
+            $providerPaymentId,
+            $providerEventId,
+        ): PlatformPayment {
+            $lockedInvoice = PlatformInvoice::query()
+                ->lockForUpdate()
+                ->findOrFail($invoice->getKey());
 
-        return PlatformPayment::query()->create([
-            'tenant_id' => $invoice->tenant_id,
-            'invoice_id' => $invoice->getKey(),
-            'provider' => $provider,
-            'provider_payment_id' => $providerPaymentId,
-            'provider_event_id' => $providerEventId,
-            'amount_minor' => $invoice->total_minor,
-            'currency' => $invoice->currency,
-            'status' => PaymentStatus::Pending,
-            'metadata' => null,
-        ]);
+            if ($lockedInvoice->status !== InvoiceStatus::Open) {
+                throw new DomainException('Only open invoices can receive payment attempts.');
+            }
+
+            if ($lockedInvoice->total_minor < 1) {
+                throw new DomainException('Zero-value invoices do not require a payment attempt.');
+            }
+
+            $existingPending = PlatformPayment::query()
+                ->where('invoice_id', $lockedInvoice->getKey())
+                ->where('status', PaymentStatus::Pending->value)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existingPending !== null) {
+                return $existingPending;
+            }
+
+            return PlatformPayment::query()->create([
+                'tenant_id' => $lockedInvoice->tenant_id,
+                'invoice_id' => $lockedInvoice->getKey(),
+                'provider' => $provider,
+                'provider_payment_id' => $providerPaymentId,
+                'provider_event_id' => $providerEventId,
+                'amount_minor' => $lockedInvoice->total_minor,
+                'currency' => $lockedInvoice->currency,
+                'status' => PaymentStatus::Pending,
+                'metadata' => null,
+            ]);
+        });
     }
 
     public function markSucceeded(
@@ -58,9 +83,16 @@ final class PaymentService
             $providerEventId,
             $providerMetadata,
         ): PlatformPayment {
+            // Use invoice -> payment lock order consistently with checkout creation
+            // and invoice voiding to reduce deadlock risk during concurrent callbacks.
+            $paymentReference = PlatformPayment::query()->findOrFail($payment->getKey());
+            $invoice = PlatformInvoice::query()
+                ->lockForUpdate()
+                ->with('items')
+                ->findOrFail($paymentReference->invoice_id);
             $payment = PlatformPayment::query()
                 ->lockForUpdate()
-                ->findOrFail($payment->getKey());
+                ->findOrFail($paymentReference->getKey());
 
             if ($payment->status === PaymentStatus::Succeeded) {
                 return $payment;
@@ -69,11 +101,6 @@ final class PaymentService
             if ($payment->status !== PaymentStatus::Pending) {
                 throw new DomainException('Only a pending payment can succeed.');
             }
-
-            $invoice = PlatformInvoice::query()
-                ->lockForUpdate()
-                ->with('items')
-                ->findOrFail($payment->invoice_id);
 
             if ($invoice->status === InvoiceStatus::Paid) {
                 throw new DomainException('Invoice is already paid.');

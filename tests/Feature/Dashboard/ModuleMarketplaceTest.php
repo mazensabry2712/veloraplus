@@ -80,6 +80,165 @@ test('marketplace overview identifies owned and available catalog items', functi
         ->and($availableRow['amount_minor'])->toBe(3000);
 });
 
+
+
+test('prospective customers can browse catalog prices before subscribing', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+    $feature = marketplaceFeature($tenant, 'marketplace.discovery.'.Str::lower(Str::random(6)), 2750);
+
+    app(TenantContext::class)->set($tenant);
+
+    $overview = app(ModuleMarketplaceService::class)->overview($tenant);
+    $row = $overview['features']->firstWhere('catalog_key', $feature->key);
+
+    expect($overview['subscription'])->toBeNull()
+        ->and($row['state'])->toBe('available')
+        ->and($row['amount_minor'])->toBe(2750)
+        ->and($row['billing_cycle'])->toBe('monthly');
+});
+
+test('marketplace quote preview is read-only and returns dependency-aware price lines', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+
+    $base = marketplaceFeature($tenant, 'marketplace.preview.base.'.Str::lower(Str::random(6)));
+    $extra = marketplaceFeature($tenant, 'marketplace.preview.extra.'.Str::lower(Str::random(6)), 4500);
+    $dependency = marketplaceFeature($tenant, 'marketplace.preview.dependency.'.Str::lower(Str::random(6)), 1500);
+    $included = marketplaceFeature($tenant, 'marketplace.preview.included.'.Str::lower(Str::random(6)), 1000);
+    $free = marketplaceFeature($tenant, 'marketplace.preview.free.'.Str::lower(Str::random(6)), 500);
+
+    $subscription = activeMarketplaceSubscription($tenant, $base);
+    $subscription->update(['metadata' => ['tax_bps' => 1000]]);
+    app(CatalogManager::class)->addDependency($extra, $dependency, 'billable');
+    app(CatalogManager::class)->addDependency($extra, $included, 'included');
+    app(CatalogManager::class)->addDependency($extra, $free, 'free');
+    app(TenantContext::class)->set($tenant);
+
+    $itemCountBefore = $subscription->fresh('items')->items->count();
+    $invoiceCountBefore = $subscription->invoices()->count();
+
+    $preview = app(ModuleMarketplaceService::class)->previewPurchase(
+        tenant: $tenant,
+        catalogType: 'feature',
+        catalogKey: $extra->key,
+        quantity: 2,
+    );
+
+    expect($preview['selection']['catalog_key'])->toBe($extra->key)
+        ->and($preview['selection']['quantity'])->toBe(2)
+        ->and($preview['subtotal_minor'])->toBe(12000)
+        ->and($preview['tax_minor'])->toBe(1200)
+        ->and($preview['total_minor'])->toBe(13200)
+        ->and($preview['lines'])->toHaveCount(2)
+        ->and(collect($preview['lines'])->firstWhere('catalog_key', $dependency->key)['metadata']['commercial_origin'])
+            ->toBe('required_dependency')
+        ->and(collect($preview['dependency_explanations'])->firstWhere('catalog_key', $dependency->key)['treatment'])
+            ->toBe('billed_separately')
+        ->and(collect($preview['dependency_explanations'])->firstWhere('catalog_key', $included->key)['treatment'])
+            ->toBe('included')
+        ->and(collect($preview['dependency_explanations'])->firstWhere('catalog_key', $free->key)['treatment'])
+            ->toBe('free')
+        ->and($preview['creates_invoice'])->toBeFalse()
+        ->and($preview['requires_payment'])->toBeTrue()
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemCountBefore)
+        ->and($subscription->invoices()->count())->toBe($invoiceCountBefore);
+});
+
+
+test('marketplace quote confirmation token changes when the quoted price changes', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+
+    $base = marketplaceFeature($tenant, 'marketplace.token.base.'.Str::lower(Str::random(6)));
+    $extra = marketplaceFeature($tenant, 'marketplace.token.extra.'.Str::lower(Str::random(6)), 3500);
+    activeMarketplaceSubscription($tenant, $base);
+    app(TenantContext::class)->set($tenant);
+
+    $marketplace = app(ModuleMarketplaceService::class);
+    $first = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+    $same = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+
+    CatalogPrice::query()
+        ->where('priceable_type', $extra->getMorphClass())
+        ->where('priceable_id', $extra->getKey())
+        ->where('billing_cycle', 'monthly')
+        ->where('currency', 'EGP')
+        ->update(['amount_minor' => 4200]);
+
+    $second = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+
+    expect($first['confirmation_token'])->toMatch('/^[a-f0-9]{64}$/')
+        ->and($same['confirmation_token'])->toBe($first['confirmation_token'])
+        ->and($second['confirmation_token'])->toMatch('/^[a-f0-9]{64}$/')
+        ->and($second['confirmation_token'])->not->toBe($first['confirmation_token'])
+        ->and($second['total_minor'])->toBeGreaterThan($first['total_minor']);
+});
+
+test('marketplace purchase rejects a stale quote inside the locked upgrade transaction', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+
+    $base = marketplaceFeature($tenant, 'marketplace.stale.base.'.Str::lower(Str::random(6)));
+    $extra = marketplaceFeature($tenant, 'marketplace.stale.extra.'.Str::lower(Str::random(6)), 3500);
+    $subscription = activeMarketplaceSubscription($tenant, $base);
+    app(TenantContext::class)->set($tenant);
+
+    $marketplace = app(ModuleMarketplaceService::class);
+    $staleQuote = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+    $invoiceCount = $subscription->invoices()->count();
+    $itemCount = $subscription->fresh('items')->items->count();
+
+    CatalogPrice::query()
+        ->where('priceable_type', $extra->getMorphClass())
+        ->where('priceable_id', $extra->getKey())
+        ->where('billing_cycle', 'monthly')
+        ->where('currency', 'EGP')
+        ->update(['amount_minor' => 4200]);
+
+    expect(fn () => $marketplace->requestPurchase(
+        tenant: $tenant,
+        catalogType: 'feature',
+        catalogKey: $extra->key,
+        quantity: 1,
+        quoteToken: $staleQuote['confirmation_token'],
+    ))->toThrow(DomainException::class, 'price or required items changed');
+
+    expect($subscription->invoices()->count())->toBe($invoiceCount)
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemCount);
+});
+
+test('marketplace purchase requires a quote token before writing invoice or subscription items', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+
+    $base = marketplaceFeature($tenant, 'marketplace.no-token.base.'.Str::lower(Str::random(6)));
+    $extra = marketplaceFeature($tenant, 'marketplace.no-token.extra.'.Str::lower(Str::random(6)));
+    $subscription = activeMarketplaceSubscription($tenant, $base);
+    app(TenantContext::class)->set($tenant);
+    $invoiceCount = $subscription->invoices()->count();
+    $itemCount = $subscription->fresh('items')->items->count();
+
+    expect(fn () => app(ModuleMarketplaceService::class)->requestPurchase(
+        tenant: $tenant,
+        catalogType: 'feature',
+        catalogKey: $extra->key,
+    ))->toThrow(DomainException::class, 'Preview the current quote');
+
+    expect($subscription->invoices()->count())->toBe($invoiceCount)
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemCount);
+});
+
 test('marketplace purchase creates a pending upgrade invoice for an active subscription', function (): void {
     $tenant = Tenant::factory()->create([
         'default_currency' => 'EGP',
@@ -92,10 +251,15 @@ test('marketplace purchase creates a pending upgrade invoice for an active subsc
     $subscription = activeMarketplaceSubscription($tenant, $base);
     app(TenantContext::class)->set($tenant);
 
-    $invoice = app(ModuleMarketplaceService::class)->requestPurchase(
+    $marketplace = app(ModuleMarketplaceService::class);
+    $quote = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+
+    $invoice = $marketplace->requestPurchase(
         tenant: $tenant,
         catalogType: 'feature',
         catalogKey: $extra->key,
+        quantity: 1,
+        quoteToken: $quote['confirmation_token'],
     );
 
     $pending = $subscription->fresh('items')->items->firstWhere('catalog_key', $extra->key);
