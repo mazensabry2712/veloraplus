@@ -4,8 +4,9 @@
 **Work branch:** `feat/revenue-model-foundation`  
 **Pull request:** [#24 — Revenue model foundation](https://github.com/mazensabry2712/veloraplus/pull/24)  
 **Status:** Draft; not merged or deployed  
-**Last verified implementation commit:** `0ded7fb21ebe37cc1bfbbf6baa916858ac25ebd9`  
-**Verification run:** [GitHub Actions run 40480000039](https://github.com/mazensabry2712/veloraplus/actions/runs/40480000039)
+**Latest verified application-code commit:** `89a7e992fae79abdc91bbe7b5e052e0e5f5443a0`  
+**Latest successful verification:** [GitHub Actions run 40649924066](https://github.com/mazensabry2712/veloraplus/actions/runs/40649924066)  
+**Documentation updates:** this log and `doc/README.md` were subsequently updated on the same feature branch; CI for those documentation commits is tracked separately.
 
 This log records the work delivered on the feature branch, the evidence gathered, and the items that remain release gates. It is not a claim that the branch is deployed or production-ready.
 
@@ -24,6 +25,8 @@ This log records the work delivered on the feature branch, the evidence gathered
 - Added a read-only quote preview for line items, quantities, subtotal, discounts, tax, total, and separately billable dependencies.
 - Kept preview side-effect free: it does not create an invoice, subscription item, or payment attempt.
 - Revalidated the catalog selection and quantity on the server when the customer confirms a purchase. The interface invalidates the previous quote when the quantity changes.
+- Bound quote confirmation to a server-generated HMAC token for the exact selection, subscription, priced lines, quantities, tax, dependency metadata, and total; the server revalidates the quote token before purchase.
+- Prevented direct upgrades from rebilling capabilities already covered by active/pending Module grants, Bundle members, or transitive dependencies. Rejected overlapping direct Module/Feature/Bundle selections that would duplicate bundle coverage.
 - A paid selection creates an upgrade invoice; a free/zero-total selection activates without an unnecessary payment attempt.
 - Kept paid capabilities unavailable until payment is verified and added tests for module/feature entitlement boundaries.
 - Added user-facing status feedback after Marketplace actions.
@@ -34,6 +37,7 @@ This log records the work delivered on the feature branch, the evidence gathered
 - Made upgrade item creation and invoice creation atomic.
 - Locked and re-checked subscription state during upgrade requests so concurrent/stale requests do not create duplicate upgrade invoices.
 - Made renewal processing idempotent so repeated processing of the same period end cannot create a second renewal invoice.
+- Protected scheduled downgrades by locking and revalidating subscription state, refusing removal of a dependency still required by another active/pending subscription item, and updating entitlement projection transactionally.
 - Added zero-value paths for initial subscriptions, upgrades, and renewals without creating payment attempts that cannot collect money.
 
 ## 4. Payment webhook safety
@@ -41,6 +45,7 @@ This log records the work delivered on the feature branch, the evidence gathered
 - Added a payload-hash consistency check for an already-known platform Kashier webhook event. Reusing the same event identity with a different payload is rejected.
 - Added handling for verified, contradictory late terminal-state callbacks: these are recorded as ignored conflicts and acknowledged rather than reversing a terminal payment state or causing endless provider retries.
 - Added corresponding regression coverage for platform payment notifications and late success callbacks against failed tenant payments.
+- Added regression coverage for quote-token invalidation, module/bundle/dependency coverage, bundle overlap, and dependency-safe downgrades.
 - Existing processed webhook deliveries remain idempotent.
 
 ## 5. Refund idempotency and uncertain provider outcomes
@@ -60,14 +65,14 @@ This log records the work delivered on the feature branch, the evidence gathered
 
 ## 7. Verification record
 
-At commit `0ded7fb21ebe37cc1bfbbf6baa916858ac25ebd9`, GitHub Actions completed successfully:
+At application-code commit `89a7e992fae79abdc91bbe7b5e052e0e5f5443a0`, GitHub Actions completed successfully:
 
-- **274 tests passed**
-- **1,452 assertions**
-- **30.00 seconds**
-- Workflow run: [40480000039](https://github.com/mazensabry2712/veloraplus/actions/runs/40480000039)
+- **282 tests passed**
+- **1,488 assertions**
+- **28.81 seconds**
+- Workflow run: [40649924066](https://github.com/mazensabry2712/veloraplus/actions/runs/40649924066)
 
-This result verifies that commit's Laravel test suite in CI. Any subsequent source change must be verified by a newer run before it is described as passing.
+Earlier intermediate verification also passed at `0ded7fb` with 274 tests and 1,452 assertions. The latest successful run is the stronger evidence for the application-code scope recorded above. Documentation-only commits followed that code commit and have their own CI runs. A green suite verifies the tested commit; it does not itself certify live payment readiness or production deployment.
 
 ## 8. Remaining work before merge / production
 
