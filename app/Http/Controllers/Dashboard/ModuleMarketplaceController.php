@@ -95,6 +95,7 @@ final class ModuleMarketplaceController extends Controller
                 catalogType: (string) $data['catalog_type'],
                 catalogKey: (string) $data['catalog_key'],
                 quantity: (int) $data['quantity'],
+                quoteToken: (string) $data['quote_token'],
             );
         } catch (DomainException $exception) {
             return back()->withErrors(['marketplace' => $exception->getMessage()])->withInput();
