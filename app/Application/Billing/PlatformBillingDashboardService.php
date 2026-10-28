@@ -155,6 +155,7 @@ final class PlatformBillingDashboardService
             $subscription,
             $resolvedItems,
             (int) ($subscription->metadata['tax_bps'] ?? 0),
+            $quoteValidator,
         );
     }
 
