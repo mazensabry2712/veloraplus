@@ -194,6 +194,7 @@ final class ModuleMarketplaceService
         string $catalogType,
         string $catalogKey,
         int $quantity = 1,
+        ?string $quoteToken = null,
     ) {
         $this->assertCurrentTenant($tenant);
 
@@ -225,11 +226,39 @@ final class ModuleMarketplaceService
             throw new DomainException("Marketplace item {$item->key} is already {$ownedState}.");
         }
 
+        $quoteValidator = null;
+
+        if ($quoteToken !== null && $quoteToken !== '') {
+            $quoteValidator = function (Subscription $lockedSubscription, array $quote) use (
+                $item,
+                $quantity,
+                $quoteToken,
+            ): void {
+                $currentPreview = [
+                    ...$quote,
+                    'selection' => [
+                        'catalog_type' => $item->getMorphClass(),
+                        'catalog_key' => $item->key,
+                        'name' => $item->name,
+                        'quantity' => $quantity,
+                    ],
+                    'billing_cycle' => $lockedSubscription->billing_cycle,
+                    'current_subscription_id' => $lockedSubscription->getKey(),
+                    'creates_invoice' => false,
+                    'requires_payment' => ((int) ($quote['total_minor'] ?? 0)) > 0,
+                ];
+
+                if (! hash_equals($this->confirmationToken($currentPreview), $quoteToken)) {
+                    throw new DomainException('The Marketplace price or required items changed. Review the refreshed quote before confirming.');
+                }
+            };
+        }
+
         return $this->billing->requestUpgrade($subscription, [[
             'catalog_type' => $item->getMorphClass(),
             'catalog_key' => $item->key,
             'quantity' => $quantity,
-        ]]);
+        ]], $quoteValidator);
     }
 
     private function present(Tenant $tenant, ?Subscription $subscription, Module|Feature|Bundle $item): array
