@@ -101,6 +101,29 @@ final class CatalogDependencyResolver
 
             if ($item instanceof Bundle) {
                 $item->loadMissing(['modules.features', 'features.module']);
+
+                // Prevent two direct selections from charging for overlapping
+                // bundle coverage. Compare the complete unique member set before
+                // adding this bundle's own coverage to the shared map.
+                $bundleMembers = [];
+                foreach ($item->modules as $module) {
+                    $bundleMembers[$this->catalogKey($module)] = true;
+                    foreach ($module->features as $feature) {
+                        if ($feature->status === 'active') {
+                            $bundleMembers[$this->catalogKey($feature)] = true;
+                        }
+                    }
+                }
+                foreach ($item->features as $feature) {
+                    $bundleMembers[$this->catalogKey($feature)] = true;
+                }
+
+                foreach (array_keys($bundleMembers) as $memberKey) {
+                    if (isset($rootKeys[$memberKey]) || isset($coveredByBundle[$memberKey])) {
+                        throw new DomainException("Bundle {$item->key} overlaps another selected Module, Feature, or Bundle.");
+                    }
+                }
+
                 foreach ($item->modules as $module) {
                     $coveredByBundle[$this->catalogKey($module)] = max(
                         $coveredByBundle[$this->catalogKey($module)] ?? 0,
