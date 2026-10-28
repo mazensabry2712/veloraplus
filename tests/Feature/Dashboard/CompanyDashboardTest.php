@@ -1,5 +1,6 @@
 <?php
 
+use App\Application\Authorization\TenantRbacBootstrapper;
 use App\Models\PlatformAccount;
 use App\Models\Tenant;
 use App\Models\TenantDomain;
@@ -114,6 +115,37 @@ test('active tenant member can access the company dashboard', function (): void 
         ->assertSee('Dashboard Tenant')
         ->assertSee('Dashboard Member')
         ->assertSee('Owner');
+});
+
+
+test('Marketplace purchase endpoint requires a fresh quote confirmation token', function (): void {
+    $path = dashboardTestTenantDatabasePath();
+    $this->dashboardTenantDatabasePath = $path;
+
+    $tenant = createDashboardTenant($path);
+    $owner = PlatformAccount::factory()->create([
+        'name' => 'Marketplace Billing Owner',
+    ]);
+
+    TenantMembership::create([
+        'tenant_id' => $tenant->getKey(),
+        'account_id' => $owner->getKey(),
+        'role_key' => 'owner',
+        'status' => 'active',
+        'joined_at' => now(),
+    ]);
+
+    app(TenantRbacBootstrapper::class)->bootstrapForTenant($tenant);
+
+    $this->actingAs($owner)
+        ->from('http://dashboard-tenant.velora.test/dashboard/marketplace')
+        ->post('http://dashboard-tenant.velora.test/dashboard/marketplace/purchase', [
+            'catalog_type' => 'feature',
+            'catalog_key' => 'feature.without.quote',
+            'quantity' => 1,
+        ])
+        ->assertRedirect('http://dashboard-tenant.velora.test/dashboard/marketplace')
+        ->assertSessionHasErrors(['marketplace' => 'Preview the current quote before confirming your Marketplace purchase.']);
 });
 
 test('account without an active tenant membership cannot access the dashboard', function (): void {
