@@ -367,14 +367,14 @@ final class SubscriptionService
                 'ends_at' => $lockedSubscription->current_period_end,
             ]);
 
+            $lockedSubscription->refresh()->load('items');
+            $this->projector->project($lockedSubscription);
+            $this->audit->record($lockedSubscription->tenant, 'subscription.item_downgrade_scheduled', $lockedItem, [
+                'ends_at' => $lockedItem->ends_at?->toIso8601String(),
+            ]);
+
             return $lockedItem->refresh();
         });
-
-        $refreshedSubscription = $subscription->fresh('items');
-        $this->projector->project($refreshedSubscription);
-        $this->audit->record($subscription->tenant, 'subscription.item_downgrade_scheduled', $scheduledItem, [
-            'ends_at' => $scheduledItem->ends_at?->toIso8601String(),
-        ]);
 
         return $scheduledItem->refresh();
     }
