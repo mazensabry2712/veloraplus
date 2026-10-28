@@ -197,7 +197,9 @@ final class CatalogDependencyResolver
             /** @var Module|Feature $dependent */
             $dependent = $current['item'];
             $dependentKey = $this->nodeKey($dependent->getMorphClass(), $dependent->getKey());
-            $visitKey = $dependentKey.':'.$current['quantity'];
+            // Preserve each root selection's provenance while still
+            // breaking cycles for the same root and quantity.
+            $visitKey = $dependentKey.':'.$current['quantity'].':'.(string) $current['required_by'];
 
             if (isset($visited[$visitKey])) {
                 continue;
