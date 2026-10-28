@@ -37,6 +37,7 @@ Implementation must follow these documents:
 23. 23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md
 24. 24-CATALOG-COMMERCE-DEPENDENCY-AUDIT.md
 25. 25-PRODUCT-VISION-OUTCOME-FIRST-PLATFORM.md
+26. 26-REVENUE-FOUNDATION-IMPLEMENTATION-LOG.md
 
 ## Locked decisions
 
@@ -136,7 +137,7 @@ The approved strategic direction is defined in doc/25-PRODUCT-VISION-OUTCOME-FIR
 
 The revenue strategy and rollout order are defined in doc/23-REVENUE-MODEL-AND-COMMERCIAL-ROADMAP.md. This is a proposed roadmap, not a claim that all listed channels are implemented. The first commercial engineering priority is transparent, dependency-aware catalog quoting and subscription commerce; usage billing, partner marketplace, payment-related revenue, and AI monetization remain gated on their own implementation, operational, and legal requirements.
 
-The dependency commerce audit in doc/24-CATALOG-COMMERCE-DEPENDENCY-AUDIT.md tracks the remaining release gaps. Dependency billing policies are now stored and applied by subscription quote expansion for create/upgrade flows, with origin/reason snapshots and shared-dependency deduplication. Customer-facing quote explanations, remaining bundle/quantity edge cases, and the whole-Module versus Feature authorization contract must still be verified before self-serve purchase is advertised as complete.
+The dependency commerce audit in doc/24-CATALOG-COMMERCE-DEPENDENCY-AUDIT.md tracks the remaining release gaps. The feature branch now contains a tenant Marketplace with read-only quotes, dependency-aware create/upgrade pricing, quote revalidation, zero-value activation, and additional payment/refund safety checks. The implementation log in doc/26-REVENUE-FOUNDATION-IMPLEMENTATION-LOG.md records the exact scope and CI evidence. Outcome-guided recommendations, complete included/free/bundle explanations, remaining bundle/quantity edge cases, uncertain-refund reconciliation, and production payment readiness remain release gates; the Marketplace must not be advertised as fully production-ready until these are closed.
 
 ## Non-negotiable rules
 
