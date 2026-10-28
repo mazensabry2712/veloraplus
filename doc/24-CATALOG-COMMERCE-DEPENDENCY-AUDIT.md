@@ -27,7 +27,7 @@ This document tracks the current implementation on the revenue-model feature bra
 
 Subscription creation resolves billable dependencies and calculates the initial quote inside the same transaction that persists subscription items and the first invoice. Upgrade preview and upgrade persistence use the dependency-aware pricing path, with the upgrade quote recalculated under the locked subscription transaction. The same resolved billable lines feed subscription and invoice items.
 
-Regression tests cover shared direct and transitive billable dependencies, provenance, existing coverage across active Modules, Bundle members, and transitive dependencies, read-only Marketplace preview, quote confirmation invalidation, and bundle overlap. Broader ownership/quantity edge cases, dependency-safe cancellation/downgrade behavior, and the feature-granular entitlement contract still need release-level review.
+Regression tests cover shared direct and transitive billable dependencies, provenance, existing coverage across active Modules, Bundle members, and transitive dependencies, read-only Marketplace preview, quote confirmation invalidation, bundle overlap, and blocking removal of a dependency still required by another active/pending subscription item. Broader ownership/quantity edge cases, cancellation lifecycle behavior, and the feature-granular entitlement contract still need release-level review.
 
 ### 2.2 Dependency billing policy is enforced for priced lines; explanation and lifecycle gaps remain
 
@@ -43,7 +43,7 @@ The chosen policy must be stored centrally and validated by catalog management, 
 
 ### 2.3 Shared dependencies must not be billed twice
 
-The current resolver emits one billable line for a shared dependency and preserves all root selections in its `required_by` metadata, including transitive paths. Upgrade preview now treats active/pending Module grants, Bundle members, and dependency-expanded coverage as already covered, so direct upgrade requests cannot bypass the Marketplace ownership check. Quantity differences and scheduled-removal transitions still require broader regression coverage.
+The current resolver emits one billable line for a shared dependency and preserves all root selections in its `required_by` metadata, including transitive paths. Upgrade preview now treats active/pending Module grants, Bundle members, and dependency-expanded coverage as already covered, so direct upgrade requests cannot bypass the Marketplace ownership check. Quantity differences and cancellation lifecycle transitions still require broader regression coverage. Scheduled downgrade now locks and revalidates the subscription/item, refuses to remove a dependency required by another active/pending root, and projects the change in the same transaction.
 
 ### 2.4 Module entitlement semantics conflict with granular selection
 
@@ -93,7 +93,7 @@ The browser may preview the selection, but the server must recompute and validat
 4. Subscription upgrade/create: persist the same normalized billable items, with explicit origin metadata.
 5. Invoice lines: preserve the quoted price, description, quantity, and origin/reason snapshot. The Marketplace token detects changed quote lines before confirmation.
 6. Entitlement projection: grant all required capabilities without depending on client state.
-7. Cancellation/downgrade: do not remove a dependency while an active purchased root still requires it.
+7. Cancellation/downgrade: scheduled downgrade now refuses to remove a dependency while another active/pending purchased root still requires it; full cancellation/renewal lifecycle behavior remains a release gate.
 8. Audit: record requested roots, expanded items, policy, quote, and resulting subscription changes.
 9. UI: show direct selections, auto-added requirements, included items, existing coverage, and total before confirmation.
 
