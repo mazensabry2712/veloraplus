@@ -23,17 +23,17 @@ This document tracks the current implementation on the revenue-model feature bra
 
 ## 2. Critical commercial gaps
 
-### 2.1 Quote and purchase do not share a dependency-expanded item set
+### 2.1 Dependency-expanded quoting is implemented; lifecycle coverage still needs release review
 
-A customer can select a Feature whose dependencies are resolved for authorization, while the quote and subscription item list still contain only the requested item. This can produce a commercial mismatch between what is granted and what is billed.
+Subscription creation resolves billable dependencies and calculates the initial quote inside the same transaction that persists subscription items and the first invoice. Upgrade preview and upgrade persistence use the dependency-aware pricing path, with the upgrade quote recalculated under the locked subscription transaction. The same resolved billable lines feed subscription and invoice items.
 
-The resolver expands billable dependency lines before quote creation, and the same quote lines are used for invoice items and subscription items. Tests cover shared billable dependencies, existing coverage, read-only preview, core entitlement boundaries, and rejection of two selected bundles that overlap on a shared feature. Broader ownership/quantity edge cases, cancellation/downgrade, and the feature-granular entitlement contract still need release-level review.
+Regression tests cover shared direct and transitive billable dependencies, provenance, existing coverage, read-only Marketplace preview, quote confirmation invalidation, and bundle overlap. Broader ownership/quantity edge cases, cancellation/downgrade behavior, and the feature-granular entitlement contract still need release-level review.
 
-### 2.2 Dependency billing policy is not yet enforced end-to-end
+### 2.2 Dependency billing policy is enforced for priced lines; explanation and lifecycle gaps remain
 
-The dependency edge validates and stores a `billing_policy` value, and the subscription resolver applies it when expanding billable dependencies. The quote UI identifies separately priced required dependencies. Directly selected bundles are rejected when their module/feature coverage overlaps another selected item or bundle, with a regression test for shared-feature overlap. The UI still needs complete item-by-item explanations for included/free dependencies and bundle-covered capabilities; broader ownership edge cases remain.
+The dependency edge validates and stores a `billing_policy` value, and the subscription resolver applies it when expanding billable dependencies. The quote UI identifies separately priced required dependencies. Directly selected bundles are rejected when their module/feature coverage overlaps another selected item or bundle, with regression coverage for shared-feature overlap. The UI still needs complete item-by-item explanations for included/free dependencies and bundle-covered capabilities; broader ownership edge cases remain.
 
-Stored policy contract (the billing integration is still required):
+Stored policy contract:
 - included: dependency is automatically selected/granted but does not add a separate price line because the parent price includes it.
 - billable: dependency is separately priced unless already covered by an active subscription item or bundle.
 - free: dependency is required and granted but has no charge; it must not carry a customer charge.
@@ -69,19 +69,19 @@ No overlap should create duplicate subscription items or unexpected charges.
 
 ## 3. Canonical commercial resolution contract
 
-The current server-side resolver accepts trusted catalog model instances and quantities. It should return a normalized, deterministic selection containing at least:
+The current server-side resolver accepts trusted catalog model instances and quantities. It expands billable dependencies, deduplicates shared billable lines, records commercial origin and `required_by`, validates quantities and dependency availability, and rejects overlapping direct bundle/module/feature selections. The full normalized selection contract still needs to cover:
 
 - requested root items;
 - transitive required dependencies;
 - per-item origin/reason;
 - dependency billing policy;
 - selected quantity and validated quantity rules;
-- existing effective subscription coverage;
-- bundle coverage;
+- complete existing effective subscription coverage across module grants, bundle members, and transitive dependencies;
+- complete bundle coverage and a consistent Module-versus-Feature ownership contract;
 - items that require a price line;
 - items that are granted but included/free;
 - warnings or errors for unavailable dependencies;
-- a stable fingerprint or version for quote/checkout consistency.
+- a stable fingerprint or version for quote/checkout consistency. The Marketplace currently uses an HMAC confirmation token tied to the selected item, subscription, price lines, quantities, totals, tax, and dependency metadata; the token is revalidated before purchase.
 
 The browser may preview the selection, but the server must recompute and validate it during quote/purchase. Never trust client-supplied prices, dependency lists, included flags, or entitlement claims.
 
@@ -89,9 +89,9 @@ The browser may preview the selection, but the server must recompute and validat
 
 1. Catalog dependency management: validate commercial metadata and expose policy through the application service.
 2. Marketplace overview/selection: show included and billable dependencies, ownership, and readiness.
-3. Pricing: quote the canonical normalized list exactly once, including shared-dependency deduplication.
+3. Pricing: quote the normalized billable list exactly once, including shared-dependency deduplication; initial subscription pricing is now calculated inside the persistence transaction.
 4. Subscription upgrade/create: persist the same normalized billable items, with explicit origin metadata.
-5. Invoice lines: preserve the approved price, description, quantity, and origin/reason snapshot.
+5. Invoice lines: preserve the quoted price, description, quantity, and origin/reason snapshot. The Marketplace token detects changed quote lines before confirmation.
 6. Entitlement projection: grant all required capabilities without depending on client state.
 7. Cancellation/downgrade: do not remove a dependency while an active purchased root still requires it.
 8. Audit: record requested roots, expanded items, policy, quote, and resulting subscription changes.
