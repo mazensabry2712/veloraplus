@@ -171,6 +171,41 @@ test('marketplace quote confirmation token changes when the quoted price changes
         ->and($second['total_minor'])->toBeGreaterThan($first['total_minor']);
 });
 
+test('marketplace purchase rejects a stale quote inside the locked upgrade transaction', function (): void {
+    $tenant = Tenant::factory()->create([
+        'default_currency' => 'EGP',
+        'country_code' => 'EG',
+    ]);
+
+    $base = marketplaceFeature($tenant, 'marketplace.stale.base.'.Str::lower(Str::random(6)));
+    $extra = marketplaceFeature($tenant, 'marketplace.stale.extra.'.Str::lower(Str::random(6)), 3500);
+    $subscription = activeMarketplaceSubscription($tenant, $base);
+    app(TenantContext::class)->set($tenant);
+
+    $marketplace = app(ModuleMarketplaceService::class);
+    $staleQuote = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+    $invoiceCount = $subscription->invoices()->count();
+    $itemCount = $subscription->fresh('items')->items->count();
+
+    CatalogPrice::query()
+        ->where('priceable_type', $extra->getMorphClass())
+        ->where('priceable_id', $extra->getKey())
+        ->where('billing_cycle', 'monthly')
+        ->where('currency', 'EGP')
+        ->update(['amount_minor' => 4200]);
+
+    expect(fn () => $marketplace->requestPurchase(
+        tenant: $tenant,
+        catalogType: 'feature',
+        catalogKey: $extra->key,
+        quantity: 1,
+        quoteToken: $staleQuote['confirmation_token'],
+    ))->toThrow(DomainException::class, 'price or required items changed');
+
+    expect($subscription->invoices()->count())->toBe($invoiceCount)
+        ->and($subscription->fresh('items')->items)->toHaveCount($itemCount);
+});
+
 test('marketplace purchase creates a pending upgrade invoice for an active subscription', function (): void {
     $tenant = Tenant::factory()->create([
         'default_currency' => 'EGP',
