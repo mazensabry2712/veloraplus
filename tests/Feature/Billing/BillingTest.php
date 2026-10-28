@@ -609,6 +609,20 @@ test('upgrade service rejects features already covered by an active module or bu
         $bundleSubscription->fresh(),
         [['item' => $bundleFeature]],
     ))->toThrow(DomainException::class, 'already part of the subscription');
+
+    $dependencyTenant = Tenant::factory()->create();
+    $dependencyModule = billingModule('coverage-dependency-module');
+    $root = billingFeature($dependencyModule, 'coverage.dependency.root');
+    $dependency = billingFeature($dependencyModule, 'coverage.dependency.required');
+    billingPrice($root, 5000);
+    billingPrice($dependency, 2000);
+    app(\App\Application\Catalog\CatalogManager::class)->addDependency($root, $dependency, 'included');
+    $dependencySubscription = paidSubscription($dependencyTenant, [['item' => $root]]);
+
+    expect(fn () => app(SubscriptionService::class)->requestUpgrade(
+        $dependencySubscription->fresh(),
+        [['item' => $dependency]],
+    ))->toThrow(DomainException::class, 'already part of the subscription');
 });
 
 test('upgrade does not bill a billable dependency already covered by the subscription', function () {
