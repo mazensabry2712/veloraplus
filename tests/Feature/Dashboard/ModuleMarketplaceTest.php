@@ -153,6 +153,7 @@ test('marketplace quote confirmation token changes when the quoted price changes
 
     $marketplace = app(ModuleMarketplaceService::class);
     $first = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
+    $same = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
 
     CatalogPrice::query()
         ->where('priceable_type', $extra->getMorphClass())
@@ -164,6 +165,7 @@ test('marketplace quote confirmation token changes when the quoted price changes
     $second = $marketplace->previewPurchase($tenant, 'feature', $extra->key, 1);
 
     expect($first['confirmation_token'])->toMatch('/^[a-f0-9]{64}$/')
+        ->and($same['confirmation_token'])->toBe($first['confirmation_token'])
         ->and($second['confirmation_token'])->toMatch('/^[a-f0-9]{64}$/')
         ->and($second['confirmation_token'])->not->toBe($first['confirmation_token'])
         ->and($second['total_minor'])->toBeGreaterThan($first['total_minor']);
