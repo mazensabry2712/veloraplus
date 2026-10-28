@@ -385,9 +385,9 @@ final class SubscriptionService
     private function dependencyRootsFor(SubscriptionItem $item): array
     {
         return match ($item->catalog_type) {
-            'module' => array_values(array_filter([
+            'module' => $this->moduleDependencyRoots(
                 Module::query()->where('key', $item->catalog_key)->first(),
-            ])),
+            ),
             'feature' => array_values(array_filter([
                 Feature::query()->where('key', $item->catalog_key)->first(),
             ])),
@@ -399,10 +399,30 @@ final class SubscriptionService
     /**
      * @return array<int, Module|Feature>
      */
+    private function moduleDependencyRoots(?Module $module): array
+    {
+        if ($module === null) {
+            return [];
+        }
+
+        $module->loadMissing('features');
+
+        return [
+            $module,
+            ...$module->features
+                ->filter(fn (Feature $feature) => $feature->status === 'active')
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array<int, Module|Feature>
+     */
     private function bundleDependencyRoots(string $bundleKey): array
     {
         $bundle = Bundle::query()
-            ->with(['modules', 'features'])
+            ->with(['modules.features', 'features'])
             ->where('key', $bundleKey)
             ->first();
 
@@ -410,7 +430,13 @@ final class SubscriptionService
             return [];
         }
 
-        return [...$bundle->modules->all(), ...$bundle->features->all()];
+        $roots = [];
+
+        foreach ($bundle->modules as $module) {
+            $roots = [...$roots, ...$this->moduleDependencyRoots($module)];
+        }
+
+        return [...$roots, ...$bundle->features->all()];
     }
 
     public function cancelAtPeriodEnd(Subscription $subscription): Subscription
