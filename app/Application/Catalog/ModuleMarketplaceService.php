@@ -161,7 +161,12 @@ final class ModuleMarketplaceService
             'discount_minor' => $line['discount_minor'] ?? null,
             'tax_minor' => $line['tax_minor'] ?? null,
             'line_total_minor' => $line['line_total_minor'] ?? null,
-            'metadata' => $line['metadata'] ?? [],
+            'metadata' => [
+                'bundle_discount_bps' => $line['metadata']['bundle_discount_bps'] ?? 0,
+                'tax_bps' => $line['metadata']['tax_bps'] ?? 0,
+                'commercial_origin' => $line['metadata']['commercial_origin'] ?? 'direct',
+                'required_by' => array_values((array) ($line['metadata']['required_by'] ?? [])),
+            ],
         ], $preview['lines'] ?? []);
 
         $fingerprint = [
