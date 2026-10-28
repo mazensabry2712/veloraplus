@@ -195,6 +195,7 @@
                     <input type="hidden" name="catalog_type">
                     <input type="hidden" name="catalog_key">
                     <input type="hidden" name="quantity" value="1">
+                    <input type="hidden" name="quote_token" value="">
                     <p id="quote-confirmation-note" class="max-w-2xl text-xs leading-5 text-slate-500">Confirming creates the upgrade invoice. Paid capabilities become available only after payment is verified.</p>
                     <button type="submit" id="confirm-marketplace-purchase" disabled
                             class="shrink-0 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300">
@@ -294,6 +295,9 @@
                         : 'No additional billable dependencies were added to this selection.';
 
                     syncPurchaseFields();
+                    if (purchaseForm?.elements.quote_token) {
+                        purchaseForm.elements.quote_token.value = quote.confirmation_token || '';
+                    }
                     lastQuotedSelection = {
                         catalog_type: data.catalog_type,
                         catalog_key: data.catalog_key,
@@ -330,6 +334,7 @@
                     selectionName = card.querySelector('h4')?.textContent?.trim() || card.dataset.key;
                     document.getElementById('quote-selection-name').textContent = selectionName;
                     lastQuotedSelection = null;
+                    if (purchaseForm?.elements.quote_token) purchaseForm.elements.quote_token.value = '';
                     syncPurchaseFields();
                     panel.hidden = false;
                     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -345,6 +350,7 @@
             previewForm.elements.quantity.addEventListener('input', () => {
                 previewRequestId += 1;
                 lastQuotedSelection = null;
+                if (purchaseForm?.elements.quote_token) purchaseForm.elements.quote_token.value = '';
                 output.hidden = true;
                 loading.hidden = true;
                 if (confirmButton) confirmButton.disabled = true;
