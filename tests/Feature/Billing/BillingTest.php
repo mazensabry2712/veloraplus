@@ -578,6 +578,39 @@ test('shared transitive billable dependencies retain every root in their provena
         ->and($contactsItem->metadata['required_by'])->toEqualCanonicalizing(['sales.orders', 'sales.reporting']);
 });
 
+
+test('upgrade service rejects features already covered by an active module or bundle', function () {
+    $moduleTenant = Tenant::factory()->create();
+    $module = billingModule('coverage-module');
+    $moduleFeature = billingFeature($module, 'coverage.module.feature');
+    billingPrice($module, 8000);
+    billingPrice($moduleFeature, 3000);
+    $moduleSubscription = paidSubscription($moduleTenant, [['item' => $module]]);
+
+    expect(fn () => app(SubscriptionService::class)->requestUpgrade(
+        $moduleSubscription->fresh(),
+        [['item' => $moduleFeature]],
+    ))->toThrow(DomainException::class, 'already part of the subscription');
+
+    $bundleTenant = Tenant::factory()->create();
+    $bundleModule = billingModule('coverage-bundle-module');
+    $bundleFeature = billingFeature($bundleModule, 'coverage.bundle.feature');
+    $bundle = app(\App\Application\Catalog\CatalogManager::class)->createBundle([
+        'key' => 'coverage.bundle',
+        'name' => 'Coverage Bundle',
+        'status' => 'active',
+    ]);
+    app(\App\Application\Catalog\CatalogManager::class)->addModuleToBundle($bundle, $bundleModule);
+    billingPrice($bundle, 9000);
+    billingPrice($bundleFeature, 3000);
+    $bundleSubscription = paidSubscription($bundleTenant, [['item' => $bundle]]);
+
+    expect(fn () => app(SubscriptionService::class)->requestUpgrade(
+        $bundleSubscription->fresh(),
+        [['item' => $bundleFeature]],
+    ))->toThrow(DomainException::class, 'already part of the subscription');
+});
+
 test('upgrade does not bill a billable dependency already covered by the subscription', function () {
     $tenant = Tenant::factory()->create();
     $module = billingModule('sales');
