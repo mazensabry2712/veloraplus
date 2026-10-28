@@ -27,11 +27,11 @@ This document tracks the current implementation on the revenue-model feature bra
 
 A customer can select a Feature whose dependencies are resolved for authorization, while the quote and subscription item list still contain only the requested item. This can produce a commercial mismatch between what is granted and what is billed.
 
-The resolver expands billable dependency lines before quote creation, and the same quote lines are used for invoice items and subscription items. Tests cover shared billable dependencies, existing coverage, read-only preview, and core entitlement boundaries. Bundle overlap, broader ownership/quantity edge cases, cancellation/downgrade, and the feature-granular entitlement contract still need release-level review.
+The resolver expands billable dependency lines before quote creation, and the same quote lines are used for invoice items and subscription items. Tests cover shared billable dependencies, existing coverage, read-only preview, core entitlement boundaries, and rejection of two selected bundles that overlap on a shared feature. Broader ownership/quantity edge cases, cancellation/downgrade, and the feature-granular entitlement contract still need release-level review.
 
 ### 2.2 Dependency billing policy is not yet enforced end-to-end
 
-The dependency edge validates and stores a `billing_policy` value, and the subscription resolver applies it when expanding billable dependencies. The quote UI identifies separately priced required dependencies. It does not yet provide a complete item-by-item explanation for included/free dependencies or bundle-covered capabilities; bundle overlap/ownership edge cases still require regression coverage.
+The dependency edge validates and stores a `billing_policy` value, and the subscription resolver applies it when expanding billable dependencies. The quote UI identifies separately priced required dependencies. Directly selected bundles are rejected when their module/feature coverage overlaps another selected item or bundle, with a regression test for shared-feature overlap. The UI still needs complete item-by-item explanations for included/free dependencies and bundle-covered capabilities; broader ownership edge cases remain.
 
 Stored policy contract (the billing integration is still required):
 - included: dependency is automatically selected/granted but does not add a separate price line because the parent price includes it.
