@@ -45,7 +45,6 @@ final class SubscriptionService
 
         $subscription = $tenant->getConnection()->transaction(function () use (
             $tenant,
-            $quote,
             $now,
             $trialEndsAt,
             $periodStart,
