@@ -31,7 +31,7 @@ Regression tests cover shared direct and transitive billable dependencies, prove
 
 ### 2.2 Dependency billing policy is enforced for priced lines; explanation and lifecycle gaps remain
 
-The dependency edge validates and stores a `billing_policy` value, and the subscription resolver applies it when expanding billable dependencies. The quote UI identifies separately priced required dependencies. Directly selected bundles are rejected when their module/feature coverage overlaps another selected item or bundle, with regression coverage for shared-feature overlap. The UI still needs complete item-by-item explanations for included/free dependencies and bundle-covered capabilities; broader ownership edge cases remain.
+The dependency edge validates and stores a `billing_policy` value, and the subscription resolver applies it when expanding billable dependencies. The quote UI now explains transitive dependencies as separately billed, included, free, or covered without an additional charge by the selected app/bundle or current subscription. These explanations are included in the signed quote fingerprint, and stale quotes are revalidated inside the locked upgrade transaction. Directly selected bundles are rejected when their module/feature coverage overlaps another selected item or bundle, with regression coverage for shared-feature overlap. Broader bundle ownership, cancellation, and quantity edge cases remain.
 
 Stored policy contract:
 - included: dependency is automatically selected/granted but does not add a separate price line because the parent price includes it.
@@ -127,7 +127,7 @@ Minimum regression coverage before launch:
 
 1. Complete the existing Phase 8.6 verification/release gate and reconcile the branch with `main`.
 2. Agree and implement the Module-versus-Feature entitlement semantics consistently across UI, middleware, projector, and tests.
-3. Add bundle/ownership/cancellation/quantity edge-case coverage and item-level included/free explanations.
+3. Add remaining bundle ownership, cancellation, and quantity edge-case coverage, including richer item-level evidence of which bundle/current subscription grants each dependency.
 4. Complete operational reconciliation for uncertain provider outcomes and verify the production payment configuration.
 5. Run the full test suite and CI; reconcile docs and release gates.
 6. Only then merge, enable live self-serve commercial selection, or advertise it as production-ready.
@@ -153,5 +153,5 @@ The backend now exposes an authorized Marketplace preview endpoint:
 - Requires the current tenant context and billing-management authorization.
 - The tenant-facing Blade Marketplace consumes this endpoint, signs the displayed quote with a server-side HMAC confirmation token, and recomputes the quote before purchase. A changed price, subscription, tax, discount, or dependency line invalidates the prior confirmation; volatile quote timestamps are excluded from the token.
 - Prospective customers can browse monthly catalog prices without an active subscription, but they cannot preview/purchase until an active or grace subscription exists.
-- The outcome-guided recommendation journey, complete included/free/bundle coverage explanations, production payment readiness, and operational reconciliation remain unfinished release gates.
+- The outcome-guided recommendation journey, richer proof of exact bundle/current-subscription coverage, production payment readiness, and operational reconciliation remain unfinished release gates.
 
