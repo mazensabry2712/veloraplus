@@ -4,8 +4,8 @@
 **Work branch:** `feat/revenue-model-foundation`  
 **Pull request:** [#24 — Revenue model foundation](https://github.com/mazensabry2712/veloraplus/pull/24)  
 **Status:** Draft; not merged or deployed  
-**Latest verified application-code commit:** `9670c50baf8afeaf2266e4123e9f2f621bd190b9`  
-**Latest successful verification:** [GitHub Actions run 40651286276](https://github.com/mazensabry2712/veloraplus/actions/runs/40651286276)  
+**Latest verified application-code commit:** `367c1472e7140049ecaaa00967473cb0b8519242`  
+**Latest successful verification:** [GitHub Actions run 40651801957](https://github.com/mazensabry2712/veloraplus/actions/runs/40651801957)  
 **Documentation updates:** this log and `doc/README.md` are tracked on the same feature branch; later documentation commits receive their own CI runs.
 
 This log records the work delivered on the feature branch, the evidence gathered, and the items that remain release gates. It is not a claim that the branch is deployed or production-ready.
@@ -27,6 +27,7 @@ This log records the work delivered on the feature branch, the evidence gathered
 - Revalidated the catalog selection and quantity on the server when the customer confirms a purchase. The interface invalidates the previous quote when the quantity changes.
 - Bound quote confirmation to a server-generated HMAC token for the exact selection, subscription, priced lines, quantities, tax, dependency metadata, and total.
 - Revalidate the quote token again inside the locked subscription-upgrade transaction immediately after recalculating the quote and before writing subscription items or an invoice. A stale quote therefore rolls back before any purchase records are created.
+- Explain transitive dependencies in the quote: separately billed dependencies, included dependencies, free dependencies, and billable dependencies already covered by the selected app/bundle or current subscription. The explanation is included in the signed quote fingerprint.
 - Prevented direct upgrades from rebilling capabilities already covered by active/pending Module grants, Bundle members, or transitive dependencies. Rejected overlapping direct Module/Feature/Bundle selections that would duplicate bundle coverage.
 - A paid selection creates an upgrade invoice; a free/zero-total selection activates without an unnecessary payment attempt.
 - Kept paid capabilities unavailable until payment is verified and added tests for module/feature entitlement boundaries.
@@ -46,7 +47,7 @@ This log records the work delivered on the feature branch, the evidence gathered
 - Added a payload-hash consistency check for an already-known platform Kashier webhook event. Reusing the same event identity with a different payload is rejected.
 - Added handling for verified, contradictory late terminal-state callbacks: these are recorded as ignored conflicts and acknowledged rather than reversing a terminal payment state or causing endless provider retries.
 - Added corresponding regression coverage for platform payment notifications and late success callbacks against failed tenant payments.
-- Added regression coverage for quote-token invalidation, atomic rejection of a stale quote after a price change, module/bundle/dependency coverage, bundle overlap, and dependency-safe downgrades.
+- Added regression coverage for quote-token invalidation, atomic rejection of a stale quote after a price change, billing explanations for billable/included/free dependencies, module/bundle/dependency coverage, bundle overlap, and dependency-safe downgrades.
 - Existing processed webhook deliveries remain idempotent.
 
 ## 5. Refund idempotency and uncertain provider outcomes
@@ -66,14 +67,14 @@ This log records the work delivered on the feature branch, the evidence gathered
 
 ## 7. Verification record
 
-At application-code commit `9670c50baf8afeaf2266e4123e9f2f621bd190b9`, GitHub Actions completed successfully:
+At application-code commit `367c1472e7140049ecaaa00967473cb0b8519242`, GitHub Actions completed successfully:
 
 - **283 tests passed**
-- **1,492 assertions**
-- **29.69 seconds**
-- Workflow run: [40651286276](https://github.com/mazensabry2712/veloraplus/actions/runs/40651286276)
+- **1,495 assertions**
+- **30.88 seconds**
+- Workflow run: [40651801957](https://github.com/mazensabry2712/veloraplus/actions/runs/40651801957)
 
-The suite includes a regression proving that changing a catalog price after quote preview causes purchase rejection inside the locked upgrade transaction, without adding an invoice or subscription item. Earlier intermediate verification also passed at `89a7e992` with 282 tests and 1,488 assertions. A green suite verifies the tested commit; it does not itself certify live payment readiness or production deployment.
+The suite includes regressions proving that changing a catalog price after quote preview causes purchase rejection inside the locked upgrade transaction without creating an invoice/subscription item, and that billable, included, and free dependencies receive distinct customer-facing explanations. Earlier intermediate verification also passed at `89a7e992` with 282 tests and 1,488 assertions. A green suite verifies the tested commit; it does not itself certify live payment readiness or production deployment.
 
 ## 8. Remaining work before merge / production
 
