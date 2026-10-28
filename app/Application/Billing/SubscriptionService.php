@@ -6,7 +6,9 @@ use App\Application\Catalog\CatalogDependencyResolver;
 use App\Domain\Billing\InvoiceStatus;
 use App\Domain\Billing\SubscriptionItemStatus;
 use App\Domain\Billing\SubscriptionStatus;
+use App\Models\Bundle;
 use App\Models\Feature;
+use App\Models\Module;
 use App\Models\PlatformInvoice;
 use App\Models\Subscription;
 use App\Models\SubscriptionItem;
@@ -193,6 +195,20 @@ final class SubscriptionService
             ->groupBy(fn (SubscriptionItem $item) => $item->catalog_type.':'.$item->catalog_key)
             ->map(fn ($items) => (int) $items->sum('quantity'))
             ->all();
+
+        // An active Module or Bundle also covers the capabilities it grants.
+        // Include that implicit coverage at the billing boundary, not only in
+        // Marketplace UI checks, so direct upgrade requests cannot double-bill.
+        foreach ($existingItems as $existingItem) {
+            foreach ($this->coveredCatalogItems($existingItem) as $coveredItem) {
+                $key = $coveredItem->getMorphClass().':'.$coveredItem->key;
+                $existing[$key] = true;
+                $coveredQuantities[$key] = max(
+                    (int) ($coveredQuantities[$key] ?? 0),
+                    (int) $existingItem->quantity,
+                );
+            }
+        }
 
         $items = $this->commercialDependencies->resolveBillableItems($items, $coveredQuantities);
 
@@ -483,6 +499,82 @@ final class SubscriptionService
         ]);
 
         return $subscription;
+    }
+
+    /**
+     * @return array<int, Module|Feature|Bundle>
+     */
+    private function coveredCatalogItems(SubscriptionItem $subscriptionItem): array
+    {
+        $catalogItem = match ($subscriptionItem->catalog_type) {
+            'module' => Module::query()->where('key', $subscriptionItem->catalog_key)->first(),
+            'feature' => Feature::query()->where('key', $subscriptionItem->catalog_key)->first(),
+            'bundle' => Bundle::query()
+                ->with(['modules.features', 'features'])
+                ->where('key', $subscriptionItem->catalog_key)
+                ->first(),
+            default => null,
+        };
+
+        if ($catalogItem === null) {
+            return [];
+        }
+
+        $covered = [];
+        $queue = [];
+
+        if ($catalogItem instanceof Bundle) {
+            $covered[] = $catalogItem;
+
+            foreach ($catalogItem->modules as $module) {
+                $queue[] = $module;
+            }
+
+            foreach ($catalogItem->features as $feature) {
+                $queue[] = $feature;
+            }
+        } else {
+            $queue[] = $catalogItem;
+        }
+
+        $visited = [];
+
+        while ($queue !== []) {
+            /** @var Module|Feature $item */
+            $item = array_shift($queue);
+            $key = $item->getMorphClass().':'.$item->key;
+
+            if (isset($visited[$key])) {
+                continue;
+            }
+
+            $visited[$key] = true;
+            $covered[] = $item;
+
+            if ($item instanceof Module) {
+                $item->loadMissing('features');
+
+                foreach ($item->features as $feature) {
+                    if ($feature->status === 'active') {
+                        $queue[] = $feature;
+                    }
+                }
+            }
+
+            foreach ($this->commercialDependencies->resolve([$item]) as $dependency) {
+                if (! $dependency->is($item)) {
+                    $queue[] = $dependency;
+                }
+            }
+        }
+
+        $unique = [];
+
+        foreach ($covered as $item) {
+            $unique[$item->getMorphClass().':'.$item->key] = $item;
+        }
+
+        return array_values($unique);
     }
 
     private function advancePeriod(CarbonImmutable $from, string $billingCycle): CarbonImmutable
