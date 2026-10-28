@@ -27,7 +27,7 @@ This document tracks the current implementation on the revenue-model feature bra
 
 Subscription creation resolves billable dependencies and calculates the initial quote inside the same transaction that persists subscription items and the first invoice. Upgrade preview and upgrade persistence use the dependency-aware pricing path, with the upgrade quote recalculated under the locked subscription transaction. The same resolved billable lines feed subscription and invoice items.
 
-Regression tests cover shared direct and transitive billable dependencies, provenance, existing coverage, read-only Marketplace preview, quote confirmation invalidation, and bundle overlap. Broader ownership/quantity edge cases, cancellation/downgrade behavior, and the feature-granular entitlement contract still need release-level review.
+Regression tests cover shared direct and transitive billable dependencies, provenance, existing coverage across active Modules, Bundle members, and transitive dependencies, read-only Marketplace preview, quote confirmation invalidation, and bundle overlap. Broader ownership/quantity edge cases, dependency-safe cancellation/downgrade behavior, and the feature-granular entitlement contract still need release-level review.
 
 ### 2.2 Dependency billing policy is enforced for priced lines; explanation and lifecycle gaps remain
 
@@ -43,7 +43,7 @@ The chosen policy must be stored centrally and validated by catalog management, 
 
 ### 2.3 Shared dependencies must not be billed twice
 
-If two selected features require the same dependency, the quote should contain one dependency line/selection with a clear reason list. If the tenant already owns an effective dependency, it should not be billed again for the same covered quantity. Quantity differences require explicit semantics before being supported.
+The current resolver emits one billable line for a shared dependency and preserves all root selections in its `required_by` metadata, including transitive paths. Upgrade preview now treats active/pending Module grants, Bundle members, and dependency-expanded coverage as already covered, so direct upgrade requests cannot bypass the Marketplace ownership check. Quantity differences and scheduled-removal transitions still require broader regression coverage.
 
 ### 2.4 Module entitlement semantics conflict with granular selection
 
